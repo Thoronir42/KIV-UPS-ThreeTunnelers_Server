@@ -2,8 +2,10 @@
 #define	TANK_H
 
 typedef struct tank {
-	int i;
-	int layer_number;
+	int x,
+		y;
+	int health;
+	int energy;
 } tank;
 
 #endif	/* TANK_H */

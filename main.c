@@ -1,21 +1,8 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/un.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include <stdlib.h>
+
 
 int main(int argc, char* argv)
 {
-	int server_sock, client_sock, n;
-	int server_addr_len, client_addr_len;
-	struct sockaddr_in local_addr;
-	struct sockaddr_in remote_addr;
-	char* ch= char[128];
-        ch = "A\0";
+	
 
 
 	server_sock = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -32,7 +19,7 @@ int main(int argc, char* argv)
 	{
 		printf("Bind ER\n");
                 return -1;
-	} 
+	}
 	else {
 		printf("Bind OK\n");
 	}
