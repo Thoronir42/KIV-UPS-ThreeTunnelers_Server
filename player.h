@@ -1,19 +1,19 @@
 #ifndef PLAYER_H
 #define	PLAYER_H
 
-#include 'tank.h'
+#include "tank.h"
 
 
 typedef struct player {
-	int i;
+	int id;
 	long address;
 	
 	tank* player_tank;
 } player;
 
-player* create_player(int id);
+player* player_create(int id);
 
-void delete_player(player* p);
+void player_delete(player* p);
 
 #endif	/* PLAYER_H */
 

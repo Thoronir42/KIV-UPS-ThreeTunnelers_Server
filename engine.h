@@ -8,11 +8,13 @@ typedef struct engine{
 	
 } engine;
 
-engine* create_engine();
+engine *engine_create();
 
-void delete_engine(engine* e);
+void engine_delete(engine *e);
 
-
+void *engine_run(){
+	
+}
 
 
 

@@ -2,12 +2,12 @@
 
 #include "game_room.h"
 
-player* create_GameRoom(int id){
-    GameRoom* tmp = malloc(sizeof(GameRoom);
+game_room* game_room_create(int id){
+    game_room* tmp = malloc(sizeof(game_room));
     tmp->id = id;
     return tmp;
 }
 
-void delete_player(player* p){
-    free(p);
+void game_room_delete(game_room *p_game_room){
+    free(p_game_room);
 }

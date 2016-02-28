@@ -1,9 +1,8 @@
+#include<stddef.h>
 
 
 int main(int argc, char* argv)
 {
-	
-
 
 	server_sock = socket( AF_INET, SOCK_DGRAM, 0 );
 

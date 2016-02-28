@@ -1,6 +1,8 @@
 #ifndef NETWORKS_H
 #define	NETWORKS_H
 
+#define NETWORKS_BUFFER_SIZE 1024
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -11,18 +13,17 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-typedef struct networks{
-  int server_sock, client_sock, n;
+typedef struct networks {
+	int server_sock, client_sock, n;
 	int server_addr_len, client_addr_len;
 	struct sockaddr_in local_addr;
 	struct sockaddr_in remote_addr;
-	char* ch;
-        ch = "A\0";  
+	char ch[NETWORKS_BUFFER_SIZE];
 } networks;
 
-networks* create_networks(int buffer_size);
+networks *networks_create();
 
-void delete_networks(networks*);
+void networks_delete(networks *p_networks);
 
 #endif	/* NETWORKS_H */
 
