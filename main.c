@@ -1,45 +1,27 @@
 #include<stddef.h>
+#include <stdlib.h>
+
+#include "settings.h"
+#include "networks.h"
+
+#define ARG_MAX_ROOMS 0
 
 
-int main(int argc, char* argv)
-{
-
-	server_sock = socket( AF_INET, SOCK_DGRAM, 0 );
-
-	memset(&local_addr, 0, sizeof(struct sockaddr_in));
-
-	local_addr.sin_family = AF_INET;
-	local_addr.sin_addr.s_addr = inet_addr( "127.0.0.1" );
-	local_addr.sin_port = htons(10000);
-
-	server_addr_len = sizeof( local_addr );
-
-	if( bind( server_sock, ( struct sockaddr *)&local_addr, server_addr_len ) != 0 )
-	{
-		printf("Bind ER\n");
-                return -1;
+int process_arguments(int argc, char *argv[], settings *p_settings) {
+	int i;
+	for (i = 0; i < argc; i++) {
+		printf(argv[i]);
 	}
-	else {
-		printf("Bind OK\n");
-	}
-	
-	while( 1 )
-	{
-		printf( "Server ceka na data\n" );
-		
-		client_addr_len = sizeof( remote_addr );
-		n = recvfrom(server_sock, &ch, 1, 0, (struct sockaddr*)&remote_addr, &client_addr_len );
-	
-		printf( "Pripojil se klient\n" );
-		printf( "Klient poslal = %c\n", &ch );
 
-		ch++;
-		sleep(5);
+	*((int *)(&p_settings->MAX_ROOMS)) = atoi(argv[ARG_MAX_ROOMS]);
 
-		printf( "Server odesila = %c\n", ch );
-		n = sendto( server_sock, &ch, 1, 0, (struct sockaddr*)&remote_addr, client_addr_len );
+}
 
-		close( client_sock );
+int main(int argc, char* argv) {
+	settings *p_settings = malloc(sizeof (settings));
 
-	}
+	process_arguments(argc - 1, argv + 1, p_settings);
+
+
+	free(p_settings);
 }
