@@ -17,6 +17,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#include "network_commands.h"
+
 typedef struct networks {
 	int server_sock, client_sock, n;
 	int server_addr_len, client_addr_len;
