@@ -17,7 +17,7 @@ int process_arguments(int argc, char *argv[], settings *p_settings) {
 
 }
 
-int main(int argc, char* argv) {
+int main(int argc, char* argv[]) {
 	settings *p_settings = malloc(sizeof (settings));
 
 	process_arguments(argc - 1, argv + 1, p_settings);

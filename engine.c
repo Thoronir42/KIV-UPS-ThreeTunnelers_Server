@@ -2,7 +2,7 @@
 
 
 engine* engine_create(networks *nw){
-	engine* tmp = malloc(sizeof engine);
+	engine* tmp = malloc(sizeof(engine));
 	tmp->nw = nw;
 	
 	return tmp;

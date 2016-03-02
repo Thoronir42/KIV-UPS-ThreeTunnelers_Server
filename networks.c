@@ -50,7 +50,7 @@ void *networks_run(networks *p_networks) {
 		printf("Server ceka na data\n");
 
 		p_networks->client_addr_len = sizeof (struct sockaddr_in);
-		n = recvfrom(p_networks->server_sock, p_networks->buffer_command, 1, 0, (struct sockaddr*) p_networks->remote_addr, p_networks->client_addr_len);
+		n = recvfrom(p_networks->server_sock, p_networks->buffer_command, 1, 0, (struct sockaddr*) p_networks->remote_addr, &p_networks->client_addr_len);
 
 		printf("Pripojil se klient\n");
 		printf("Klient poslal = %c\n", &ch);

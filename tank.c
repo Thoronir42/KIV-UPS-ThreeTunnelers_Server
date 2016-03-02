@@ -1,3 +1,6 @@
+#include <stddef.h>
+#include <stdlib.h>
+
 #include "tank.h"
 
 tank *tank_create(int x, int y){

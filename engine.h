@@ -12,9 +12,7 @@ engine *engine_create();
 
 void engine_delete(engine *e);
 
-void *engine_run(){
-	
-}
+void *engine_run();
 
 
 

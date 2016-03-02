@@ -9,7 +9,7 @@ OBJECTS=$(SOURCES:.c=.o)
 #sdl-config or any other library here. 
 #``- ensures that the command between them is executed, and the result is put into LIBS
 #executable filename
-EXECUTABLE=FATty
+EXECUTABLE=TT_server
 #Special symbols used:
 #$^ - is all the dependencies (in this case =$(OBJECTS) )
 #$@ - is the result name (in this case =$(EXECUTABLE) )
