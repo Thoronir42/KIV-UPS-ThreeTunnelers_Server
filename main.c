@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "settings.h"
-#include "networks.h"
+#include "networkz.h"
 
 #define ARG_MAX_ROOMS 0
 

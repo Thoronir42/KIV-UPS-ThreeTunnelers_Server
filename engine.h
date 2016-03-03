@@ -1,7 +1,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "networks.h"
+#include "networkz.h"
 
 typedef struct engine{
 	networks* nw;
