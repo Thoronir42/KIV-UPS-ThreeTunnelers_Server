@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "networkz.h"
+#include "networks.h"
 
 networks* networks_create() {
 	networks *tmp = malloc(sizeof (networks));
