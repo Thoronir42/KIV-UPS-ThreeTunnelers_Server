@@ -18,8 +18,11 @@
 #include <stdlib.h>
 
 #include "network_commands.h"
+#include "../settings.h"
 
 typedef struct networks {
+	settings *p_settings;
+	
 	int server_sock, client_sock, n;
 	int server_addr_len, client_addr_len;
 	struct sockaddr_in *local_addr;

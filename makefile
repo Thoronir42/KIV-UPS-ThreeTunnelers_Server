@@ -19,8 +19,20 @@ default: all clean
 
 all: $(EXECUTABLE)
 
-$(EXECUTABLE): $(OBJECTS)
-	$(LINK.o) $^ -pthread -o $@
-
 clean:
 	rm $(OBJECTS)
+
+$(EXECUTABLE): root game networks $(OBJECTS)
+	$(LINK.o) $^ -pthread -o $@	
+
+root: settings
+	$(CC) *.c $(OPTS)
+
+game: settings
+	$(CC) game/*.c $(OPTS)
+	
+networks: settings
+	$(CC) networks/*.c $(OPTS)
+	
+settings:
+	$(CC) settings.c $(OPTS)

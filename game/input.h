@@ -12,13 +12,9 @@ typedef struct input{
 } input;
 
 
-void input_key_press(input *p_input, int input_type){
-	p_input->heldKeys |= input_type;
-}
+void input_key_press(input *p_input, int input_type);
 
-void input_key_press(input *p_input, int input_type){
-	p_input->heldKeys &= ~input_type;
-}
+void input_key_press(input *p_input, int input_type);
 
 #endif	/* INPUT_H */
 
