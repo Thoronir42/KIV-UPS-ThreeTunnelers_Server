@@ -8,11 +8,13 @@
 #ifndef SETTINGS_H
 #define	SETTINGS_H
 
-
-typedef struct settings{
+typedef struct settings {
 	const int MAX_ROOMS;
+
+	int port;
 } settings;
 
+settings *settings_process_arguments(int argc, char* argv[]);
 
 
 

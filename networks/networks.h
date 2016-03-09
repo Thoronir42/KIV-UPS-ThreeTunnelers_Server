@@ -24,7 +24,7 @@ typedef struct networks {
 	settings *p_settings;
 	
 	int server_sock, client_sock, n;
-	int server_addr_len, client_addr_len;
+	unsigned int server_addr_len, client_addr_len;
 	struct sockaddr_in *local_addr;
 	struct sockaddr_in *remote_addr;
 	

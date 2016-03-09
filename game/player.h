@@ -3,6 +3,9 @@
 
 #include "tank.h"
 
+const int PLAYER_NONE = 0;
+const int PLAYER_SERVER = 1;
+const int PLAYER_FIRST_USABLE = 40;
 
 typedef struct player {
 	int id;

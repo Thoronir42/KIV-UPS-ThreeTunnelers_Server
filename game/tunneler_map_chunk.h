@@ -5,9 +5,9 @@
 #include "tunneler_map_block.h"
 
 typedef struct tunnel_map_chunk {
-	byte assigned_player;
+	short assigned_player;
 	
-	byte block_map[][];
+	char *block_map;
 	
 } tunnel_map_chunk;
 

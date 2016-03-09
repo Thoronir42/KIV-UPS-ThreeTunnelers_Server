@@ -13,10 +13,10 @@
 typedef struct game_room {
 	int id;
 	char password[PASSWORD_MAX_LENGTH];
-	byte game_state;
+	char game_state;
 	
 	int max_players;
-	player players[];
+	player *players;
 	
 	
 } game_room;

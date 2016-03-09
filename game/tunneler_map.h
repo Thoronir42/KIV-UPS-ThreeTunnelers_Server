@@ -4,20 +4,22 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "game/tunneler_map_chunk.h"
+#include "tunneler_map_chunk.h"
+
+#define _CHUNK_SIZE 20
 
 typedef struct tunneler_map {
-	const int CHUNK_SIZE = 20;
+	const int CHUNK_SIZE;
 	const int CHUNKS_VERTICAL;
 	const int CHUNKS_HORITZONTAL;
 	
-	tunnel_map_chunk *chunk_map[][];
+	tunnel_map_chunk **chunk_map;
 	
 } tunneler_map;
 
 tunneler_map *tunneler_map_create(int width, int height);
 
-void tunneler_map_create(tunneler_map *p);
+void tunneler_map_delete(tunneler_map *p);
 
 
 

@@ -14,6 +14,7 @@ EXECUTABLE=TT_server
 #$^ - is all the dependencies (in this case =$(OBJECTS) )
 #$@ - is the result name (in this case =$(EXECUTABLE) )
 
+.PHONY: root game networks settings
 default: all clean
 
 
@@ -22,10 +23,10 @@ all: $(EXECUTABLE)
 clean:
 	rm $(OBJECTS)
 
-$(EXECUTABLE): root game networks $(OBJECTS)
+$(EXECUTABLE): game networks $(OBJECTS)
 	$(LINK.o) $^ -pthread -o $@	
 
-root: settings
+root: 
 	$(CC) *.c $(OPTS)
 
 game: settings
