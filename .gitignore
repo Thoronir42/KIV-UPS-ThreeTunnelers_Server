@@ -1,4 +1,7 @@
 TT_Server.dev
 TT_Server.layout
 nbproject/
-*.o
+
+TT_server
+obj
+
