@@ -1,11 +1,16 @@
 #compiler
 CC=gcc
-#compiler options
 OPTS=-c -Wall
+CFLAGS=
 #source files
-SOURCES=$(wildcard *.c)
+ODIR = obj
+SDIR = src
+
+SOURCES=$(wildcard $(SDIR)/*.c)
+GAME_SOURCES=$(wildcard $(SDIR)/game/*.c)
+NETW_SOURCES=$(wildcard $(SDIR)/networks/*.c)
 #object files
-OBJECTS=$(SOURCES:.c=.o)
+OBJECTS=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(SOURCES) $(GAME_SOURCES) $(NETW_SOURCES))
 #sdl-config or any other library here. 
 #``- ensures that the command between them is executed, and the result is put into LIBS
 #executable filename
@@ -14,26 +19,20 @@ EXECUTABLE=TT_server
 #$^ - is all the dependencies (in this case =$(OBJECTS) )
 #$@ - is the result name (in this case =$(EXECUTABLE) )
 
-.PHONY: root game networks settings
-default: all clean
-
+default: clean $(ODIR) all
+	
+$(ODIR):
+	mkdir $@
+	cd $@; mkdir game
+	mkdir $@/networks
 
 all: $(EXECUTABLE)
 
 clean:
-	rm $(OBJECTS)
+	rm -f $(ODIR)/*.o
 
-$(EXECUTABLE): game networks $(OBJECTS)
-	$(LINK.o) $^ -pthread -o $@	
+$(EXECUTABLE): $(OBJECTS)
+	$(CC) $^ -pthread -o $@
 
-root: 
-	$(CC) *.c $(OPTS)
-
-game: settings
-	$(CC) game/*.c $(OPTS)
-	
-networks: settings
-	$(CC) networks/*.c $(OPTS)
-	
-settings:
-	$(CC) settings.c $(OPTS)
+$(ODIR)/%.o: $(SDIR)/%.c
+	$(CC) -c -o $@ $< $(CFLAGS) 
