@@ -1,5 +1,6 @@
 #include<stddef.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "settings.h"
 #include "networks/networks.h"
@@ -13,6 +14,7 @@
 #include "game/tunneler_map_block.h"
 
 #define _CHUNK_SIZE 20
+#define _MAX_TICKRATE 32
 
 int define_consts(){
 	//			GAME_ROOM
@@ -52,11 +54,20 @@ int main(int argc, char* argv[]) {
 	
 	settings *p_settings = settings_process_arguments(argc - 1, argv + 1);
 	*(int *)&p_settings->CHUNK_SIZE = _CHUNK_SIZE;
+	*(unsigned int *)&p_settings->MAX_TICKRATE = _MAX_TICKRATE;
+	
 	networks *p_networks = networks_create(p_settings);
 	engine *p_engine = engine_create(p_networks, p_settings);
 	
+	pthread_t thr_engine, thr_networks;
+	
+	pthread_create(&thr_engine, NULL, engine_run, p_engine);
+	pthread_create(&thr_networks, NULL, networks_run, p_networks);
+	
 	p_engine->keep_running = 0;
 
+	pthread_join(thr_engine, NULL);
+	
 	free(p_settings);
 	
 	return 0;
