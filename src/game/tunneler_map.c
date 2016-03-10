@@ -3,12 +3,12 @@
 
 #include "tunneler_map.h"
 
-tunneler_map *tunneler_map_create(int width, int height){
+tunneler_map *tunneler_map_create(int width, int height, int chunk_size){
 	int x, y;
 	
 	tunneler_map *tmp = malloc(sizeof(tunneler_map));
 	
-	*(int *)&tmp->CHUNK_SIZE = _CHUNK_SIZE;
+	*(int *)&tmp->CHUNK_SIZE = chunk_size;
 	*(int *)&tmp->CHUNKS_HORITZONTAL = width;
 	*(int *)&tmp->CHUNKS_VERTICAL = height;
 	

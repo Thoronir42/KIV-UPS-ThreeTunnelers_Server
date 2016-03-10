@@ -2,20 +2,20 @@
 #define	INPUT_H
 
 const unsigned int
-INPUT_MASK_UP = 0x01,
-		INPUT_MASK_DOWN = 0x02,
-		INPUT_MASK_LEFT = 0x04,
-		INPUT_MASK_RIGHT = 0x08,
-		INPUT_MASK_SHOOT = 0x10;
+INPUT_MASK_UP,
+		INPUT_MASK_DOWN,
+		INPUT_MASK_LEFT,
+		INPUT_MASK_RIGHT,
+		INPUT_MASK_SHOOT;
 
 typedef struct input {
 	int heldKeys;
 } input;
 
 
-void input_set(input *p_input, int input);
+void input_set(input *p_input, unsigned int input);
 
-int input_is_held(input *p_input, int input_mask);
+int input_is_held(input *p_input, unsigned int input_mask);
 
 #endif	/* INPUT_H */
 

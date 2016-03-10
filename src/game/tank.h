@@ -3,8 +3,8 @@
 #ifndef TANK_H
 #define	TANK_H
 
-#define TANK_MAX_HEALTH 20
-#define TANK_MAX_ENERGY 20
+const int TANK_MAX_HEALTH,
+	TANK_MAX_ENERGY;
 
 typedef struct tank {
 	int x,

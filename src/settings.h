@@ -10,6 +10,7 @@
 
 typedef struct settings {
 	const int MAX_ROOMS;
+	const int CHUNK_SIZE;
 
 	int port;
 } settings;

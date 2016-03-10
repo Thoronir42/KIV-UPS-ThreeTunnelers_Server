@@ -3,16 +3,16 @@
 
 #include "player.h"
 
-#define GAME_ROOM_MAX_PLAYERS 4
-#define PASSWORD_MAX_LENGTH 32
+const int GAME_ROOM_MAX_PLAYERS;
+const int GAME_ROOM_PASS_MAX_LENGTH;
 
-#define GAME_ROOM_STATE_LOBBY 1
-#define GAME_ROOM_STATE_RUNNING 2
-#define GAME_ROOM_STATE_DONE 3
+const int GAME_ROOM_STATE_LOBBY,
+	GAME_ROOM_STATE_RUNNING,
+	GAME_ROOM_STATE_DONE;
 
 typedef struct game_room {
 	int id;
-	char password[PASSWORD_MAX_LENGTH];
+	char *password;
 	char game_state;
 	
 	int max_players;

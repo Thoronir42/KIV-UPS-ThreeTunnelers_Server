@@ -17,7 +17,7 @@ typedef struct tunneler_map {
 	
 } tunneler_map;
 
-tunneler_map *tunneler_map_create(int width, int height);
+tunneler_map *tunneler_map_create(int width, int height, int chunk_size);
 
 void tunneler_map_delete(tunneler_map *p);
 
