@@ -13,10 +13,13 @@ typedef struct settings {
 	const int CHUNK_SIZE;
 	const unsigned int MAX_TICKRATE;
 
+	int show_summaries;
+	
 	int port;
+	
 } settings;
 
-settings *settings_process_arguments(int argc, char* argv[]);
+settings *settings_process_arguments(settings *p_settings, int argc, char* argv[]);
 
 
 

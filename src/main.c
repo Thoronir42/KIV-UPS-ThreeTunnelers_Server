@@ -16,6 +16,7 @@
 #define _CHUNK_SIZE 20
 #define _MAX_TICKRATE 32
 
+#define RUN_ERROR_NO_ARGS 1
 int define_consts(){
 	//			GAME_ROOM
 	*(int *)&GAME_ROOM_MAX_PLAYERS = 1;
@@ -49,11 +50,18 @@ int define_consts(){
 	return 0;
 }
 
+void print_help(){
+	printf("Include params pls\n");
+}
+
 int main(int argc, char* argv[]) {
 	define_consts();
-	
+	settings *p_settings = malloc(sizeof(settings));
+	if(settings_process_arguments(p_settings, argc, argv)){
+		print_help();
+	}
 	settings *p_settings = settings_process_arguments(argc - 1, argv + 1);
-	*(int *)&p_settings->CHUNK_SIZE = _CHUNK_SIZE;
+	*(int *)(&p_settings->CHUNK_SIZE) = _CHUNK_SIZE;
 	*(unsigned int *)&p_settings->MAX_TICKRATE = _MAX_TICKRATE;
 	
 	networks *p_networks = networks_create(p_settings);
