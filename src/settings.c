@@ -16,12 +16,14 @@ int settings_process_arguments(settings *p_settings, int argc, char *argv[]) {
 	
 	p_settings->show_summaries = 1;
 	
-	
+	int req_port = atoi(argv[ARG_MAX_ROOMS]);
+	p_settings->port = req_port;
 	
 	int max_rooms = atoi(argv[ARG_MAX_ROOMS]);
 	*(int *) &p_settings->MAX_ROOMS = max_rooms;
 	
-	int req_port = atoi(argv[ARG_MAX_ROOMS]);
-
-	return p_settings;
+	
+	
+	
+	return 0;
 }

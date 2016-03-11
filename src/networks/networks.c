@@ -16,7 +16,6 @@
 
 networks* networks_create(settings *p_settings) {
 	networks *tmp = malloc(sizeof (networks));
-
 	tmp->p_settings = p_settings;
 	
 	tmp->local_addr = malloc(sizeof (struct sockaddr_in));

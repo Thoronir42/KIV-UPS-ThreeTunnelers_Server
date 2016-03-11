@@ -19,7 +19,7 @@ typedef struct settings {
 	
 } settings;
 
-settings *settings_process_arguments(settings *p_settings, int argc, char* argv[]);
+int settings_process_arguments(settings *p_settings, int argc, char* argv[]);
 
 
 
