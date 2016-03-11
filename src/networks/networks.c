@@ -37,9 +37,9 @@ networks* networks_create(settings *p_settings) {
 	
 	if (bind(tmp->server_sock, (struct sockaddr *) tmp->local_addr, tmp->server_addr_len) != 0) {
 		printf("ok\n");
-		return NULL;
 	} else {
 		printf("error\n");
+		return NULL;
 	}
 
 	tmp->status = NETWORKS_STATUS_NEW;
@@ -59,7 +59,7 @@ int networks_keep_running(networks *p_networks) {
 void *networks_run(networks *p_networks) {
 	int n = 0;
 	char *ch = p_networks->buffer_command;
-
+	
 	while (networks_keep_running(p_networks)) {
 		printf("Server ceka na %d. data\n", ++n);
 

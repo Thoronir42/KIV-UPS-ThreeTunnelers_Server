@@ -36,5 +36,7 @@ networks *networks_create();
 
 void networks_delete(networks *p_networks);
 
+void *networks_run(networks *p_networks);
+
 #endif	/* NETWORKS_H */
 

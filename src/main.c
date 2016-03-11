@@ -17,6 +17,8 @@
 #define _MAX_TICKRATE 32
 
 #define RUN_ERROR_NO_ARGS 1
+#define RUN_ERROR_NETWORK_FAILED 1
+
 int define_consts(){
 	//			GAME_ROOM
 	*(int *)&GAME_ROOM_MAX_PLAYERS = 1;
@@ -65,6 +67,12 @@ int main(int argc, char* argv[]) {
 	*(unsigned int *)&p_settings->MAX_TICKRATE = _MAX_TICKRATE;
 	
 	networks *p_networks = networks_create(p_settings);
+	if(!p_networks){
+		printf("Network interface couldn't be created, exitting. ");
+		return RUN_ERROR_NETWORK_FAILED;
+	}
+	
+	
 	engine *p_engine = engine_create(p_networks, p_settings);
 	
 	pthread_t thr_engine, thr_networks;
@@ -75,8 +83,10 @@ int main(int argc, char* argv[]) {
 	p_engine->keep_running = 0;
 
 	pthread_join(thr_engine, NULL);
+	pthread_join(thr_networks, NULL);
 	
-	free(p_settings);
+	engine_delete(p_engine);
 	
+	printf("Program exited gracefully.\n");
 	return 0;
 }
