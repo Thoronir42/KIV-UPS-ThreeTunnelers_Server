@@ -98,7 +98,9 @@ int main(int argc, char* argv[]) {
 	pthread_t thr_engine, thr_networks;
 	
 	pthread_create(&thr_engine, NULL, engine_run, p_engine);
-	pthread_create(&thr_networks, NULL, networks_run, p_networks);
+	
+	pthread_create(&thr_networks, NULL, networks_receiver_run, p_networks);
+	pthread_create(&thr_networks, NULL, networks_sender_run, p_networks);
 	
 	p_engine->keep_running = 0;
 

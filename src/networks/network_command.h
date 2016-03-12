@@ -1,6 +1,8 @@
 #ifndef NETWORK_COMMANDS_H
 #define	NETWORK_COMMANDS_H
 
+#define NETWORK_MESSAGE_LENGTH 512
+
 #define NET_CMD_LEAD_APPROVE 1
 #define NET_CMD_LEAD_DENY 2
 #define NET_CMD_LEAD_STILL_THERE 3
@@ -15,6 +17,15 @@
 #define NET_CMD_CONNECTION_GAME_ROOM_LIST 90
 #define NET_CMD_CONNECTION_GAME_ROOM_LIST_END 91
 #define NET_CMD_CONNECTION_PLAYER_DISCONNECTED 99
+
+typedef struct network_command {
+	short message_id;
+	short cmd_type;
+	
+	char content[NETWORK_MESSAGE_LENGTH];
+	
+} network_command;
+
 
 #endif	/* NETWORK_COMMANDS_H */
 

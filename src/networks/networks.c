@@ -55,7 +55,7 @@ int networks_keep_running(networks *p_networks) {
 	return p_networks->status & 1;
 }
 
-void *networks_run(networks *p_networks) {
+void *networks_receiver_run(networks *p_networks) {
 	int n = 0;
 	char *ch = p_networks->buffer_command;
 	
@@ -82,4 +82,8 @@ void *networks_run(networks *p_networks) {
 	}
 	
 	return NULL;
+}
+
+void *networks_sender_run(networks *p_networks){
+	
 }

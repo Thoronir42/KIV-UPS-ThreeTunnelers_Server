@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "network_commands.h"
+#include "network_command.h"
 #include "../settings.h"
 
 typedef struct networks {
@@ -30,13 +30,15 @@ typedef struct networks {
 	
 	int status;
 	char buffer_command[NETWORKS_BUFFER_SIZE];
+	
+	
 } networks;
 
 networks *networks_create();
 
 void networks_delete(networks *p_networks);
 
-void *networks_run(networks *p_networks);
+void *networks_receiver_run(networks *p_networks);
 
 #endif	/* NETWORKS_H */
 
