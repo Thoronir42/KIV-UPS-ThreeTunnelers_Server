@@ -13,8 +13,8 @@ typedef struct settings {
 	const int CHUNK_SIZE;
 	const unsigned int MAX_TICKRATE;
 
-	const int NETWORKS_SEND_BUFFER;
-	const int NETWORKS_RECV_BUFFER;
+	const int NETWORKS_SEND_BUFFER_SIZE;
+	const int NETWORKS_RECV_BUFFER_SIZE;
 	
 	
 	int show_summaries;

@@ -1,12 +1,6 @@
 #ifndef NETWORKS_H
 #define	NETWORKS_H
 
-#define NETWORKS_BUFFER_SIZE 1024
-
-#define NETWORKS_STATUS_NEW 1
-#define NETWORKS_STATUS_RUNNING 3
-#define NETWORKS_STATUS_END 4
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -17,8 +11,20 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "network_command.h"
+#include <semaphore.h>
+
 #include "../settings.h"
+
+#include "netcommand_buffer.h"
+#include "network_command.h"
+
+
+#define NETWORKS_COMMAND_SIZE 1024
+
+#define NETWORKS_STATUS_NEW 1
+#define NETWORKS_STATUS_RUNNING 3
+#define NETWORKS_STATUS_END 4
+
 
 typedef struct networks {
 	settings *p_settings;
@@ -29,7 +35,15 @@ typedef struct networks {
 	struct sockaddr_in *remote_addr;
 	
 	int status;
-	char buffer_command[NETWORKS_BUFFER_SIZE];
+	
+	
+	sem_t *sem_commands_recv;
+	netcommand_buffer *netcmd_buf_recv;
+	
+	sem_t *sem_commands_send;
+	netcommand_buffer *netcmd_buf_send;
+	
+	
 	
 	
 } networks;
@@ -38,7 +52,9 @@ networks *networks_create();
 
 void networks_delete(networks *p_networks);
 
-void *networks_receiver_run(networks *p_networks);
+void *networks_receiver_run(void *p_networks);
+
+void *networks_sender_run(void *p_networks);
 
 #endif	/* NETWORKS_H */
 
