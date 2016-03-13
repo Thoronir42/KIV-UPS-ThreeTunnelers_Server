@@ -32,7 +32,7 @@ clean:
 	rm -f $(ODIR)/*.o
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $^ -pthread -o $@
+	$(CC) $(ODIR)/*.o $(ODIR)/game/*.o $(ODIR)/networks/*.o -pthread -o $@
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) 
