@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "networks.h"
+#include "network_command.h"
 #include "../settings.h"
 
 int networks_setup(networks *tmp, settings *p_settings){
@@ -43,9 +44,11 @@ networks* networks_create(settings *p_settings) {
 	tmp->remote_addr = malloc(sizeof (struct sockaddr_in));
 	tmp->sem_commands_recv = malloc(sizeof(sem_t));
 	tmp->sem_commands_send = malloc(sizeof(sem_t));
+	tmp->tmp_command = malloc(sizeof(network_command));
 	
 	
 	tmp->p_settings = p_settings;
+	tmp->command_counter = 0;
 	
 	if (!networks_setup(tmp, p_settings)) {
 		return NULL;
@@ -66,8 +69,38 @@ void networks_delete(networks* p_networks) {
 	free(p_networks->remote_addr);
 	free(p_networks->sem_commands_recv);
 	free(p_networks->sem_commands_send);
+	free(p_networks->tmp_command);
 	free(p_networks);
 }
+
+void networks_handle_message(networks *p_networks, network_command *ncmd){
+	netcommand_buffer_put(p_networks->netcmd_buf_recv, ncmd);
+	sem_post(p_networks->sem_commands_recv);
+}
+
+void networks_send_message(networks *p_networks, network_command *ncmd){
+	netcommand_buffer_put(p_networks->netcmd_buf_send, ncmd);
+	sem_post(p_networks->sem_commands_send);
+}
+
+void networks_shutdown(networks *p){
+	int i;
+	static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (i = 0; i < NETWORKS_SHUTDOWN_KEY_LENGTH; ++i) {
+        p->shutdown_key[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+	p->status = NETWORKS_STATUS_END;
+	
+	network_command_prepare(p->tmp_command, ++p->command_counter, NET_CMD_SERVER_SHUTDOWN);
+	memcpy(p->tmp_command->content + NETWORK_COMMAND_BODY_OFFSET, p->shutdown_key, NETWORKS_SHUTDOWN_KEY_LENGTH);
+	
+	networks_send_message(p, p->tmp_command);
+}
+
 
 int networks_keep_running(networks *p_networks) {
 	return p_networks->status & 1;
@@ -90,8 +123,7 @@ void *networks_receiver_run(void *args){
 		printf("Pripojil se klient\n");
 		printf("Klient poslal = %s\n", buffer);
 		
-		netcommand_buffer_put(p_networks->netcmd_buf_recv, p_buffer);
-		sem_post(p_networks->sem_commands_recv);
+		networks_handle_message(p_networks, p_buffer);
 
 	}
 	

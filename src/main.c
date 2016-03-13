@@ -95,17 +95,19 @@ int main(int argc, char* argv[]) {
 	
 	engine *p_engine = engine_create(p_networks, p_settings);
 	
-	pthread_t thr_engine, thr_networks;
+	pthread_t thr_engine, thr_networks_recv, thr_networks_send;
 	
 	pthread_create(&thr_engine, NULL, engine_run, p_engine);
 	
-	pthread_create(&thr_networks, NULL, networks_receiver_run, p_networks);
-	pthread_create(&thr_networks, NULL, networks_sender_run, p_networks);
+	pthread_create(&thr_networks_recv, NULL, networks_receiver_run, p_networks);
+	pthread_create(&thr_networks_send, NULL, networks_sender_run, p_networks);
 	
 	p_engine->keep_running = 0;
 
 	pthread_join(thr_engine, NULL);
-	pthread_join(thr_networks, NULL);
+	
+	pthread_join(thr_networks_recv, NULL);
+	pthread_join(thr_networks_send, NULL);
 	
 	engine_delete(p_engine);
 	

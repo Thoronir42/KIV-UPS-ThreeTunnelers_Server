@@ -3,6 +3,9 @@
 #include <time.h>
 
 #include "engine.h"
+
+#include "networks/networks.h"
+
 #include "settings.h"
 #include "run_summary.h"
 
@@ -41,9 +44,12 @@ void *engine_run(engine *p_engine){
 		usleep(p_engine->usleep_length);
 	}
 	p_engine->p_summary->run_end = clock();
-	printf("Engine has ended, printing sumamry: \n");
 	if(p_engine->p_settings->show_summaries){
+		printf("Engine has ended, printing sumamry: \n");
 		run_summary_print(p_engine->p_summary);
 	}
+	
+	networks_shutdown(p_engine->p_networks);
+	
 	return NULL;
 }

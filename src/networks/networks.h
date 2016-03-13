@@ -20,6 +20,7 @@
 
 
 #define NETWORKS_COMMAND_SIZE 1024
+#define NETWORKS_SHUTDOWN_KEY_LENGTH 12
 
 #define NETWORKS_STATUS_NEW 1
 #define NETWORKS_STATUS_RUNNING 3
@@ -36,14 +37,16 @@ typedef struct networks {
 	
 	int status;
 	
+	int command_counter;
 	
 	sem_t *sem_commands_recv;
 	netcommand_buffer *netcmd_buf_recv;
 	
 	sem_t *sem_commands_send;
 	netcommand_buffer *netcmd_buf_send;
+	network_command *tmp_command;
 	
-	
+	char shutdown_key[NETWORKS_SHUTDOWN_KEY_LENGTH];
 	
 	
 } networks;
@@ -51,6 +54,14 @@ typedef struct networks {
 networks *networks_create();
 
 void networks_delete(networks *p_networks);
+
+
+void networks_handle_message(networks *p_networks, network_command *ncmd);
+
+void networks_send_message(networks *p_networks, network_command *ncmd);
+
+void networks_shutdown(networks *p);
+
 
 void *networks_receiver_run(void *p_networks);
 
