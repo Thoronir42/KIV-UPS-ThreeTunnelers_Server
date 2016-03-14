@@ -50,7 +50,7 @@ networks* networks_create(settings *p_settings) {
 	tmp->p_settings = p_settings;
 	tmp->command_counter = 0;
 	
-	if (!networks_setup(tmp, p_settings)) {
+	if (networks_setup(tmp, p_settings)) {
 		return NULL;
 	}
 	

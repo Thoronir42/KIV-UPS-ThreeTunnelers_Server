@@ -35,9 +35,10 @@ void *engine_run(engine *p_engine){
 	p_engine->keep_running = 1;
 	p_engine->p_summary->run_start = clock();
 	while(p_engine->keep_running){
+		p_engine->total_ticks++;
 		if(!p_engine->total_ticks % p_engine->p_settings->MAX_TICKRATE )
 		printf("Engine runs * %d.\n", p_engine->total_ticks / p_engine->p_settings->MAX_TICKRATE);
-		if(++p_engine->total_ticks > p_engine->p_settings->MAX_TICKRATE * 2){
+		if(0 && p_engine->total_ticks > p_engine->p_settings->MAX_TICKRATE * 2){
 			p_engine->keep_running = 0;
 		}
 		

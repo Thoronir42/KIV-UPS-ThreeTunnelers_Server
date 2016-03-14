@@ -17,7 +17,7 @@
 #define _CHUNK_SIZE 20
 #define _MAX_TICKRATE 32
 
-#define RUN_ERROR_NO_ARGS 1
+#define RUN_ERROR_BAD_ARGS 1
 #define RUN_ERROR_NETWORK_FAILED 1
 
 int define_consts(){
@@ -81,6 +81,7 @@ int main(int argc, char* argv[]) {
 	settings *p_settings = malloc(sizeof(settings));
 	if(settings_process_arguments(p_settings, argc, argv)){
 		print_help();
+		return RUN_ERROR_BAD_ARGS;
 	}
 	
 	*(int *)(&p_settings->CHUNK_SIZE) = _CHUNK_SIZE;
@@ -102,8 +103,8 @@ int main(int argc, char* argv[]) {
 	pthread_create(&thr_networks_recv, NULL, networks_receiver_run, p_networks);
 	pthread_create(&thr_networks_send, NULL, networks_sender_run, p_networks);
 	
+	
 	p_engine->keep_running = 0;
-
 	pthread_join(thr_engine, NULL);
 	
 	pthread_join(thr_networks_recv, NULL);
