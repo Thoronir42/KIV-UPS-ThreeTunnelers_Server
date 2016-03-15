@@ -46,6 +46,9 @@ networks* networks_create(settings *p_settings) {
 	tmp->sem_commands_send = malloc(sizeof(sem_t));
 	tmp->tmp_command = malloc(sizeof(network_command));
 	
+	tmp->client_count = p_settings->MAX_ROOMS * p_settings->MAX_PLAYERS_PER_ROOM + 10;
+	tmp->clients = malloc(sizeof(net_client) * tmp->client_count);
+	
 	
 	tmp->p_settings = p_settings;
 	tmp->command_counter = 0;
@@ -70,6 +73,7 @@ void networks_delete(networks* p_networks) {
 	free(p_networks->sem_commands_recv);
 	free(p_networks->sem_commands_send);
 	free(p_networks->tmp_command);
+	free(p_networks->clients);
 	free(p_networks);
 }
 

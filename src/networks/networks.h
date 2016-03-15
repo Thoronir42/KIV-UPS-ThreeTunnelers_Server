@@ -17,6 +17,7 @@
 
 #include "netcommand_buffer.h"
 #include "network_command.h"
+#include "net_client.h"
 
 
 #define NETWORKS_COMMAND_SIZE 1024
@@ -47,6 +48,9 @@ typedef struct networks {
 	network_command *tmp_command;
 	
 	char shutdown_key[NETWORKS_SHUTDOWN_KEY_LENGTH];
+	
+	net_client *clients;
+	int client_count;
 	
 	
 } networks;

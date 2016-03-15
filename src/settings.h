@@ -10,6 +10,8 @@
 
 typedef struct settings {
 	const int MAX_ROOMS;
+	const int MAX_PLAYERS_PER_ROOM;
+	
 	const int CHUNK_SIZE;
 	const unsigned int MAX_TICKRATE;
 
