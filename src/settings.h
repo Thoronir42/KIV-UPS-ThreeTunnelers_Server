@@ -9,8 +9,8 @@
 #define	SETTINGS_H
 
 typedef struct settings {
-	const int MAX_ROOMS;
-	const int MAX_PLAYERS_PER_ROOM;
+	const unsigned int MAX_ROOMS;
+	const unsigned short MAX_PLAYERS_PER_ROOM;
 	
 	const int CHUNK_SIZE;
 	const unsigned int MAX_TICKRATE;

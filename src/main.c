@@ -16,9 +16,15 @@
 
 #define _CHUNK_SIZE 20
 #define _MAX_TICKRATE 32
+#define _MAX_PLAYERS_PER_ROOM 4
 
 #define RUN_ERROR_BAD_ARGS 1
 #define RUN_ERROR_NETWORK_FAILED 1
+
+#define THR_ENGINE 0
+#define THR_ENGINE_KEY 1
+#define THR_NETW_SEND 2
+#define THR_NETW_RECV 3
 
 int define_consts(){
 	//			GAME_ROOM
@@ -86,6 +92,7 @@ int main(int argc, char* argv[]) {
 	
 	*(int *)(&p_settings->CHUNK_SIZE) = _CHUNK_SIZE;
 	*(unsigned int *)&p_settings->MAX_TICKRATE = _MAX_TICKRATE;
+	*(unsigned short *)&p_settings->MAX_PLAYERS_PER_ROOM = _MAX_PLAYERS_PER_ROOM;
 	
 	networks *p_networks = networks_create(p_settings);
 	if(!p_networks){
@@ -96,19 +103,21 @@ int main(int argc, char* argv[]) {
 	
 	engine *p_engine = engine_create(p_networks, p_settings);
 	
-	pthread_t thr_engine, thr_networks_recv, thr_networks_send;
+	pthread_t threads[4];
 	
-	pthread_create(&thr_engine, NULL, engine_run, p_engine);
+	pthread_create(threads + THR_ENGINE, NULL, engine_run, p_engine);
+	pthread_create(threads + THR_ENGINE_KEY, NULL, engine_key_input_run, p_engine);
 	
-	pthread_create(&thr_networks_recv, NULL, networks_receiver_run, p_networks);
-	pthread_create(&thr_networks_send, NULL, networks_sender_run, p_networks);
+	pthread_create(threads + THR_NETW_RECV, NULL, networks_receiver_run, p_networks);
+	pthread_create(threads + THR_NETW_SEND, NULL, networks_sender_run, p_networks);
 	
 	
 	p_engine->keep_running = 0;
-	pthread_join(thr_engine, NULL);
+	pthread_join(threads[THR_ENGINE], NULL);
+	pthread_join(threads[THR_ENGINE_KEY], NULL);
 	
-	pthread_join(thr_networks_recv, NULL);
-	pthread_join(thr_networks_send, NULL);
+	pthread_join(threads[THR_NETW_RECV], NULL);
+	pthread_join(threads[THR_NETW_SEND], NULL);
 	
 	engine_delete(p_engine);
 	
