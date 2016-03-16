@@ -31,7 +31,9 @@ void engine_delete(engine *p_engine){
 	free(p_engine);
 }
 
-void *engine_run(engine *p_engine){
+void *engine_run(void *args){
+	engine *p_engine = (engine *)args;
+	
 	p_engine->keep_running = 1;
 	p_engine->p_summary->run_start = clock();
 	while(p_engine->keep_running){
@@ -52,5 +54,13 @@ void *engine_run(engine *p_engine){
 	
 	networks_shutdown(p_engine->p_networks);
 	
+	return NULL;
+}
+
+void *engine_key_input_run(void *args){
+	engine *p_engine = (engine *)args;
+	while(p_engine->keep_running){
+		
+	}
 	return NULL;
 }

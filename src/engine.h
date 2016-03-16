@@ -25,10 +25,11 @@ typedef struct engine{
 
 engine *engine_create(networks *p_networks, settings *p_settings);
 
-void engine_delete(engine *e);
+void engine_delete(void *args);
 
-void *engine_run();
+void *engine_run(void *args);
 
+void *engine_key_input_run(void *args);
 
 
 #endif
