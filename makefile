@@ -6,11 +6,10 @@ CFLAGS=
 ODIR = obj
 SDIR = src
 
-SOURCES=$(wildcard $(SDIR)/*.c)
-GAME_SOURCES=$(wildcard $(SDIR)/game/*.c)
-NETW_SOURCES=$(wildcard $(SDIR)/networks/*.c)
+ROOT_SOURCES=$(wildcard $(SDIR)/*.c)
+SUBF_SOURCES=$(wildcard $(SDIR)/*/*.c)
 #object files
-OBJECTS=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(SOURCES) $(GAME_SOURCES) $(NETW_SOURCES))
+OBJECTS=$(patsubst $(SDIR)/%.c,$(ODIR)/%.o,$(ROOT_SOURCES) $(SUBF_SOURCES))
 #sdl-config or any other library here. 
 #``- ensures that the command between them is executed, and the result is put into LIBS
 #executable filename
@@ -23,16 +22,19 @@ default: clean $(ODIR) all
 	
 $(ODIR):
 	mkdir $@
-	cd $@; mkdir game
+	mkdir $@/core
 	mkdir $@/networks
+	mkdir $@/model
+	mkdir $@/map
+	mkdir $@/game
 
 all: $(EXECUTABLE)
 
 clean:
-	rm -f $(ODIR)/*.o
+	rm -rf $(ODIR)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(ODIR)/*.o $(ODIR)/game/*.o $(ODIR)/networks/*.o -pthread -o $@
+	$(CC) $(ODIR)/*.o $(ODIR)/*/*.o -pthread -o $@
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) 

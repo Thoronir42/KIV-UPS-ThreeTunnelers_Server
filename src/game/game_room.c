@@ -7,7 +7,6 @@
 game_room* game_room_create(int id, int max_players) {
 	int i;
 	game_room* tmp = malloc(sizeof (game_room));
-	tmp->password = malloc(sizeof(char) * GAME_ROOM_PASS_MAX_LENGTH);
 	
 	tmp->id = id;
 	tmp->game_state = GAME_ROOM_STATE_LOBBY;
@@ -24,12 +23,7 @@ game_room* game_room_create(int id, int max_players) {
 
 void game_room_delete(game_room *p_game_room) {
 	free(p_game_room->players);
-	free(p_game_room->password);
 	free(p_game_room);
-}
-
-int game_room_has_password(game_room *p_game_room) {
-	return strlen(p_game_room->password);
 }
 
 int game_room_get_open_slots(game_room *p_game_room) {

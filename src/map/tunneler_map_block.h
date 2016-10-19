@@ -1,10 +1,3 @@
-/* 
- * File:   tunneler_map_block.h
- * Author: Stepan
- *
- * Created on 5. března 2016, 15:23
- */
-
 #ifndef TUNNELER_MAP_BLOCK_H
 #define	TUNNELER_MAP_BLOCK_H
 

@@ -5,38 +5,37 @@
 #include "settings.h"
 #include "networks/networks.h"
 
-#include "engine.h"
+#include "core/engine.h"
 
 #include "game/game_room.h"
 #include "game/player.h"
 #include "game/input.h"
-#include "game/tank.h"
-#include "game/tunneler_map_block.h"
-#include "game/direction.h"
+#include "model/tank.h"
+#include "map/tunneler_map_block.h"
+#include "model/direction.h"
 
 #define _CHUNK_SIZE 20
 #define _MAX_TICKRATE 32
 #define _MAX_PLAYERS_PER_ROOM 4
 
 #define RUN_ERROR_BAD_ARGS 1
-#define RUN_ERROR_NETWORK_FAILED 1
+#define RUN_ERROR_NETWORK_FAILED 2
 
 #define THR_ENGINE 0
-#define THR_ENGINE_KEY 1
+#define THR_ENGINE_INPUT 1
 #define THR_NETW_SEND 2
 #define THR_NETW_RECV 3
 
 int define_consts(){
 	//			GAME_ROOM
-	*(int *)&GAME_ROOM_MAX_PLAYERS = 1;
-	*(int *)&GAME_ROOM_PASS_MAX_LENGTH = 32;
+	*(int *)&GAME_ROOM_MAX_PLAYERS = 4;
 	*(int *)&GAME_ROOM_STATE_LOBBY = 1;
 	*(int *)&GAME_ROOM_STATE_RUNNING = 2;
 	*(int *)&GAME_ROOM_STATE_DONE = 3;
 	
 	//			PLAYER
-	*(int *)&PLAYER_NONE = 0;
-	*(int *)&PLAYER_SERVER = 1;
+	*(int *)&PLAYER_NONE = -1;
+	*(int *)&PLAYER_SERVER = 0;
 	*(int *)&PLAYER_FIRST_USABLE = 40;
 	
 	//			INPUT
@@ -106,7 +105,7 @@ int main(int argc, char* argv[]) {
 	pthread_t threads[4];
 	
 	pthread_create(threads + THR_ENGINE, NULL, engine_run, p_engine);
-	pthread_create(threads + THR_ENGINE_KEY, NULL, engine_key_input_run, p_engine);
+	pthread_create(threads + THR_ENGINE_INPUT, NULL, engine_input_run, p_engine);
 	
 	pthread_create(threads + THR_NETW_RECV, NULL, networks_receiver_run, p_networks);
 	pthread_create(threads + THR_NETW_SEND, NULL, networks_sender_run, p_networks);
@@ -114,7 +113,7 @@ int main(int argc, char* argv[]) {
 	
 	p_engine->keep_running = 0;
 	pthread_join(threads[THR_ENGINE], NULL);
-	pthread_join(threads[THR_ENGINE_KEY], NULL);
+	pthread_join(threads[THR_ENGINE_INPUT], NULL);
 	
 	pthread_join(threads[THR_NETW_RECV], NULL);
 	pthread_join(threads[THR_NETW_SEND], NULL);
