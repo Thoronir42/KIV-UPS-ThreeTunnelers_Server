@@ -13,7 +13,7 @@ tunneler_map *tunneler_map_create(int width, int height, int chunk_size){
 	*(int *)&tmp->CHUNKS_VERTICAL = height;
 	
 	
-	tmp->chunk_map = malloc(sizeof(tunnel_map_chunk*) * width * height);
+	tmp->chunk_map = malloc(sizeof(tunneler_map_chunk*) * width * height);
 	
 	for(y = 0; y < height; y++){
 		for(x = 0; x < width; x++){
@@ -34,4 +34,15 @@ void tunneler_map_delete(tunneler_map *p){
 	free(p->chunk_map);
 	
 	free(p);
+}
+
+tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y){
+	int offset;
+	
+	if(y < 0 || y > map->CHUNKS_VERTICAL || x < 0 || x > map->CHUNKS_HORITZONTAL){
+		return NULL;
+	}
+	offset = y * map->CHUNKS_HORITZONTAL + x;
+	
+	return map.chunk_map + offset;
 }

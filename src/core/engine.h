@@ -1,30 +1,31 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-
-
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "../networks/networks.h"
+#include "../networks/netadapter.h"
 #include "../settings.h"
-#include "run_summary.h"
+#include "summary.h"
+
+#define ENGERR_NETWORK_INIT_FAILED 1
+
 
 typedef struct engine {
-	networks *p_networks;
-	settings *p_settings;
-	run_summary *p_summary;
+    settings *settings;
+    netadapter netadapter;
+    summary summary;
 
-	useconds_t usleep_length;
-	unsigned long total_ticks;
+    useconds_t usleep_length;
+    unsigned long total_ticks;
 
-	int keep_running;
+    int keep_running;
 
 
 
 } engine;
 
-engine *engine_create(networks *p_networks, settings *p_settings);
+int engine_init(engine *p_engine, settings *p_settings);
 
 void engine_delete(engine *p_engine);
 

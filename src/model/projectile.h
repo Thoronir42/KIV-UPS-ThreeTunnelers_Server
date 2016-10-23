@@ -2,8 +2,7 @@
 #define PROJECTILE_H
 
 typedef struct projectile {
-	int x,
-		y;
+	int x, y;
 	int direction;
 } projectile;
 
