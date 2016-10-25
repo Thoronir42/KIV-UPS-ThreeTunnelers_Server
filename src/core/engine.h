@@ -16,7 +16,7 @@ typedef struct engine {
     netadapter netadapter;
     summary summary;
 
-    useconds_t usleep_length;
+    struct timespec sleep;
     unsigned long total_ticks;
 
     int keep_running;
@@ -26,8 +26,6 @@ typedef struct engine {
 } engine;
 
 int engine_init(engine *p_engine, settings *p_settings);
-
-void engine_delete(engine *p_engine);
 
 void *engine_run(void *args);
 

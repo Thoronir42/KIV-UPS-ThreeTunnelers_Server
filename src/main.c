@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -16,9 +17,7 @@
 #define MAIN_ERR_NETWORK_FAILED 2
 
 #define THR_ENGINE 0
-#define THR_ENGINE_INPUT 1
-#define THR_NETW_SEND 2
-#define THR_NETW_RECV 3
+#define THR_NETADAPTER 1
 
 int define_consts() {
     //			GAME_ROOM
@@ -48,22 +47,42 @@ int define_consts() {
     return 0;
 }
 
-void print_help() {
-    printf("Include params pls\n");
+void print_help(char *file, int err) {
+    switch(err){
+        case ARGERR_NOT_ENOUGH_ARGUMENTS:
+            printf("Not enough arguments \n");
+            break;
+    }
+    
+    printf("Usage: %s port rooms\n", file);
+    printf("  port      port number for binding in range of 0 - 65535\n");
+    printf("  rooms     maximum concurent game rooms, recommended amount is 10\n");
+}
+
+void dump_args(int argc, char *argv[]){
+    int i;
+    for(i = 0; i < argc; i++){
+        printf("%d: %s\n", i, argv[i]);
+    }
 }
 
 int main(int argc, char* argv[]) {
     int ret_val;
     engine eng;
-    pthread_t threads[4];
+    pthread_t threads[2];
 
+    printf("Main: Defining constants\n");
     define_consts();
+    
+    printf("Main: Processing arguments\n");
     settings *p_settings = malloc(sizeof (settings));
-    if (settings_process_arguments(p_settings, argc, argv)) {
-        print_help();
+    ret_val = settings_process_arguments(p_settings, argc, argv);
+    if (ret_val) {
+        print_help(argv[0], ret_val);
         return MAIN_ERR_BAD_ARGS;
     }
 
+    printf("Main: Initialising engine\n");
     ret_val = engine_init(&eng, p_settings);
     switch (ret_val) {
         case ENGERR_NETWORK_INIT_FAILED:
@@ -72,22 +91,23 @@ int main(int argc, char* argv[]) {
     }
 
 
-
+    printf("Main: Starting threads\n");
     pthread_create(threads + THR_ENGINE, NULL, engine_run, &eng);
-    pthread_create(threads + THR_ENGINE_INPUT, NULL, engine_input_run, &eng);
 
     //	pthread_create(threads + THR_NETW_RECV, NULL, networks_receiver_run, p_networks);
     //	pthread_create(threads + THR_NETW_SEND, NULL, networks_sender_run, p_networks);
 
-
+    printf("Main: Waiting for threads to finish\n");
     pthread_join(threads[THR_ENGINE], NULL);
-    pthread_join(threads[THR_ENGINE_INPUT], NULL);
 
-    pthread_join(threads[THR_NETW_RECV], NULL);
-    pthread_join(threads[THR_NETW_SEND], NULL);
+//    pthread_join(threads[THR_NETW_RECV], NULL);
+//    pthread_join(threads[THR_NETW_SEND], NULL);
+    
+    if (eng.settings->show_summaries) {
+        printf("Main: Engine has ended, printing sumamry: \n");
+        summary_print(&eng.summary);
+    }
 
-    engine_delete(&eng);
-
-    printf("Program exited gracefully.\n");
+    printf("Main: Program exited gracefully.\n");
     return EXIT_SUCCESS;
 }

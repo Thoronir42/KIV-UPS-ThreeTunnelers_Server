@@ -1,16 +1,9 @@
-
 #ifndef TUNNELER_MAP_CHUNK_H
 #define	TUNNELER_MAP_CHUNK_H
 
-typedef struct tunneler_map_chunk {
-	short assigned_player;
-	
-	char *block_map;
-	
-} tunneler_map_chunk;
+#include "tunneler_map.h"
 
-
-tunneler_map_chunk *tunnel_map_chunk_create();
+int tunnel_map_chunk_init(tunneler_map_chunk *p, tunneler_map *map);
 
 void tunnel_map_chunk_delete(tunneler_map_chunk *p);
 

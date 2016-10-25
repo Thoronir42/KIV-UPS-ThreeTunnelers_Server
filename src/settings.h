@@ -8,15 +8,24 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+// defaults
+#define _CHUNK_SIZE 20
+#define _MAX_TICKRATE 32
+#define _MAX_PLAYERS_PER_ROOM 4
+
+// mind the 0th argument which is program path
+#define ARG_FILE 0
+#define ARG_REQ_PORT 1
+#define ARG_MAX_ROOMS 2
+
+#define ARGERR_NOT_ENOUGH_ARGUMENTS -1
+
 typedef struct settings {
     const unsigned int MAX_ROOMS;
     const unsigned short MAX_PLAYERS_PER_ROOM;
 
     const int CHUNK_SIZE;
     const unsigned int MAX_TICKRATE;
-
-    const int NETWORKS_SEND_BUFFER_SIZE;
-    const int NETWORKS_RECV_BUFFER_SIZE;
 
 
     char show_summaries;

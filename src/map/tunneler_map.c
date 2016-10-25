@@ -9,15 +9,16 @@ tunneler_map *tunneler_map_create(int width, int height, int chunk_size){
 	tunneler_map *tmp = malloc(sizeof(tunneler_map));
 	
 	*(int *)&tmp->CHUNK_SIZE = chunk_size;
+	*(int *)&tmp->CHUNK_BLOCKS = chunk_size * chunk_size;
 	*(int *)&tmp->CHUNKS_HORITZONTAL = width;
 	*(int *)&tmp->CHUNKS_VERTICAL = height;
 	
 	
-	tmp->chunk_map = malloc(sizeof(tunneler_map_chunk*) * width * height);
+	tmp->chunks = malloc(sizeof(tunneler_map_chunk*) * width * height);
 	
 	for(y = 0; y < height; y++){
 		for(x = 0; x < width; x++){
-			tmp->chunk_map[y * width + x] = tunnel_map_chunk_create(tmp->CHUNK_SIZE);
+			tunnel_map_chunk_init(tmp->chunks + y * width + x, tmp);
 		}
 	}
 	
@@ -28,10 +29,10 @@ void tunneler_map_delete(tunneler_map *p){
 	int x, y;
 	for(y = 0; y < p->CHUNKS_VERTICAL; y++){
 		for(x = 0; x < p->CHUNKS_HORITZONTAL; x++){
-			tunnel_map_chunk_delete(p->chunk_map[y * p->CHUNKS_HORITZONTAL + x]);
+			tunnel_map_chunk_delete(p->chunks[y * p->CHUNKS_HORITZONTAL + x]);
 		}
 	}
-	free(p->chunk_map);
+	free(p->chunks);
 	
 	free(p);
 }
@@ -44,5 +45,5 @@ tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y){
 	}
 	offset = y * map->CHUNKS_HORITZONTAL + x;
 	
-	return map.chunk_map + offset;
+	return map->chunks + offset;
 }

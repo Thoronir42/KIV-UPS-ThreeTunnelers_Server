@@ -3,13 +3,13 @@
 
 #include "tank.h"
 
-tank *tank_create(int x, int y){
+tank *tank_create(int x, int y, int energy, int hitpoints){
 	tank *tmp = malloc(sizeof(tank));
 	tmp->x = x;
 	tmp->y = y;
 	
-	tmp->energy = TANK_MAX_ENERGY;
-	tmp->health = TANK_MAX_HEALTH;
+	tmp->energy = energy;
+	tmp->hitpoints = hitpoints;
 	
 	return tmp;
 }

@@ -1,14 +1,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "summary.h"
 
 int summary_init(summary *p) {
-    memset(0, p, sizeof(summary));
-    p->udp_received = p->udp_sent = 0;
+    memset(p, 0, sizeof(summary));
 
-    return tmp;
+    return 0;
 }
 
 void summary_print(summary *p) {
@@ -16,7 +16,7 @@ void summary_print(summary *p) {
     printf("Run length: %d\n", p->run_end - p->run_start);
 
     printf("Network statisticcs\n");
-    printf("Total TCP messages sent by server            : %d\n", p->udp_sent);
-    printf("Total TCP messages received [total(invalid)] : %d(%d)\n", p->udp_received, p->udp_received_invalid);
+    printf("Total TCP messages sent by server            : %d\n", p->commands_sent);
+    printf("Total TCP messages received [total(invalid)] : %d(%d)\n", p->commands_received, p->commands_received_invalid);
 
 }
