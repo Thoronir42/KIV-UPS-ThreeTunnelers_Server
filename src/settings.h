@@ -19,7 +19,7 @@ typedef struct settings {
     const int NETWORKS_RECV_BUFFER_SIZE;
 
 
-    bool show_summaries;
+    char show_summaries;
 
     int port;
 

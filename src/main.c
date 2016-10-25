@@ -1,4 +1,4 @@
-#include<stddef.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <pthread.h>
 
@@ -35,21 +35,7 @@ int define_consts() {
     *(int *) &INPUT_MASK_LEFT = 0x04;
     *(int *) &INPUT_MASK_RIGHT = 0x08;
     *(int *) &INPUT_MASK_SHOOT = 0x10;
-
-    //			TANK
-    *(int *) &TANK_MAX_ENERGY = 24;
-    *(int *) &TANK_MAX_HEALTH = 120;
-
-    //			DIRECTIONS
-    *(unsigned short *) &DIRECTION_0 = 0;
-    *(unsigned short *) &DIRECTION_N = 1;
-    *(unsigned short *) &DIRECTION_NE = 2;
-    *(unsigned short *) &DIRECTION_E = 3;
-    *(unsigned short *) &DIRECTION_SE = 4;
-    *(unsigned short *) &DIRECTION_S = 5;
-    *(unsigned short *) &DIRECTION_SW = 6;
-    *(unsigned short *) &DIRECTION_W = 7;
-    *(unsigned short *) &DIRECTION_NW = 8;
+    
 
     DIRECTION_AXIS_X[DIRECTION_NW] = DIRECTION_AXIS_X[DIRECTION_W] = DIRECTION_AXIS_X[DIRECTION_SW] = -1;
     DIRECTION_AXIS_X[DIRECTION_N] = DIRECTION_AXIS_X[DIRECTION_0] = DIRECTION_AXIS_X[DIRECTION_S] = 0;
@@ -103,5 +89,5 @@ int main(int argc, char* argv[]) {
     engine_delete(&eng);
 
     printf("Program exited gracefully.\n");
-    return 0;
+    return EXIT_SUCCESS;
 }
