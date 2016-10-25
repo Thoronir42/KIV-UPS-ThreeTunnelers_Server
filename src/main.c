@@ -6,6 +6,7 @@
 #include "settings.h"
 
 #include "core/engine.h"
+#include "networks/netadapter.h"
 
 #include "game/game_room.h"
 #include "game/player.h"
@@ -92,13 +93,12 @@ int main(int argc, char* argv[]) {
 
 
     printf("Main: Starting threads\n");
-    pthread_create(threads + THR_ENGINE, NULL, engine_run, &eng);
-
-    //	pthread_create(threads + THR_NETW_RECV, NULL, networks_receiver_run, p_networks);
-    //	pthread_create(threads + THR_NETW_SEND, NULL, networks_sender_run, p_networks);
+//    pthread_create(threads + THR_ENGINE, NULL, engine_run, &eng);
+    pthread_create(threads + THR_NETADAPTER, NULL, netadapter_thread_select, &eng.netadapter);
 
     printf("Main: Waiting for threads to finish\n");
-    pthread_join(threads[THR_ENGINE], NULL);
+//    pthread_join(threads[THR_ENGINE], NULL);
+    pthread_join(threads[THR_NETADAPTER], NULL);
 
 //    pthread_join(threads[THR_NETW_RECV], NULL);
 //    pthread_join(threads[THR_NETW_SEND], NULL);

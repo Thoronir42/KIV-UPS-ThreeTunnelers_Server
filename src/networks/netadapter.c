@@ -10,7 +10,11 @@
 #include "net_client.h"
 #include "netadapter.h"
 
-int netadapter_bind_socket(netadapter *p) {
+#include "../my_strings.h"
+
+////  THREAD_SELECT
+
+int netadapter_init_socket(netadapter *p) {
     memset(&p->addr, 0, sizeof (struct sockaddr_in));
 
     p->socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -19,8 +23,40 @@ int netadapter_bind_socket(netadapter *p) {
     p->addr.sin_port = htons(p->port);
     p->addr.sin_addr.s_addr = INADDR_ANY;
 
-    return bind(p->socket, (struct sockaddr *) &p->addr, \
-		sizeof (struct sockaddr_in));
+    if (bind(p->socket, (struct sockaddr *) &p->addr, \
+		sizeof (struct sockaddr_in))) {
+        return NETADAPTER_STATUS_BIND_ERROR;
+    }
+    if (listen(p->socket, NETADAPTER_BACKLOG_SIZE)) {
+        return NETADAPTER_STATUS_LISTEN_ERROR;
+    }
+
+    return NETADAPTER_STATUS_OK;
+}
+
+void netadapter_process_message(int fd, char *c, int read_size) {
+    char reverse[NETADAPTER_BUFFER_SIZE];
+    memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
+
+    int length;
+
+    length = NETADAPTER_BUFFER_SIZE - 2;
+    if (read_size < length) {
+        length = read_size;
+    }
+    int i;
+    for (i = 0; i < read_size; i++) {
+        printf("%d: %c\n", c[i], c[i]);
+    }
+
+    read(fd, c, length);
+
+    printf("Prijato %s\n", c);
+
+    strrev(c, reverse, length);
+
+    netadapter_send_message(fd, reverse, length + 2);
+    printf("Odeslano %s\n", reverse);
 }
 
 void *netadapter_thread_select(void *args) {
@@ -30,19 +66,26 @@ void *netadapter_thread_select(void *args) {
     int fd;
     int a2read;
 
-    if (netadapter_bind_socket(adapter) == 0) {
-        printf("Bind - OK\n");
-    } else {
-        printf("Bind - ER\n");
-        adapter->status = NETADAPTER_STATUS_BIND_ERROR;
-        return NULL;
-    }
 
-    if (listen(adapter->socket, 5) == 0) {
-        printf("Listen - OK\n");
+
+    printf("Netadapter: Bind and listen ...");
+    return_value = netadapter_init_socket(adapter);
+    if (return_value == NETADAPTER_STATUS_OK) {
+        printf("OK\n");
     } else {
-        printf("Listen - ER\n");
-        adapter->status = NETADAPTER_STATUS_LISTEN_ERROR;
+        printf("ER\n");
+        switch (return_value) {
+            default:
+                printf("Unidentified error on initialising adapter\n");
+                break;
+            case NETADAPTER_STATUS_BIND_ERROR:
+                printf("Failed to bind to port %d\n", adapter->port);
+                break;
+            case NETADAPTER_STATUS_LISTEN_ERROR:
+                printf("Failed to listen at port %d\n", adapter->port);
+                break;
+        }
+        adapter->status = return_value;
         return NULL;
     }
 
@@ -62,6 +105,7 @@ void *netadapter_thread_select(void *args) {
         }
         // vynechavame stdin, stdout, stderr
         for (fd = 3; fd < FD_SETSIZE; fd++) {
+            memset(adapter->cbuf, 0, NETADAPTER_BUFFER_SIZE);
             // je dany socket v sade fd ze kterych lze cist ?
             if (FD_ISSET(fd, &adapter->tests)) {
                 // je to server socket ? prijmeme nove spojeni
@@ -75,10 +119,7 @@ void *netadapter_thread_select(void *args) {
                     ioctl(fd, FIONREAD, &a2read);
                     // mame co cist
                     if (a2read > 0) {
-                        recv(fd, &adapter->cbuf, 1, 0);
-                        printf("Prijato %c\n", adapter->cbuf);
-                        read(fd, &adapter->cbuf, 1);
-                        printf("Prijato %c\n", adapter->cbuf);
+                        netadapter_process_message(fd, adapter->cbuf, a2read);
                     }// na socketu se stalo neco spatneho
                     else {
                         close(fd);
@@ -92,10 +133,16 @@ void *netadapter_thread_select(void *args) {
     adapter->status = NETADAPTER_STATUS_FINISHED;
 }
 
-int netadapter_init(netadapter *p, int port){
-    memset(p, 0, sizeof(netadapter));
-    
+int netadapter_init(netadapter *p, int port) {
+    memset(p, 0, sizeof (netadapter));
+
     p->port = port;
-    
+
     return 0;
+}
+
+int netadapter_send_message(int fd, char* c, int length) {
+    c[length - 2] = '\n';
+    c[length - 1] = '\0';
+    write(fd, c, length);
 }

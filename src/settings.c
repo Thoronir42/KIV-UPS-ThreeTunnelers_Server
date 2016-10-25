@@ -11,7 +11,7 @@ int settings_process_arguments(settings *p, int argc, char *argv[]) {
         return ARGERR_NOT_ENOUGH_ARGUMENTS;
     }
     p->show_summaries = 1;
-    p->port = atoi(argv[ARG_MAX_ROOMS]);
+    p->port = atoi(argv[ARG_REQ_PORT]);
     printf("ARG: port = %d\n", p->port);
     
     *(int *) &p->MAX_ROOMS = atoi(argv[ARG_MAX_ROOMS]);
