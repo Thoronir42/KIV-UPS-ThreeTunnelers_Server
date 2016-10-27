@@ -46,7 +46,7 @@ my_byte read_hex_byte(const char *src) {
 }
 
 void write_hex_long(char *dest, long val) {
-	sprintf(dest, "%016X", val);
+	sprintf(dest, "%016LX", val);
 }
 
 void write_hex_int(char *dest, int val) {

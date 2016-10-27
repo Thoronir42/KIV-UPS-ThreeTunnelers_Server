@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "my_strings.h"
 
 void test_hex_formatting() {
-	char strings[4][16] = {"FF", "FF00", "FF000000", "FF00000000000000"};
-	char output[4][16];
+	char strings[4][17] = {"FF", "1234", "12345678", "123456789ABCDEF0"};
+	char output[4][17];
+	memset(output, 0, 4 * 17);
+
 	my_byte b;
 	short s;
 	int i;
@@ -28,7 +31,7 @@ void test_hex_formatting() {
 	printf("     < %s\n", output[1]);
 	printf("Int> %s = %ud\n", strings[2], i);
 	printf("   < %s\n", strings[2]);
-	printf("Long> %s = %ul\n", strings[3], l);
+	printf("Long> %s = %ld\n", strings[3], l);
 	printf("    < %s\n", output[3]);
 
 
