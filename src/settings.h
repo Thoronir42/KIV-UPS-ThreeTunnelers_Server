@@ -18,6 +18,7 @@
 #define ARG_REQ_PORT 1
 #define ARG_MAX_ROOMS 2
 
+#define ARGERR_RUN_TESTS -2
 #define ARGERR_NOT_ENOUGH_ARGUMENTS -1
 
 typedef struct settings {

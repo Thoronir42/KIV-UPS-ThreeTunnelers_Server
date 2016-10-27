@@ -2,9 +2,9 @@
 #define	NETWORK_COMMANDS_H
 
 #include "net_client.h"
+#include "../my_strings.h"
 
-#define NETWORK_COMMAND_LENGTH 512
-#define NETWORK_COMMAND_BODY_OFFSET 12
+#define NETWORK_COMMAND_DATA_LENGTH 512
 
 #define NET_CMD_LEAD_APPROVE 1
 #define NET_CMD_LEAD_DENY 2
@@ -21,9 +21,10 @@
 #define NET_CMD_CONNECTION_PLAYER_DISCONNECTED 99
 
 typedef struct network_command {
-	short message_id;
-	short cmd_type;
-	char content[NETWORK_COMMAND_LENGTH];
+	my_byte id;
+	short type;
+	short length;
+	char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 	
 	net_client *client;
 	
