@@ -8,6 +8,8 @@
 
 typedef struct net_client {
 	int socket;
+	int a2read;
+	
 	struct sockaddr_in addr;
 	int addr_len;
 	char name[NET_CLIENT_NAME_MAX_LENGTH];
