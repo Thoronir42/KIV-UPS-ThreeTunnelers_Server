@@ -24,6 +24,8 @@ int network_command_from_string(network_command *dest, char *src) {
 	}
 	
 	memcpy(dest->data, src + 10, copy_length);
+	
+	return 0;
 }
 
 int network_command_to_string(char *dest, network_command *src) {

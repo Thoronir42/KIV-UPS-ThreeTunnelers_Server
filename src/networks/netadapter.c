@@ -11,6 +11,7 @@
 #include "netadapter.h"
 
 #include "../my_strings.h"
+#include "network_command.h"
 
 ////  THREAD_SELECT - INIT
 int netadapter_init_socket(netadapter *p) {
@@ -33,7 +34,7 @@ int netadapter_init_socket(netadapter *p) {
 	return NETADAPTER_STATUS_OK;
 }
 
-void netadapter_thread_select_bind_listen(netadapter *adapter){
+void netadapter_thread_select_bind_listen(netadapter *adapter) {
 	printf("Netadapter: Bind and listen ...");
 	adapter->status = netadapter_init_socket(adapter);
 	if (adapter->status != NETADAPTER_STATUS_OK) {
@@ -55,34 +56,29 @@ void netadapter_thread_select_bind_listen(netadapter *adapter){
 }
 
 ////  THREAD_SELECT - PROCESS INCOMMING STUFF
-void netadapter_process_message(int fd, char *c, int read_size) {
-	char reverse[NETADAPTER_BUFFER_SIZE];
-	memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
 
+int netadapter_process_message(net_client cli, char *buffer, int read_size, network_command *command) {
 	int length;
 
 	length = NETADAPTER_BUFFER_SIZE - 2;
 	if (read_size < length) {
 		length = read_size;
 	}
-	int i;
-	for (i = 0; i < read_size; i++) {
-		printf("%d: %c\n", c[i], c[i]);
-	}
 
-	read(fd, c, length);
+	read(cli.socket, buffer, length);
 
-	printf("Prijato %s\n", c);
+	printf("Prijato %s\n", buffer);
 
-	strrev(c, reverse, length);
+	return network_command_from_string(command, buffer);
 
-	netadapter_send_message(fd, reverse, length + 2);
-	printf("Odeslano %s\n", reverse);
 }
 
 void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 	net_client client;
-	
+	network_command command;
+
+	char reverse[NETADAPTER_BUFFER_SIZE];
+
 	memset(adapter->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 	// je dany socket v sade fd ze kterych lze cist ?
 	if (FD_ISSET(fd, &adapter->tests)) {
@@ -98,7 +94,15 @@ void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 		// pocet bajtu co je pripraveno ke cteni
 		ioctl(fd, FIONREAD, &client.a2read);
 		if (client.a2read > 0) { // mame co cist
-			netadapter_process_message(fd, adapter->_buffer, client.a2read);
+			client.socket = fd;
+			netadapter_process_message(client, adapter->_buffer, client.a2read, &command);
+			memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
+			strrev(reverse, command.data, command.length);
+			
+			memcpy(command.data, reverse, command.length);
+			
+			netadapter_send_command(&client, command);
+			printf("Odeslano %s\n", reverse);
 		} else { // na socketu se stalo neco spatneho
 			close(fd);
 			FD_CLR(fd, &adapter->client_socks);
@@ -108,13 +112,14 @@ void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 }
 
 ////  THREAD_SELECT
+
 void *netadapter_thread_select(void *args) {
 	netadapter *adapter = (netadapter *) args;
 	int return_value;
 	int fd;
 
 	netadapter_thread_select_bind_listen(adapter);
-	if(adapter->status != NETADAPTER_STATUS_OK){
+	if (adapter->status != NETADAPTER_STATUS_OK) {
 		return NULL;
 	}
 
@@ -148,8 +153,14 @@ int netadapter_init(netadapter *p, int port) {
 	return 0;
 }
 
-int netadapter_send_message(int fd, char* c, int length) {
-	c[length - 2] = '\n';
-	c[length - 1] = '\0';
-	write(fd, c, length);
+int netadapter_send_command(net_client *client, network_command *cmd) {
+	char buffer[sizeof (network_command) + 2];
+	int a2write;
+	a2write = network_command_to_string(buffer, cmd);
+	
+	buffer[a2write] = '\n';
+	buffer[a2write + 1] = '\0';
+	write(client->socket, buffer, a2write + 2);
+	
+	return 0;
 }

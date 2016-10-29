@@ -6,7 +6,7 @@
 
 #define MY_STR_RADIX 16
 
-void strrev(char *src, char *dest, int length) {
+void strrev(char *dest, const char *src, int length) {
 	int i;
 	for (i = 0; i < length; i++) {
 		dest[i] = src[length - 1 - i];

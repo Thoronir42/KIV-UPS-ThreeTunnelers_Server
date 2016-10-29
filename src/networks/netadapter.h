@@ -36,7 +36,7 @@ void *netadapter_thread_select(void *args);
 
 int netadapter_init(netadapter *p, int port);
 
-int netadapter_send_message(int fd, char* c, int length);
+int netadapter_send_command(int fd, char* c, int length);
 
 #endif /* NETADAPTER_H */
 
