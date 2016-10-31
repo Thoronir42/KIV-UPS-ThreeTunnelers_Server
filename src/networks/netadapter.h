@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 
 #include "net_client.h"
+#include "network_command.h"
 
 #define NETADAPTER_STATUS_OK 0
 #define NETADAPTER_STATUS_SHUTTING_DOWN 1
@@ -36,7 +37,7 @@ void *netadapter_thread_select(void *args);
 
 int netadapter_init(netadapter *p, int port);
 
-int netadapter_send_command(int fd, char* c, int length);
+int netadapter_send_command(net_client *client, network_command * cmd);
 
 #endif /* NETADAPTER_H */
 

@@ -4,11 +4,13 @@
 #include "net_client.h"
 #include "../my_strings.h"
 
+#define NETWORK_COMMAND_HEADER_SIZE 10
 #define NETWORK_COMMAND_DATA_LENGTH 512
 
 #define NET_CMD_LEAD_APPROVE 1
 #define NET_CMD_LEAD_DENY 2
 #define NET_CMD_LEAD_STILL_THERE 3
+#define NET_CMD_BAD_FORMAT 4
 
 #define NET_CMD_CONNECTION_FETCH_LOBBIES 10
 #define NET_CMD_CONNECTION_CREATE_LOBBY 11
@@ -35,6 +37,8 @@ void network_command_prepare(network_command *p, short id, short type);
 int network_command_from_string(network_command *dest, char *src);
 
 int network_command_to_string(char *dest, network_command *src);
+
+void network_command_print(const char *label, const network_command *command);
 
 #endif	/* NETWORK_COMMANDS_H */
 

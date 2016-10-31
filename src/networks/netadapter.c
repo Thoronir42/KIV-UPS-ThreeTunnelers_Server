@@ -7,6 +7,8 @@
 #include <stdlib.h>
 // kvuli iotctl
 #include <sys/ioctl.h>
+#include <string.h>
+
 #include "net_client.h"
 #include "netadapter.h"
 
@@ -14,6 +16,7 @@
 #include "network_command.h"
 
 ////  THREAD_SELECT - INIT
+
 int netadapter_init_socket(netadapter *p) {
 	memset(&p->addr, 0, sizeof (struct sockaddr_in));
 
@@ -66,9 +69,6 @@ int netadapter_process_message(net_client cli, char *buffer, int read_size, netw
 	}
 
 	read(cli.socket, buffer, length);
-
-	printf("Prijato %s\n", buffer);
-
 	return network_command_from_string(command, buffer);
 
 }
@@ -80,34 +80,38 @@ void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 	char reverse[NETADAPTER_BUFFER_SIZE];
 
 	memset(adapter->_buffer, 0, NETADAPTER_BUFFER_SIZE);
-	// je dany socket v sade fd ze kterych lze cist ?
-	if (FD_ISSET(fd, &adapter->tests)) {
-		// je to server socket ? prijmeme nove spojeni
-		if (fd == adapter->socket) {
-			client.socket = accept(adapter->socket, (struct sockaddr *) &client.addr, &client.addr_len);
-			FD_SET(client.socket, &adapter->client_socks);
-			printf("Pripojen novy klient a pridan do sady socketu\n");
-			continue;
-		}
+	// je to server socket ? prijmeme nove spojeni
+	if (fd == adapter->socket) {
+		client.socket = accept(adapter->socket, (struct sockaddr *) &client.addr, &client.addr_len);
+		FD_SET(client.socket, &adapter->client_socks);
+		printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", client.socket);
+		return;
+	}
 
-		// je to klientsky socket ? prijmem data
-		// pocet bajtu co je pripraveno ke cteni
-		ioctl(fd, FIONREAD, &client.a2read);
-		if (client.a2read > 0) { // mame co cist
+	// je to klientsky socket ? prijmem data
+	// pocet bajtu co je pripraveno ke cteni
+	ioctl(fd, FIONREAD, &client.a2read);
+	if (client.a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
+		if (client.a2read > 0) {
+			memset(&command, 0, sizeof (network_command));
 			client.socket = fd;
-			netadapter_process_message(client, adapter->_buffer, client.a2read, &command);
-			memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
-			strrev(reverse, command.data, command.length);
-			
-			memcpy(command.data, reverse, command.length);
-			
-			netadapter_send_command(&client, command);
-			printf("Odeslano %s\n", reverse);
-		} else { // na socketu se stalo neco spatneho
-			close(fd);
-			FD_CLR(fd, &adapter->client_socks);
-			printf("Klient se odpojil a byl odebran ze sady socketu\n");
+			command.type = 4;
+			read(fd, command.data, client.a2read);
+			netadapter_send_command(&client, &command);
 		}
+		close(fd);
+		FD_CLR(fd, &adapter->client_socks);
+		printf("Klient(%02d) se odpojil a byl odebran ze sady socketu\n", fd);
+	} else {
+		client.socket = fd;
+		netadapter_process_message(client, adapter->_buffer, client.a2read, &command);
+		network_command_print("Received", &command);
+		memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
+		strrev(reverse, command.data, command.length);
+
+		memcpy(command.data, reverse, command.length);
+
+		netadapter_send_command(&client, &command);
 	}
 }
 
@@ -139,7 +143,10 @@ void *netadapter_thread_select(void *args) {
 		}
 		// vynechavame stdin, stdout, stderr
 		for (fd = NETADAPTER_FD_STD_SKIP; fd < FD_SETSIZE; fd++) {
-			netadapter_thread_select_process_socket(adapter, fd);
+			// je dany socket v sade fd ze kterych lze cist ?
+			if (FD_ISSET(fd, &adapter->tests)) {
+				netadapter_thread_select_process_socket(adapter, fd);
+			}
 		}
 	}
 	adapter->status = NETADAPTER_STATUS_FINISHED;
@@ -157,10 +164,12 @@ int netadapter_send_command(net_client *client, network_command *cmd) {
 	char buffer[sizeof (network_command) + 2];
 	int a2write;
 	a2write = network_command_to_string(buffer, cmd);
-	
+
 	buffer[a2write] = '\n';
 	buffer[a2write + 1] = '\0';
 	write(client->socket, buffer, a2write + 2);
+
+	network_command_print("Sent", cmd);
 	
 	return 0;
 }
