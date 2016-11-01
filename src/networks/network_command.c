@@ -17,7 +17,7 @@ int network_command_from_string(network_command *dest, char *src) {
 	memset(dest, 0, sizeof(network_command));
 
 	dest->id = read_hex_byte(src + 0);      // 2
-	dest->type = read_hex_short(src + 1);   // 6 //// pozor: misto +2 je tu +1, kdo vi proc?
+	dest->type = read_hex_short(src + 2);   // 6
 	copy_length = dest->length = read_hex_short(src + 6); // 10
 	if(copy_length > NETWORK_COMMAND_DATA_LENGTH){
 		copy_length = NETWORK_COMMAND_DATA_LENGTH;

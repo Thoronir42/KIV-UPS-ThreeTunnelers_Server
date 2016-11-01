@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "my_strings.h"
+#include "networks/network_command.h"
 
 void test_hex_formatting() {
 	char strings[4][17] = {"FF", "1234", "12345678", "123456789ABCDEF0"};
@@ -38,6 +39,27 @@ void test_hex_formatting() {
 
 }
 
+void test_command_parsing(){
+	char bfr[64] = "AB000413Jelenovi pivo nelej.";
+	network_command cmd;
+	
+	network_command_from_string(&cmd, bfr);
+	
+	printf("CharSrc : %s\n", bfr);
+	network_command_print("Parsed", &cmd);
+	
+	cmd.id = 127;
+	memcpy(&cmd.data, "Nevypust supy ven.\n", 20);
+	
+	network_command_to_string(bfr, &cmd);
+	
+	network_command_print("Test", &cmd);
+	printf("CharDst : %s", bfr);
+	
+	
+}
+
 void run_tests() {
 	test_hex_formatting();
+	test_command_parsing();
 }

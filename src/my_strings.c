@@ -32,7 +32,7 @@ int read_hex_int(const char *src) {
 short read_hex_short(const char *src) {
 	char tmp[5];
 	memset(tmp, 0, 5);
-	memcpy(tmp, src, 5);
+	memcpy(tmp, src, 4);
 
 	return (short) strtol(tmp, NULL, MY_STR_RADIX);
 }
