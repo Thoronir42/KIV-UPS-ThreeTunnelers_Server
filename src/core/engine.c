@@ -11,7 +11,7 @@
 
 #include "../settings.h"
 #include "summary.h"
-#include "../game/input.h"
+#include "../game/control_input.h"
 
 #define CLOCK CLOCK_MONOTONIC
 

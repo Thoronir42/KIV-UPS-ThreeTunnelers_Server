@@ -95,7 +95,7 @@ void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 		if (client.a2read > 0) {
 			memset(&command, 0, sizeof (network_command));
 			client.socket = fd;
-			command.type = 4;
+			command.type = NET_CMD_BAD_FORMAT;
 			read(fd, command.data, client.a2read);
 			netadapter_send_command(&client, &command);
 		}

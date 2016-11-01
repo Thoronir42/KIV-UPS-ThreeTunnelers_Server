@@ -1,8 +1,10 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
 
+#include "../data/intpoint.h"
+
 typedef struct projectile {
-	int x, y;
+	intpoint location;
 	int direction;
 } projectile;
 

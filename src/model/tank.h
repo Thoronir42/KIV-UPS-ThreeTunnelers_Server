@@ -1,15 +1,18 @@
 #ifndef TANK_H
 #define TANK_H
 
+#include "../data/intpoint.h"
+
 typedef struct tank {
-	int x, y;
+	intpoint location;
+	
 	int direction;
 	int hitpoints;
 	int energy;
 } tank;
 
-tank *tank_create(int x, int y, int energy, int hitpoints);
+int tank_init(tank *p, int x, int y, int energy, int hitpoints);
 
-void tank_delete(tank *p_tank);
+
 
 #endif /* TANK_H */
