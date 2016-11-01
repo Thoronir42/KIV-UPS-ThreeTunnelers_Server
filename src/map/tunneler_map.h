@@ -33,7 +33,7 @@ struct tunneler_map {
 
 struct tunneler_map_chunk {
 	tunneler_map *map;
-	short assigned_player;
+	unsigned char assigned_player_rid;
 	
 	char *blocks;
 	

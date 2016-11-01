@@ -9,6 +9,8 @@ typedef struct tank {
 	int direction;
 	int hitpoints;
 	int energy;
+	
+	int player_rid;
 } tank;
 
 int tank_init(tank *p, int x, int y, int energy, int hitpoints);

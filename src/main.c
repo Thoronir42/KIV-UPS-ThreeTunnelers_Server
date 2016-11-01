@@ -10,7 +10,7 @@
 
 #include "game/game_room.h"
 #include "game/player.h"
-#include "game/input.h"
+#include "game/control_input.h"
 #include "model/tank.h"
 #include "model/direction.h"
 
@@ -24,19 +24,20 @@ int define_consts() {
 	//			GAME_ROOM
 	*(int *) &GAME_ROOM_MAX_PLAYERS = 4;
 
-	//			PLAYER
-	*(int *) &PLAYER_NONE = -1;
-	*(int *) &PLAYER_SERVER = 0;
-	*(int *) &PLAYER_FIRST_USABLE = 40;
 
-
+	// -1 on X (West)
 	DIRECTION_AXIS_X[DIRECTION_NW] = DIRECTION_AXIS_X[DIRECTION_W] = DIRECTION_AXIS_X[DIRECTION_SW] = -1;
+	//  0 on X (neutral)
 	DIRECTION_AXIS_X[DIRECTION_N] = DIRECTION_AXIS_X[DIRECTION_0] = DIRECTION_AXIS_X[DIRECTION_S] = 0;
-	DIRECTION_AXIS_X[DIRECTION_NE] = DIRECTION_AXIS_X[DIRECTION_E] = DIRECTION_AXIS_X[DIRECTION_SE] = 1;
+	// +1 on X (East)
+	DIRECTION_AXIS_X[DIRECTION_NE] = DIRECTION_AXIS_X[DIRECTION_E] = DIRECTION_AXIS_X[DIRECTION_SE] = +1;
 
+	// -1 on Y (North)
 	DIRECTION_AXIS_Y[DIRECTION_NW] = DIRECTION_AXIS_Y[DIRECTION_N] = DIRECTION_AXIS_Y[DIRECTION_NE] = -1;
+	//  0 on Y (neutral)
 	DIRECTION_AXIS_Y[DIRECTION_W] = DIRECTION_AXIS_Y[DIRECTION_0] = DIRECTION_AXIS_Y[DIRECTION_E] = 0;
-	DIRECTION_AXIS_Y[DIRECTION_SW] = DIRECTION_AXIS_Y[DIRECTION_S] = DIRECTION_AXIS_Y[DIRECTION_SE] = 1;
+	// +1 on Y (South)
+	DIRECTION_AXIS_Y[DIRECTION_SW] = DIRECTION_AXIS_Y[DIRECTION_S] = DIRECTION_AXIS_Y[DIRECTION_SE] = +1;
 
 	return 0;
 }
@@ -63,13 +64,16 @@ void dump_args(int argc, char *argv[]) {
 int main(int argc, char* argv[]) {
 	int ret_val;
 	engine eng;
+	settings s_settings;
 	pthread_t threads[2];
 
+	settings *p_settings = &s_settings;
+	
 	printf("Main: Defining constants\n");
 	define_consts();
 
 	printf("Main: Processing arguments\n");
-	settings *p_settings = malloc(sizeof (settings));
+	
 	ret_val = settings_process_arguments(p_settings, argc, argv);
 	if (ret_val == ARGERR_RUN_TESTS) {
 		run_tests();

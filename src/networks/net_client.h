@@ -4,7 +4,8 @@
 #include <time.h>
 #include <netinet/in.h>
 
-#define NET_CLIENT_NAME_MAX_LENGTH 16
+#define NET_CLIENT_NAME_MAX_LENGTH 24
+#define NET_CLIENT_MAX_PLAYERS 2
 
 typedef struct net_client {
 	int socket;
@@ -16,6 +17,9 @@ typedef struct net_client {
 	
 	clock_t last_active;
 	int invalid_counter;
+	
+	int room_id;
+	int player_rids[NET_CLIENT_MAX_PLAYERS];
 	
 } net_client;
 

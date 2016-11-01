@@ -1,21 +1,22 @@
 #ifndef PLAYER_H
 #define	PLAYER_H
 
-#include "../model/tank.h"
+#include "control_input.h"
 
-const int PLAYER_NONE;
-const int PLAYER_SERVER;
-const int PLAYER_FIRST_USABLE;
+// unsigned short
+#define PLAYER_NONE 0
+#define PLAYER_SERVER 1
+#define PLAYER_FIRST_USABLE 12
 
 typedef struct player {
-	int id;
+	unsigned short id;
+	unsigned short client_aid;
+	control_input input;
 	
-	tank* player_tank;
+	int tank_id;
 } player;
 
-player* player_create(int id);
-
-void player_delete(player* p);
+int player_init(player *p, unsigned short id,  unsigned short client_id);
 
 #endif	/* PLAYER_H */
 

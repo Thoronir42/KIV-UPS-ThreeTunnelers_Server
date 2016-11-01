@@ -2,12 +2,7 @@
 
 #include "player.h"
 
-player* player_create(int id){
-    player* tmp = malloc(sizeof(player));
-    tmp->id = id;
-    return tmp;
-}
-
-void player_delete(player* p){
-    free(p);
+int player_init(player *p, unsigned short id,  unsigned short client_id) {
+	p->id = id;
+	p->client_aid = client_id;
 }

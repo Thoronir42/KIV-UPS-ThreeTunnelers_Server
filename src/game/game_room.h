@@ -16,13 +16,13 @@ typedef struct game_room {
     int id;
     char game_state;
 
-    int max_players;
     player *players;
+	int players_size;
 
 
 } game_room;
 
-game_room *game_room_create(int id, int max_players);
+int game_room_init(game_room *p, int id, player * players, int players_size);
 
 void game_room_delete(game_room *p_game_room);
 
