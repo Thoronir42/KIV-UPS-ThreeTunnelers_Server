@@ -60,7 +60,7 @@ void netadapter_thread_select_bind_listen(netadapter *adapter) {
 
 ////  THREAD_SELECT - PROCESS INCOMMING STUFF
 
-int netadapter_process_message(net_client cli, char *buffer, int read_size, network_command *command) {
+int netadapter_process_message(net_client *p_client, char *buffer, int read_size, network_command *command) {
 	int length;
 
 	length = NETADAPTER_BUFFER_SIZE - 2;
@@ -68,50 +68,76 @@ int netadapter_process_message(net_client cli, char *buffer, int read_size, netw
 		length = read_size;
 	}
 
-	read(cli.socket, buffer, length);
+	read(p_client->socket, buffer, length);
 	return network_command_from_string(command, buffer);
 
 }
 
+void netadapter_thread_select_handle_command(netadapter *p, const network_command *cmd_in) {
+	network_command cmd_out;
+	net_client *p_client = (p->clients + cmd_in->client_aid);
+
+	switch (cmd_in->type) {
+		default:
+			cmd_out.type = NET_CMD_UNDEFINED;
+			memcpy(cmd_out.data, "Cmd type unrecognised\0", 22);
+			netadapter_send_command(p_client, &cmd_out);
+			break;
+		case NET_CMD_MSG_RCON:
+			cmd_out.id = 66;
+			memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);
+			strrev(cmd_out.data, cmd_in->data, cmd_in->length);
+			
+			netadapter_send_command(p_client, &cmd_out);
+			break;
+		case NET_CMD_MSG_PLAIN:
+			cmd_out.type = NET_CMD_MSG_PLAIN;
+			memcpy(cmd_out.data, cmd_in->data, cmd_in->length);
+			cmd_out.data[cmd_in->length] = '\0';
+			netadapter_broadcast_command(p->clients, p->clients_size, &cmd_out);
+			break;
+	}
+}
+
 void netadapter_thread_select_process_socket(netadapter *adapter, int fd) {
 	net_client client;
-	network_command command;
+	net_client *p_client;
+	network_command cmd_in;
+	int socket;
 
-	char reverse[NETADAPTER_BUFFER_SIZE];
 
 	memset(adapter->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 	// je to server socket ? prijmeme nove spojeni
 	if (fd == adapter->socket) {
-		client.socket = accept(adapter->socket, (struct sockaddr *) &client.addr, &client.addr_len);
-		FD_SET(client.socket, &adapter->client_socks);
-		printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", client.socket);
+		socket = accept(adapter->socket, (struct sockaddr *) &client.addr, &client.addr_len);
+		p_client = adapter->clients - 3 + socket; // std -in -out -err, server socket
+		net_client_init(p_client, socket);
+
+		FD_SET(p_client->socket, &adapter->client_socks);
+		printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_client->socket);
 		return;
+	} else {
+		p_client = adapter->clients - 3 + fd; // fixme: array out of boudns?
 	}
 
 	// je to klientsky socket ? prijmem data
 	// pocet bajtu co je pripraveno ke cteni
-	ioctl(fd, FIONREAD, &client.a2read);
-	if (client.a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
-		if (client.a2read > 0) {
-			memset(&command, 0, sizeof (network_command));
-			client.socket = fd;
-			command.type = NET_CMD_BAD_FORMAT;
-			read(fd, command.data, client.a2read);
-			netadapter_send_command(&client, &command);
+	ioctl(fd, FIONREAD, &p_client->a2read);
+	if (p_client->a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
+		if (p_client->a2read > 0) {
+			memset(&cmd_in, 0, sizeof (network_command));
+			cmd_in.type = NET_CMD_BAD_FORMAT;
+			read(fd, cmd_in.data, p_client->a2read);
+			netadapter_send_command(p_client, &cmd_in);
 		}
 		close(fd);
 		FD_CLR(fd, &adapter->client_socks);
 		printf("Klient(%02d) se odpojil a byl odebran ze sady socketu\n", fd);
 	} else {
-		client.socket = fd;
-		netadapter_process_message(client, adapter->_buffer, client.a2read, &command);
-		network_command_print("Received", &command);
-		memset(reverse, 0, NETADAPTER_BUFFER_SIZE);
-		strrev(reverse, command.data, command.length);
-
-		memcpy(command.data, reverse, command.length);
-
-		netadapter_send_command(&client, &command);
+		netadapter_process_message(p_client, adapter->_buffer, p_client->a2read, &cmd_in);
+		cmd_in.client_aid = fd - 3; // fixme: client_aid
+		network_command_print("Received", &cmd_in);
+		netadapter_thread_select_handle_command(adapter, &cmd_in);
 	}
 }
 
@@ -167,11 +193,24 @@ int netadapter_send_command(net_client *client, network_command *cmd) {
 	int a2write;
 	a2write = network_command_to_string(buffer, cmd);
 
-	buffer[a2write] = '\n';
-	buffer[a2write + 1] = '\0';
+	memcpy(buffer + a2write, "\n\0", 2); // message footer
 	write(client->socket, buffer, a2write + 2);
 
 	network_command_print("Sent", cmd);
-	
+
 	return 0;
+}
+
+int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd) {
+	int i, counter = 0;
+	network_command_print("bc", cmd);
+	for (i = 0; i < clients_size; i++) {
+		if ((clients + i)->status == NET_CLIENT_STATUS_CONNECTED) {
+			netadapter_send_command(clients + i, cmd);
+			counter++;
+
+		}
+	}
+
+	return counter;
 }

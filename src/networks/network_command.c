@@ -4,12 +4,13 @@
 
 #include "network_command.h"
 #include "../my_strings.h"
+#include "net_client.h"
 
 void network_command_prepare(network_command *p, short id, short type) {
 	p->id = id;
 	p->type = type;
-
-	p->client = NULL;
+	
+	p->client_aid = NET_CLIENT_ID_EMPTY;
 }
 
 int network_command_from_string(network_command *dest, char *src) {

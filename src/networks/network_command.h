@@ -1,7 +1,6 @@
 #ifndef NETWORK_COMMANDS_H
 #define NETWORK_COMMANDS_H
 
-#include "net_client.h"
 #include "../my_strings.h"
 
 #define NETWORK_COMMAND_HEADER_SIZE 10
@@ -51,7 +50,7 @@ typedef struct network_command {
 	short length;
 	char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
-	net_client *client;
+	short client_aid;
 
 } network_command;
 

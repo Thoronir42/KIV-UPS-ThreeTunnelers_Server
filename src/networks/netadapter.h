@@ -33,11 +33,13 @@ typedef struct netadapter {
 	int clients_size;
 } netadapter;
 
-void *netadapter_thread_select(void *args);
 
 int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size);
 
+void *netadapter_thread_select(void *args);
+
 int netadapter_send_command(net_client *client, network_command * cmd);
+int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd);
 
 #endif /* NETADAPTER_H */
 
