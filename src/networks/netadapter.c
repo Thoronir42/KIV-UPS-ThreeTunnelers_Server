@@ -152,10 +152,12 @@ void *netadapter_thread_select(void *args) {
 	adapter->status = NETADAPTER_STATUS_FINISHED;
 }
 
-int netadapter_init(netadapter *p, int port) {
+int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size) {
 	memset(p, 0, sizeof (netadapter));
 
 	p->port = port;
+	p->clients = clients;
+	p->clients_size = clients_size;
 
 	return 0;
 }

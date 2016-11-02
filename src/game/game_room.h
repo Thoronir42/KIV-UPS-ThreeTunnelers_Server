@@ -9,9 +9,6 @@
 #include "player.h"
 #include "../map/tunneler_map.h"
 
-const int GAME_ROOM_MAX_PLAYERS;
-
-
 typedef struct game_room {
     int id;
     char game_state;

@@ -30,12 +30,12 @@ typedef struct netadapter {
 	fd_set client_socks, tests;
 	
 	net_client *clients;
-	int clients_length;
+	int clients_size;
 } netadapter;
 
 void *netadapter_thread_select(void *args);
 
-int netadapter_init(netadapter *p, int port);
+int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size);
 
 int netadapter_send_command(net_client *client, network_command * cmd);
 

@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "settings.h"
+#include "data/resources.h"
 
 #include "core/engine.h"
 #include "networks/netadapter.h"
@@ -21,10 +22,6 @@
 #define THR_NETADAPTER 1
 
 int define_consts() {
-	//			GAME_ROOM
-	*(int *) &GAME_ROOM_MAX_PLAYERS = 4;
-
-
 	// -1 on X (West)
 	DIRECTION_AXIS_X[DIRECTION_NW] = DIRECTION_AXIS_X[DIRECTION_W] = DIRECTION_AXIS_X[DIRECTION_SW] = -1;
 	//  0 on X (neutral)
@@ -54,19 +51,14 @@ void print_help(char *file, int err) {
 	printf("  rooms     maximum concurent game rooms, recommended amount is 10\n");
 }
 
-void dump_args(int argc, char *argv[]) {
-	int i;
-	for (i = 0; i < argc; i++) {
-		printf("%d: %s\n", i, argv[i]);
-	}
-}
-
 int main(int argc, char* argv[]) {
 	int ret_val;
-	engine eng;
-	settings s_settings;
 	pthread_t threads[2];
-
+	
+	settings s_settings;
+	resources s_resources;
+	engine eng;
+	
 	settings *p_settings = &s_settings;
 	
 	printf("Main: Defining constants\n");
@@ -84,9 +76,12 @@ int main(int argc, char* argv[]) {
 		print_help(argv[0], ret_val);
 		return MAIN_ERR_BAD_ARGS;
 	}
+	
+	printf("Main: Allocating resources\n");
+	resources_allocate(&s_resources, p_settings->MAX_ROOMS, p_settings->MAX_PLAYERS_PER_ROOM);
 
 	printf("Main: Initialising engine\n");
-	ret_val = engine_init(&eng, p_settings);
+	ret_val = engine_init(&eng, p_settings, &s_resources);
 	switch (ret_val) {
 		case ENGERR_NETWORK_INIT_FAILED:
 			printf("Network interface couldn't be created, exitting. \n");
@@ -110,6 +105,12 @@ int main(int argc, char* argv[]) {
 		summary_print(&eng.summary);
 	}
 
+	
+	
+	printf("Main: Freeing resources.\n");
+	resources_free(&s_resources);
+	
+	
 	printf("Main: Program exited gracefully.\n");
 	return EXIT_SUCCESS;
 }

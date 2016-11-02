@@ -12,8 +12,6 @@ int summary_init(summary *p);
 
 void summary_print(summary *p);
 
-void summary_delete(summary *p);
-
 
 #endif	/* SUMMARY_H */
 

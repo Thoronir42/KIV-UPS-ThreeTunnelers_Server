@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "engine.h"
+#include "../data/resources.h"
 
 #include "../networks/netadapter.h"
 
@@ -15,9 +16,10 @@
 
 #define CLOCK CLOCK_MONOTONIC
 
-int engine_init(engine *p_engine, struct settings *p_settings) {
+int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) {
     memset(p_engine, 0, sizeof (engine));
     p_engine->settings = p_settings;
+	p_engine->resources = p_resources;
 
     unsigned long milliseconds = 1000 / p_settings->MAX_TICKRATE;
     
@@ -28,7 +30,7 @@ int engine_init(engine *p_engine, struct settings *p_settings) {
     
     
     printf("Engine: Initialising netadapter\n");
-    if (netadapter_init(&p_engine->netadapter, p_settings->port)) {
+    if (netadapter_init(&p_engine->netadapter, p_settings->port, p_resources->clients, p_resources->clients_size)) {
         return ENGERR_NETWORK_INIT_FAILED;
     }
 
