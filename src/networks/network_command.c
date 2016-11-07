@@ -32,14 +32,15 @@ int network_command_from_string(network_command *dest, char *src) {
 int network_command_to_string(char *dest, network_command *src) {
 	int a2write = 0;
 	src->length = strlen(src->data);
-	write_hex_byte (dest + a2write, src->id);		a2write += 2;	// 2
-	write_hex_short(dest + a2write, src->type);		a2write += 4;	// 6
-	write_hex_short(dest + a2write, src->length);	a2write += 4;	// 10
+	//write_hex_byte (dest + a2write, src->id);		a2write += 2;
+	write_hex_short(dest + a2write, src->type);		a2write += 4;
+	//write_hex_short(dest + a2write, src->length);	a2write += 4;
 	memcpy(dest + a2write, src->data, src->length);
 	
 	return a2write + src->length;
 }
 
 void network_command_print(const char *label, const network_command *command){
-	printf("%8s: %03d:%05d:%05d - %s\n", label, command->id, command->type, command->length, command->data);
+	//printf("%8s: %03d:%05d:%05d - %s\n", label, command->id, command->type, command->length, command->data);
+	printf("%8s: %05d - %s\n", label, command->type, command->data);
 }

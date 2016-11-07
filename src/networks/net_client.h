@@ -12,12 +12,13 @@
 
 #define NET_CLIENT_NAME_MAX_LENGTH 24
 #define NET_CLIENT_MAX_PLAYERS 2
+#define NET_CLIENT_SECRET_LENGTH 6
 
 typedef struct net_client {
 	unsigned char status;
 
-	int socket;
-	int a2read;
+	int socket, a2read;
+	char connection_secret[NET_CLIENT_SECRET_LENGTH];
 
 	struct sockaddr_in addr;
 	int addr_len;

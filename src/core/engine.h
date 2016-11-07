@@ -9,7 +9,7 @@
 #include "../settings.h"
 #include "summary.h"
 
-#define ENGERR_NETWORK_INIT_FAILED 1
+#define ENGINE_CLI_BUFFER_SIZE 24
 
 typedef struct engine {
 	settings *settings;
@@ -30,7 +30,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources);
 
 void *engine_run(void *args);
 
-void *engine_input_run(void *args);
+void *engine_cli_run(void *args);
 
 
 #endif

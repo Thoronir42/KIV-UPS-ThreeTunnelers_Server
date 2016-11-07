@@ -3,7 +3,7 @@
 
 #include "../my_strings.h"
 
-#define NETWORK_COMMAND_HEADER_SIZE 10
+#define NETWORK_COMMAND_HEADER_SIZE 4
 #define NETWORK_COMMAND_DATA_LENGTH 512
 
 #define NET_CMD_UNDEFINED 0

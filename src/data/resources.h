@@ -8,6 +8,7 @@
 typedef struct resources {
 	net_client *clients;
 	const int clients_size;
+	short *fd_to_client;
 
 	player *players;
 	const int players_size;
@@ -16,7 +17,7 @@ typedef struct resources {
 	const int tanks_size;
 } resources;
 
-int resources_allocate(resources *p, int rooms, int players_per_room);
+int resources_allocate(resources *p, int rooms, int players_per_room, int fd_reserve);
 
 int resources_free(resources *p);
 
