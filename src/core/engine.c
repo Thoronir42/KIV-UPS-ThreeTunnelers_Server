@@ -35,6 +35,34 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     return 0;
 }
 
+// fixme: engine composition
+void engine_handle_command(netadapter *p, const network_command *cmd_in) {
+    network_command cmd_out;
+    netadapter *p_na = p;
+    net_client *p_client = (p_na->clients + cmd_in->client_aid);
+
+    switch (cmd_in->type) {
+        default:
+            cmd_out.type = NET_CMD_UNDEFINED;
+            memcpy(cmd_out.data, "Cmd type unrecognised\0", 22);
+            netadapter_send_command(p_client, &cmd_out);
+            break;
+        case NET_CMD_MSG_RCON:
+            cmd_out.id = 66;
+            memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);
+            strrev(cmd_out.data, cmd_in->data, cmd_in->length);
+
+            netadapter_send_command(p_client, &cmd_out);
+            break;
+        case NET_CMD_MSG_PLAIN:
+            cmd_out.type = NET_CMD_MSG_PLAIN;
+            memcpy(cmd_out.data, cmd_in->data, cmd_in->length);
+            cmd_out.data[cmd_in->length] = '\0';
+            netadapter_broadcast_command(p_na->clients, p_na->clients_size, &cmd_out);
+            break;
+    }
+}
+
 void *engine_run(void *args) {
     engine *p_engine = (engine *) args;
 

@@ -32,8 +32,11 @@ typedef struct net_client {
 
 } net_client;
 
-int net_client_init(net_client *p, int socket);
+int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len);
 
+void net_client_disconnected(net_client *p);
+
+void net_client_cleanup(net_client *p);
 
 #endif /* NET_CLIENT_H */
 

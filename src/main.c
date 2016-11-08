@@ -15,6 +15,7 @@
 #include "game/control_input.h"
 #include "model/tank.h"
 #include "model/direction.h"
+#include "tests/test.h"
 
 int define_consts() {
     // -1 on X (West)
@@ -73,7 +74,7 @@ int main(int argc, char* argv[]) {
         ret_val = MAIN_ERR_NETWORK_FAILED;
     } else {
         main_run_threads(threads, p_engine);
-        
+
         ret_val = EXIT_SUCCESS;
     }
 

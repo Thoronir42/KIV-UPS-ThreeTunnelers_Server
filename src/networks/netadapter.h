@@ -20,6 +20,8 @@
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
 
+#define NETADAPTER_PATIENCE 3
+
 typedef struct netadapter {
     int status;
     char _buffer[NETADAPTER_BUFFER_SIZE];
@@ -44,6 +46,8 @@ void *netadapter_thread_select(void *args);
 
 int netadapter_send_command(net_client *client, network_command * cmd);
 int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd);
+
+int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 
 net_client *netadapter_get_client_by_fd(netadapter *p, int fd);
 
