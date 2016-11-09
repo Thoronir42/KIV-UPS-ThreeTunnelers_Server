@@ -75,11 +75,9 @@ void *engine_run(void *args) {
         }
         nanosleep(&p_engine->sleep, NULL);
     }
-    
-    p_engine->netadapter.status = NETADAPTER_STATUS_SHUTTING_DOWN;
 
     p_engine->summary.run_end = clock();
-
-    printf("Engine: Exitting\n");
+    printf("Engine: Finished\n");
+    netadapter_shutdown(&p_engine->netadapter);
     return NULL;
 }

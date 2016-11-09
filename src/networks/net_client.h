@@ -32,6 +32,8 @@ typedef struct net_client {
 
 } net_client;
 
+char net_client_get_status_letter(unsigned char status);
+
 int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len);
 
 void net_client_disconnected(net_client *p);

@@ -2,6 +2,19 @@
 
 #include "net_client.h"
 
+char net_client_get_status_letter(unsigned char status) {
+    switch (status) {
+        default:
+            return '?';
+        case NET_CLIENT_STATUS_CONNECTED:
+            return 'C';
+        case NET_CLIENT_STATUS_DISCONNECTED:
+            return 'D';
+        case NET_CLIENT_STATUS_EMPTY:
+            return 'E';
+    }
+}
+
 int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len) {
     memset(p, 0, sizeof (net_client));
     p->socket = socket;

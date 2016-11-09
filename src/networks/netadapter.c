@@ -127,9 +127,12 @@ void *netadapter_thread_select(void *args) {
             }
         }
     }
+    printf("Netadapter: finished with status %d.\n", adapter->status);
+    
     adapter->status = NETADAPTER_STATUS_FINISHED;
 }
 
+////  NETADAPTER - initialisation
 int _netadapter_init_socket(netadapter *p) {
     memset(&p->addr, 0, sizeof (struct sockaddr_in));
 
@@ -183,6 +186,12 @@ int netadapter_init(netadapter *p, int port, net_client *clients, int clients_si
     return _netadapter_bind_and_listen(p);
 }
 
+void netadapter_shutdown(netadapter *p){
+    p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
+    
+}
+
+////  NETADAPTER - command sending
 int netadapter_send_command(net_client *client, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
@@ -209,6 +218,7 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
     return counter;
 }
 
+//// NETADAPTER - client controls
 short _netadapter_first_free_client_offset(netadapter *p) {
     short i;
     for (i = 0; i < p->clients_size; i++) {
@@ -242,7 +252,7 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
     return offset;
 }
 
-void netadapter_check_clients(netadapter *p) {
+void netadapter_check_idle_clients(netadapter *p) {
     int i;
     net_client *p_client;
     clock_t now = clock();

@@ -41,6 +41,7 @@ typedef struct netadapter {
 
 
 int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *fd_to_client);
+void netadapter_shutdown(netadapter *p);
 
 void *netadapter_thread_select(void *args);
 
@@ -50,6 +51,8 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 
 net_client *netadapter_get_client_by_fd(netadapter *p, int fd);
+
+void netadapter_check_idle_clients(netadapter *p);
 
 #endif /* NETADAPTER_H */
 
