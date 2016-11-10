@@ -10,8 +10,8 @@ void _cli_shutdown(engine *p) {
 void _cli_list_clients(netadapter *p) {
     int i, n = 0, cpp = 20;
     net_client *p_client;
-    clock_t now = clock();
-    double idle;
+    time_t now = time(NULL);
+    int idle;
     char status;
     
     int pages = p->clients_size / cpp + (p->clients_size % cpp > 0 ? 1 : 0); 
@@ -25,15 +25,15 @@ void _cli_list_clients(netadapter *p) {
             printf("╞════╪════╪══════════════╪═════╪════════╪═════════╛\n");
         }
         p_client = p->clients + i;
-        if ((p_client)->status != NET_CLIENT_STATUS_EMPTY) {
+        if (p_client->status != NET_CLIENT_STATUS_EMPTY) {
             //idle = (now - p_client->last_active);
-            idle = (now - p_client->last_active) * 1.0 / CLOCKS_PER_SEC;
+            idle = now - p_client->last_active;
             n++;
         } else {
             idle = 0;
         }
         status = net_client_get_status_letter(p_client->status);
-        printf("│ %02d │ %02d │ %12s │   %c │ %6.1f │\n", 
+        printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n", 
                 i, p_client->socket, p_client->name, 
                 status, idle);
     }

@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../my_strings.h"
 #include "../networks/network_command.h"
+#include "../networks/net_client.h"
+#include "../networks/netadapter.h"
 
 void test_hex_formatting() {
     char strings[4][17] = {"FF", "1234", "12345678", "123456789ABCDEF0"};
@@ -40,7 +43,7 @@ void test_hex_formatting() {
 }
 
 void test_command_parsing() {
-    char bfr[64] = "AB000413Jelenovi pivo nelej.";
+    char bfr[64] = "0004Jelenovi pivo nelej.";
     network_command cmd;
 
     network_command_from_string(&cmd, bfr);
@@ -55,17 +58,42 @@ void test_command_parsing() {
 
     network_command_print("Test", &cmd);
     printf("CharDst : %s", bfr);
-
-
 }
 
-void test_network_client_idle(){
+void test_network_client_idle() {
+    net_client clients[4];
+    netadapter adapter;
+    memset(clients, 0, sizeof(net_client) * 4);
+    int i;
+
+    netadapter_init(&adapter, 0, clients, 4, NULL);
+    printf("Please ignore port related errors. Starting clients idle tests.\n"
+            "Max allowed idletime set to %d", 2);
     
+    *(short *)&adapter.ALLOWED_IDLE_TIME = 2;
+    
+    memcpy(clients[0].name, "Adam", 5);
+    memcpy(clients[2].name, "Barbara", 8);
+
+    clients[0].status = NET_CLIENT_STATUS_DISCONNECTED;
+    clients[2].status = NET_CLIENT_STATUS_DISCONNECTED;
+    
+    clients[0].last_active = time(NULL);
+    sleep(1);
+    clients[2].last_active = time(NULL);
+    _cli_list_clients(&adapter);
+    
+    for(i = 1; i <= 3; i++){
+        printf("Sleeping for 1 sec %d/%d", i, 3);
+        sleep(1);
+        netadapter_check_idle_clients(&adapter);
+        _cli_list_clients(&adapter);
+    }
 }
 
 void run_tests() {
     test_hex_formatting();
     test_command_parsing();
-    
+
     test_network_client_idle();
 }

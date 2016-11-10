@@ -17,7 +17,6 @@
 #include "../core/engine.h"
 
 ////  THREAD_SELECT - PROCESS INCOMMING STUFF
-
 int _netadapter_process_message(int socket, char *buffer, int read_size, network_command *command) {
     int length;
 
@@ -259,12 +258,30 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
 void netadapter_check_idle_clients(netadapter *p) {
     int i;
     net_client *p_client;
-    clock_t now = clock();
-    double sec;
+    time_t now = time(NULL);
+    int sec;
 
     for (i = 0; i < p->clients_size; i++) {
         p_client = p->clients + i;
+        if (p_client->status == NET_CLIENT_STATUS_EMPTY) {
+            continue;
+        }
+
+        sec = now - p_client->last_active;
+
+        switch (p_client->status) {
+            default:
+            case NET_CLIENT_STATUS_CONNECTED:
+                continue;
+            case NET_CLIENT_STATUS_DISCONNECTED:
+                if (sec > p->ALLOWED_IDLE_TIME) {
+                    net_client_cleanup(p_client);
+                }
+                break;
+                
+
+
+        }
         sec = (double) (now - p_client->last_active);
-        printf("Client %02d inactive for %02.01f seconds.\n", i, sec);
     }
 }

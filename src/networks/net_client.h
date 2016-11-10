@@ -24,7 +24,7 @@ typedef struct net_client {
 	int addr_len;
 	char name[NET_CLIENT_NAME_MAX_LENGTH];
 
-	clock_t last_active;
+	time_t last_active;
 	int invalid_counter;
 
 	int room_id;
