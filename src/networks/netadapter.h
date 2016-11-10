@@ -20,7 +20,8 @@
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
 
-#define NETADAPTER_PATIENCE 3
+#define _NETADAPTER_MAX_WRONG_MSGS 3
+#define _NETADAPTER_MAX_IDLE_TIME 5
 
 typedef struct netadapter {
     int status;
@@ -37,6 +38,9 @@ typedef struct netadapter {
     net_client *clients;
     int clients_size;
     short *fd_to_client;
+    
+    const short ALLOWED_IDLE_TIME;
+    const short ALLOWED_INVALLID_MSG_COUNT;
 } netadapter;
 
 

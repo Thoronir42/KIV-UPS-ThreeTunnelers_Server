@@ -45,7 +45,7 @@ void _netadapter_handle_invalid_message(netadapter *adapter, net_client *p_cl) {
     read(p_cl->socket, cmd.data, p_cl->a2read);
     netadapter_send_command(p_cl, &cmd);
 
-    if (++(p_cl->invalid_counter) > NETADAPTER_PATIENCE) {
+    if (++(p_cl->invalid_counter) > adapter->ALLOWED_INVALLID_MSG_COUNT) {
         printf("Netadapter: client on socket %02d kept sending gibberish. They "
                 "will be terminated immediately.\n", p_cl->socket);
         _netadapter_close_client(adapter, p_cl);
@@ -77,12 +77,13 @@ void _netadapter_ts_process_client_socket(netadapter *adapter, net_client *p_cl)
 }
 
 void _netadapter_ts_process_server_socket(netadapter *adapter) {
-    net_client tmp_client;
+    struct sockaddr_in addr; int addr_len;
     net_client *p_client;
     int socket;
-    socket = accept(adapter->socket, (struct sockaddr *) &tmp_client.addr, &tmp_client.addr_len);
+    
+    socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
     p_client = netadapter_get_client_by_fd(adapter, socket);
-    net_client_init(p_client, socket, tmp_client.addr, tmp_client.addr_len);
+    net_client_init(p_client, socket, addr, addr_len);
     p_client->last_active = clock();
 
     FD_SET(p_client->socket, &adapter->client_socks);
@@ -183,6 +184,9 @@ int netadapter_init(netadapter *p, int port, net_client *clients, int clients_si
     p->clients_size = clients_size;
     p->fd_to_client = fd_to_client;
 
+    *(short *)&p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
+    *(short *)&p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
+    
     return _netadapter_bind_and_listen(p);
 }
 

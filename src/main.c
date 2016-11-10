@@ -101,12 +101,12 @@ void main_run_threads(pthread_t *threads, engine *p_engine) {
     printf("Run: Starting threads\n");
     pthread_create(threads + THR_ENGINE, NULL, engine_run, p_engine);
     pthread_create(threads + THR_ENGINE_CLI, NULL, engine_cli_run, p_engine);
-    pthread_create(threads + THR_NETADAPTER, NULL, netadapter_thread_select, &p_engine->netadapter);
+//    pthread_create(threads + THR_NETADAPTER, NULL, netadapter_thread_select, &p_engine->netadapter);
 
     printf("Run: Waiting for threads to finish\n");
     pthread_join(threads[THR_ENGINE], NULL);
     pthread_join(threads[THR_ENGINE_CLI], NULL);
-    pthread_join(threads[THR_NETADAPTER], NULL);
+    //pthread_join(threads[THR_NETADAPTER], NULL);
 
     printf("Run: Engine has ended");
     if (p_engine->settings->show_summaries) {
