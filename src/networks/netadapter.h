@@ -38,7 +38,7 @@ typedef struct netadapter {
     net_client *clients;
     int clients_size;
     short *fd_to_client;
-    
+
     const short ALLOWED_IDLE_TIME;
     const short ALLOWED_INVALLID_MSG_COUNT;
 } netadapter;

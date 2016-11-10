@@ -1,5 +1,5 @@
 #ifndef CONTROL_INPUT_H
-#define	CONTROL_INPUT_H
+#define CONTROL_INPUT_H
 
 #define INPUT_UP 0x01
 #define INPUT_DOWN 0x02
@@ -8,7 +8,7 @@
 #define INPUT_SHOOT 0x10
 
 typedef struct control_input {
-	int heldKeys;
+    int heldKeys;
 } control_input;
 
 
@@ -19,5 +19,5 @@ int input_is_held(control_input *p_input, unsigned int input_mask);
 int input_direction_x(control_input *p);
 int input_direction_y(control_input *p);
 
-#endif	/* CONTROL_INPUT_H */
+#endif /* CONTROL_INPUT_H */
 

@@ -45,12 +45,12 @@
 #define NET_CMD_GAME_PROJ_REM 221
 
 typedef struct network_command {
-	my_byte id;
-	short type;
-	short length;
-	char data[NETWORK_COMMAND_DATA_LENGTH + 1];
+    my_byte id;
+    short type;
+    short length;
+    char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
-	short client_aid;
+    short client_aid;
 
 } network_command;
 

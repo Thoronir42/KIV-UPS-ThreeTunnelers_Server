@@ -6,17 +6,17 @@
 #include "../model/projectile.h"
 
 typedef struct warzone {
-	const int TANK_MAX_HP,
-		TANK_MAX_EP;
-	tunneler_map *map;
+    const int TANK_MAX_HP,
+    TANK_MAX_EP;
+    tunneler_map *map;
 
-	tank *tanks;
-	int tanks_size;
-	projectile *projectiles;
-	int projectiles_size;
+    tank *tanks;
+    int tanks_size;
+    projectile *projectiles;
+    int projectiles_size;
 
-	int current_round;
-	int total_rounds;
+    int current_round;
+    int total_rounds;
 
 
 } warzone;

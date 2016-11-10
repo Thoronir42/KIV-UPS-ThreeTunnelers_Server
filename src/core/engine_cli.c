@@ -13,8 +13,8 @@ void _cli_list_clients(netadapter *p) {
     time_t now = time(NULL);
     int idle;
     char status;
-    
-    int pages = p->clients_size / cpp + (p->clients_size % cpp > 0 ? 1 : 0); 
+
+    int pages = p->clients_size / cpp + (p->clients_size % cpp > 0 ? 1 : 0);
 
     printf("Clients listing: \n");
 
@@ -33,8 +33,8 @@ void _cli_list_clients(netadapter *p) {
             idle = 0;
         }
         status = net_client_get_status_letter(p_client->status);
-        printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n", 
-                i, p_client->socket, p_client->name, 
+        printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
+                i, p_client->socket, p_client->name,
                 status, idle);
     }
 

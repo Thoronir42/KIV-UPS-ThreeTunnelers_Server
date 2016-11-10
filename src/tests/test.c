@@ -63,27 +63,27 @@ void test_command_parsing() {
 void test_network_client_idle() {
     net_client clients[4];
     netadapter adapter;
-    memset(clients, 0, sizeof(net_client) * 4);
+    memset(clients, 0, sizeof (net_client) * 4);
     int i;
 
     netadapter_init(&adapter, 0, clients, 4, NULL);
     printf("Please ignore port related errors. Starting clients idle tests.\n"
             "Max allowed idletime set to %d", 2);
-    
-    *(short *)&adapter.ALLOWED_IDLE_TIME = 2;
-    
+
+    *(short *) &adapter.ALLOWED_IDLE_TIME = 2;
+
     memcpy(clients[0].name, "Adam", 5);
     memcpy(clients[2].name, "Barbara", 8);
 
     clients[0].status = NET_CLIENT_STATUS_DISCONNECTED;
     clients[2].status = NET_CLIENT_STATUS_DISCONNECTED;
-    
+
     clients[0].last_active = time(NULL);
     sleep(1);
     clients[2].last_active = time(NULL);
     _cli_list_clients(&adapter);
-    
-    for(i = 1; i <= 3; i++){
+
+    for (i = 1; i <= 3; i++) {
         printf("Sleeping for 1 sec %d/%d", i, 3);
         sleep(1);
         netadapter_check_idle_clients(&adapter);

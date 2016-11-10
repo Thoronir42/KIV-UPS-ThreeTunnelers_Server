@@ -17,6 +17,7 @@
 #include "../core/engine.h"
 
 ////  THREAD_SELECT - PROCESS INCOMMING STUFF
+
 int _netadapter_process_message(int socket, char *buffer, int read_size, network_command *command) {
     int length;
 
@@ -76,10 +77,11 @@ void _netadapter_ts_process_client_socket(netadapter *adapter, net_client *p_cl)
 }
 
 void _netadapter_ts_process_server_socket(netadapter *adapter) {
-    struct sockaddr_in addr; int addr_len;
+    struct sockaddr_in addr;
+    int addr_len;
     net_client *p_client;
     int socket;
-    
+
     socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
     p_client = netadapter_get_client_by_fd(adapter, socket);
     net_client_init(p_client, socket, addr, addr_len);
@@ -128,11 +130,12 @@ void *netadapter_thread_select(void *args) {
         }
     }
     printf("Netadapter: finished with status %d.\n", adapter->status);
-    
+
     adapter->status = NETADAPTER_STATUS_FINISHED;
 }
 
 ////  NETADAPTER - initialisation
+
 int _netadapter_init_socket(netadapter *p) {
     memset(&p->addr, 0, sizeof (struct sockaddr_in));
 
@@ -183,18 +186,19 @@ int netadapter_init(netadapter *p, int port, net_client *clients, int clients_si
     p->clients_size = clients_size;
     p->fd_to_client = fd_to_client;
 
-    *(short *)&p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
-    *(short *)&p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
-    
+    *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
+    *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
+
     return _netadapter_bind_and_listen(p);
 }
 
-void netadapter_shutdown(netadapter *p){
+void netadapter_shutdown(netadapter *p) {
     p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
-    
+
 }
 
 ////  NETADAPTER - command sending
+
 int netadapter_send_command(net_client *client, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
@@ -222,6 +226,7 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
 }
 
 //// NETADAPTER - client controls
+
 short _netadapter_first_free_client_offset(netadapter *p) {
     short i;
     for (i = 0; i < p->clients_size; i++) {
@@ -278,7 +283,7 @@ void netadapter_check_idle_clients(netadapter *p) {
                     net_client_cleanup(p_client);
                 }
                 break;
-                
+
 
 
         }

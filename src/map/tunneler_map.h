@@ -12,31 +12,31 @@
 #define MAP_BLOCK_WALL 3
 
 typedef struct {
-	int x;
-	int y;
+    int x;
+    int y;
 } base_point;
 
 typedef struct tunneler_map tunneler_map;
 typedef struct tunneler_map_chunk tunneler_map_chunk;
 
 struct tunneler_map {
-	const int CHUNK_SIZE;
-	const int CHUNK_BLOCKS;
-	const int CHUNKS_VERTICAL;
-	const int CHUNKS_HORITZONTAL;
+    const int CHUNK_SIZE;
+    const int CHUNK_BLOCKS;
+    const int CHUNKS_VERTICAL;
+    const int CHUNKS_HORITZONTAL;
 
-	struct tunneler_map_chunk *chunks;
-	
-	base_point *bases;
-	int bases_size;
+    struct tunneler_map_chunk *chunks;
+
+    base_point *bases;
+    int bases_size;
 };
 
 struct tunneler_map_chunk {
-	tunneler_map *map;
-	unsigned char assigned_player_rid;
-	
-	char *blocks;
-	
+    tunneler_map *map;
+    unsigned char assigned_player_rid;
+
+    char *blocks;
+
 };
 
 tunneler_map *tunneler_map_create(int width, int height, int chunk_size);

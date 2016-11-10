@@ -1,5 +1,5 @@
 #ifndef DIRECTION_H
-#define	DIRECTION_H
+#define DIRECTION_H
 
 
 #define DIRECTION_0 0
@@ -13,9 +13,9 @@
 #define DIRECTION_NW 8
 
 short
-	DIRECTION_AXIS_X[9],
-	DIRECTION_AXIS_Y[9];
+DIRECTION_AXIS_X[9],
+DIRECTION_AXIS_Y[9];
 
 
-#endif	/* INPUT_H */
+#endif /* INPUT_H */
 

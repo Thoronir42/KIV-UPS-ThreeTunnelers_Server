@@ -6,7 +6,7 @@
 #include "summary.h"
 
 int summary_init(summary *p) {
-    memset(p, 0, sizeof(summary));
+    memset(p, 0, sizeof (summary));
 
     return 0;
 }
@@ -15,7 +15,7 @@ void summary_print(summary *p) {
     int run_length = (p->run_end - p->run_start) / 1000;
     int run_mins = run_length / 60;
     int run_sec = run_length % 60;
-    
+
     printf("ThreeTunnelers runtime summary\n");
     printf("Run length: %3d:%02d\n", run_mins, run_sec);
 

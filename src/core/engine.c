@@ -36,6 +36,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 }
 
 // fixme: engine composition
+
 void engine_handle_command(netadapter *p, const network_command *cmd_in) {
     network_command cmd_out;
     netadapter *p_na = p;
@@ -71,7 +72,7 @@ void *engine_run(void *args) {
     while (p_engine->keep_running) {
         p_engine->total_ticks++;
         if (p_engine->total_ticks > p_engine->settings->MAX_TICKRATE * 30) {
-            
+
         }
         nanosleep(&p_engine->sleep, NULL);
     }

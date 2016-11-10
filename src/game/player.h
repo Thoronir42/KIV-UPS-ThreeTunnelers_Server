@@ -1,5 +1,5 @@
 #ifndef PLAYER_H
-#define	PLAYER_H
+#define PLAYER_H
 
 #include "control_input.h"
 
@@ -9,14 +9,14 @@
 #define PLAYER_FIRST_USABLE 12
 
 typedef struct player {
-	unsigned short id;
-	unsigned short client_aid;
-	control_input input;
-	
-	int tank_id;
+    unsigned short id;
+    unsigned short client_aid;
+    control_input input;
+
+    int tank_id;
 } player;
 
-int player_init(player *p, unsigned short id,  unsigned short client_id);
+int player_init(player *p, unsigned short id, unsigned short client_id);
 
-#endif	/* PLAYER_H */
+#endif /* PLAYER_H */
 

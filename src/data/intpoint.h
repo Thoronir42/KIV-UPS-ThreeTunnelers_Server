@@ -2,8 +2,8 @@
 #define INTPOINT_H
 
 typedef struct intpoint {
-	int x;
-	int y;
+    int x;
+    int y;
 } intpoint;
 
 #endif /* INTPOINT_H */

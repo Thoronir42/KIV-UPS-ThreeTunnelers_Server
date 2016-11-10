@@ -6,15 +6,15 @@
 #include "../model/tank.h"
 
 typedef struct resources {
-	net_client *clients;
-	const int clients_size;
-	short *fd_to_client;
+    net_client *clients;
+    const int clients_size;
+    short *fd_to_client;
 
-	player *players;
-	const int players_size;
+    player *players;
+    const int players_size;
 
-	tank *tanks;
-	const int tanks_size;
+    tank *tanks;
+    const int tanks_size;
 } resources;
 
 int resources_allocate(resources *p, int rooms, int players_per_room, int fd_reserve);

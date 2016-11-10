@@ -14,7 +14,7 @@ typedef struct game_room {
     char game_state;
 
     player *players;
-	int players_size;
+    int players_size;
 
 
 } game_room;
