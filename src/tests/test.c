@@ -46,7 +46,7 @@ void test_command_parsing() {
     char bfr[64] = "0004Jelenovi pivo nelej.";
     network_command cmd;
 
-    network_command_from_string(&cmd, bfr);
+    network_command_from_string(&cmd, bfr, strlen(bfr));
 
     printf("CharSrc : %s\n", bfr);
     network_command_print("Parsed", &cmd);

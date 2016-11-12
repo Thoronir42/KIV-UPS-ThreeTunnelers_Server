@@ -47,7 +47,7 @@
 typedef struct network_command {
     my_byte id;
     short type;
-    short length;
+    short _length;
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
     short client_aid;
@@ -56,7 +56,7 @@ typedef struct network_command {
 
 void network_command_prepare(network_command *p, short id, short type);
 
-int network_command_from_string(network_command *dest, char *src);
+int network_command_from_string(network_command *dest, char *src, int length);
 
 int network_command_to_string(char *dest, network_command *src);
 

@@ -41,6 +41,9 @@ typedef struct netadapter {
 
     const short ALLOWED_IDLE_TIME;
     const short ALLOWED_INVALLID_MSG_COUNT;
+    
+    void *command_handler;
+    void (*command_handle_func)(void *handler, network_command cmd);
 } netadapter;
 
 

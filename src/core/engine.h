@@ -28,7 +28,7 @@ typedef struct engine {
 
 int engine_init(engine *p_engine, settings *p_settings, resources *p_resources);
 
-void engine_handle_command(netadapter *p, const network_command *cmd_in);
+void _engine_handle_command(void *handler, const network_command cmd);
 
 void *engine_run(void *args);
 

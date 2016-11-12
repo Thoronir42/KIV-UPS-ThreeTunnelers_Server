@@ -16,6 +16,77 @@
 #include "network_command.h"
 #include "../core/engine.h"
 
+////  NETADAPTER - initialisation
+
+int _netadapter_init_socket(netadapter *p) {
+    memset(&p->addr, 0, sizeof (struct sockaddr_in));
+
+    p->socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    p->addr.sin_family = AF_INET;
+    p->addr.sin_port = htons(p->port);
+    p->addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(p->socket, (struct sockaddr *) &p->addr, \
+		sizeof (struct sockaddr_in))) {
+        return NETADAPTER_STATUS_BIND_ERROR;
+    }
+    if (listen(p->socket, NETADAPTER_BACKLOG_SIZE)) {
+        return NETADAPTER_STATUS_LISTEN_ERROR;
+    }
+
+    return NETADAPTER_STATUS_OK;
+}
+
+int _netadapter_bind_and_listen(netadapter *adapter) {
+    printf("Netadapter: Bind and listen on port %d...", adapter->port);
+    adapter->status = _netadapter_init_socket(adapter);
+    if (adapter->status != NETADAPTER_STATUS_OK) {
+        printf("ER\n");
+        switch (adapter->status) {
+            default:
+                printf("Unidentified error on initialising adapter\n");
+                break;
+            case NETADAPTER_STATUS_BIND_ERROR:
+                printf("Failed to bind to port %d\n", adapter->port);
+                break;
+            case NETADAPTER_STATUS_LISTEN_ERROR:
+                printf("Failed to listen at port %d\n", adapter->port);
+                break;
+        }
+    } else {
+        printf("OK\n");
+    }
+    return adapter->status;
+}
+
+void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
+    printf("Unhandled command:\n");
+    network_command_print("Err", &cmd);
+}
+
+int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *fd_to_client) {
+    memset(p, 0, sizeof (netadapter));
+
+    p->port = port;
+    p->clients = clients;
+    p->clients_size = clients_size;
+    p->fd_to_client = fd_to_client;
+
+    p->command_handler = p;
+    p->command_handle_func = &_netadapter_cmd_unhandled;
+
+    *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
+    *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
+
+    return _netadapter_bind_and_listen(p);
+}
+
+void netadapter_shutdown(netadapter *p) {
+    p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
+
+}
+
 ////  THREAD_SELECT - PROCESS INCOMMING STUFF
 
 int _netadapter_process_message(int socket, char *buffer, int read_size, network_command *command) {
@@ -27,7 +98,7 @@ int _netadapter_process_message(int socket, char *buffer, int read_size, network
     }
 
     read(socket, buffer, length);
-    return network_command_from_string(command, buffer);
+    return network_command_from_string(command, buffer, read_size);
 
 }
 
@@ -71,8 +142,7 @@ void _netadapter_ts_process_client_socket(netadapter *adapter, net_client *p_cl)
         _netadapter_process_message(p_cl->socket, adapter->_buffer, p_cl->a2read, &cmd_in);
         cmd_in.client_aid = netadapter_client_aid_by_client(adapter, p_cl); // fixme: client_aid
 
-        network_command_print("Received", &cmd_in);
-        engine_handle_command(adapter, &cmd_in);
+        adapter->command_handle_func(adapter->command_handler, cmd_in);
     }
 }
 
@@ -132,69 +202,6 @@ void *netadapter_thread_select(void *args) {
     printf("Netadapter: finished with status %d.\n", adapter->status);
 
     adapter->status = NETADAPTER_STATUS_FINISHED;
-}
-
-////  NETADAPTER - initialisation
-
-int _netadapter_init_socket(netadapter *p) {
-    memset(&p->addr, 0, sizeof (struct sockaddr_in));
-
-    p->socket = socket(AF_INET, SOCK_STREAM, 0);
-
-    p->addr.sin_family = AF_INET;
-    p->addr.sin_port = htons(p->port);
-    p->addr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(p->socket, (struct sockaddr *) &p->addr, \
-		sizeof (struct sockaddr_in))) {
-        return NETADAPTER_STATUS_BIND_ERROR;
-    }
-    if (listen(p->socket, NETADAPTER_BACKLOG_SIZE)) {
-        return NETADAPTER_STATUS_LISTEN_ERROR;
-    }
-
-    return NETADAPTER_STATUS_OK;
-}
-
-int _netadapter_bind_and_listen(netadapter *adapter) {
-    printf("Netadapter: Bind and listen on port %d...", adapter->port);
-    adapter->status = _netadapter_init_socket(adapter);
-    if (adapter->status != NETADAPTER_STATUS_OK) {
-        printf("ER\n");
-        switch (adapter->status) {
-            default:
-                printf("Unidentified error on initialising adapter\n");
-                break;
-            case NETADAPTER_STATUS_BIND_ERROR:
-                printf("Failed to bind to port %d\n", adapter->port);
-                break;
-            case NETADAPTER_STATUS_LISTEN_ERROR:
-                printf("Failed to listen at port %d\n", adapter->port);
-                break;
-        }
-    } else {
-        printf("OK\n");
-    }
-    return adapter->status;
-}
-
-int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *fd_to_client) {
-    memset(p, 0, sizeof (netadapter));
-
-    p->port = port;
-    p->clients = clients;
-    p->clients_size = clients_size;
-    p->fd_to_client = fd_to_client;
-
-    *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
-    *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
-
-    return _netadapter_bind_and_listen(p);
-}
-
-void netadapter_shutdown(netadapter *p) {
-    p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
-
 }
 
 ////  NETADAPTER - command sending
