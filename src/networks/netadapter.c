@@ -65,13 +65,13 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
     network_command_print("Err", &cmd);
 }
 
-int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *fd_to_client) {
+int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *soc_to_client) {
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
     p->clients = clients;
     p->clients_size = clients_size;
-    p->fd_to_client = fd_to_client;
+    p->soc_to_client = soc_to_client;
 
     p->command_handler = p;
     p->command_handle_func = &_netadapter_cmd_unhandled;
@@ -105,7 +105,7 @@ int _netadapter_process_message(int socket, char *buffer, int read_size, network
 void _netadapter_close_client(netadapter *adapter, net_client *p_cl) {
     close(p_cl->socket);
     FD_CLR(p_cl->socket, &adapter->client_socks);
-    net_client_disconnected(p_cl);
+    net_client_disconnected(p_cl, 0);
 }
 
 void _netadapter_handle_invalid_message(netadapter *adapter, net_client *p_cl) {
@@ -123,26 +123,27 @@ void _netadapter_handle_invalid_message(netadapter *adapter, net_client *p_cl) {
     }
 }
 
-void _netadapter_ts_process_client_socket(netadapter *adapter, net_client *p_cl) {
+void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
     network_command cmd_in;
-    memset(adapter->_buffer, 0, NETADAPTER_BUFFER_SIZE);
+    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 
     ioctl(p_cl->socket, FIONREAD, &p_cl->a2read);
     if (p_cl->a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
         if (p_cl->a2read <= 0) {
             printf("Netadapter: something wrong happened with client on socket "
                     "%02d. They will be put down now.\n", p_cl->socket);
-            _netadapter_close_client(adapter, p_cl);
+            _netadapter_close_client(p, p_cl);
             return;
         } else {
-            _netadapter_handle_invalid_message(adapter, p_cl);
+            _netadapter_handle_invalid_message(p, p_cl);
         }
 
     } else {
-        _netadapter_process_message(p_cl->socket, adapter->_buffer, p_cl->a2read, &cmd_in);
-        cmd_in.client_aid = netadapter_client_aid_by_client(adapter, p_cl); // fixme: client_aid
+        p_cl->last_active = time(NULL);
+        _netadapter_process_message(p_cl->socket, p->_buffer, p_cl->a2read, &cmd_in);
+        cmd_in.client_aid = netadapter_client_aid_by_client(p, p_cl); // fixme: client_aid
 
-        adapter->command_handle_func(adapter->command_handler, cmd_in);
+        p->command_handle_func(p->command_handler, cmd_in);
     }
 }
 
@@ -153,7 +154,7 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     int socket;
 
     socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
-    p_client = netadapter_get_client_by_fd(adapter, socket);
+    p_client = netadapter_get_client_by_socket(adapter, socket);
     net_client_init(p_client, socket, addr, addr_len);
     p_client->last_active = clock();
 
@@ -194,7 +195,7 @@ void *netadapter_thread_select(void *args) {
             if (fd == adapter->socket) {
                 _netadapter_ts_process_server_socket(adapter);
             } else {
-                p_client = netadapter_get_client_by_fd(adapter, fd);
+                p_client = netadapter_get_client_by_socket(adapter, fd);
                 _netadapter_ts_process_client_socket(adapter, p_client);
             }
         }
@@ -245,18 +246,21 @@ short _netadapter_first_free_client_offset(netadapter *p) {
     return -1;
 }
 
-net_client *netadapter_get_client_by_fd(netadapter *p, int fd) {
+net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
+    return (p->clients + aid);
+}
+net_client *netadapter_get_client_by_socket(netadapter *p, int socket) {
     short offset;
-    if (p->fd_to_client[fd] == NET_CLIENT_ID_EMPTY) {
+    if (p->soc_to_client[socket] == NET_CLIENT_ID_EMPTY) {
         offset = _netadapter_first_free_client_offset(p);
         if (offset == -1) {
             return NULL;
         }
 
-        p->fd_to_client[fd] = offset;
+        p->soc_to_client[socket] = offset;
     }
 
-    return p->clients + p->fd_to_client[fd];
+    return p->clients + p->soc_to_client[socket];
 }
 
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
@@ -287,7 +291,7 @@ void netadapter_check_idle_clients(netadapter *p) {
                 continue;
             case NET_CLIENT_STATUS_DISCONNECTED:
                 if (sec > p->ALLOWED_IDLE_TIME) {
-                    net_client_cleanup(p_client);
+                    net_client_disconnected(p_client, 1);
                 }
                 break;
 

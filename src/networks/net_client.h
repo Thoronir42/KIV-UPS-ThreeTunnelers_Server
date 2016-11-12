@@ -36,9 +36,9 @@ char net_client_get_status_letter(unsigned char status);
 
 int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len);
 
-void net_client_disconnected(net_client *p);
+void net_client_disconnected(net_client *p, int bool_clean);
 
-void net_client_cleanup(net_client *p);
+int net_client_set_name(net_client *p, const char *name, int length);
 
 #endif /* NET_CLIENT_H */
 

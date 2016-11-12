@@ -15,7 +15,7 @@
 #define NETADAPTER_STATUS_SELECT_ERROR -3
 
 #define NETADAPTER_FD_STD_SKIP 3
-#define NETADAPTER_FD_RESERVE 20
+#define NETADAPTER_SOCKET_RESERVE 20
 
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
@@ -37,7 +37,7 @@ typedef struct netadapter {
 
     net_client *clients;
     int clients_size;
-    short *fd_to_client;
+    short *soc_to_client;
 
     const short ALLOWED_IDLE_TIME;
     const short ALLOWED_INVALLID_MSG_COUNT;
@@ -47,7 +47,7 @@ typedef struct netadapter {
 } netadapter;
 
 
-int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *fd_to_client);
+int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *soc_to_client);
 void netadapter_shutdown(netadapter *p);
 
 void *netadapter_thread_select(void *args);
@@ -57,7 +57,8 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
 
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 
-net_client *netadapter_get_client_by_fd(netadapter *p, int fd);
+net_client *netadapter_get_client_by_aid(netadapter *p, int aid);
+net_client *netadapter_get_client_by_socket(netadapter *p, int socket);
 
 void netadapter_check_idle_clients(netadapter *p);
 

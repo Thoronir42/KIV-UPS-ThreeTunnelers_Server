@@ -31,6 +31,11 @@ int network_command_from_string(network_command *dest, char *src, int length) {
     dest->_length = length - scanned;
     memcpy(dest->data, src + scanned, dest->_length);
     
+    if(dest->data[dest->_length - 1] == '\n'){
+        dest->data[dest->_length - 1] = '\0';
+        dest->_length--;
+    }
+    
 
     return 0;
 }

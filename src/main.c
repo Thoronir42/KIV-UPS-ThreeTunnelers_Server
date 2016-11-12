@@ -64,12 +64,12 @@ int main(int argc, char* argv[]) {
 
     printf("Main: Allocating resources\n");
     resources_allocate(p_resources, p_settings->MAX_ROOMS,
-            p_settings->MAX_PLAYERS_PER_ROOM, NETADAPTER_FD_RESERVE);
+            p_settings->MAX_PLAYERS_PER_ROOM, NETADAPTER_SOCKET_RESERVE);
 
     printf("Main: Initialising engine and netadapter\n");
     engine_init(p_engine, p_settings, p_resources);
     if (netadapter_init(&p_engine->netadapter, p_settings->port,
-            p_resources->clients, p_resources->clients_size, p_resources->fd_to_client)) {
+            p_resources->clients, p_resources->clients_size, p_resources->soc_to_client)) {
         printf("Network interface couldn't be created, exitting. \n");
         ret_val = MAIN_ERR_NETWORK_FAILED;
     } else {

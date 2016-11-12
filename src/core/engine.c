@@ -37,14 +37,21 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 
 void _engine_handle_command(void *handler, const network_command cmd) {
     network_command cmd_out;
+    memset(&cmd_out, 0, sizeof(network_command));
+    
     engine *p_engine = (engine *)handler;
     netadapter *p_na = &p_engine->netadapter;
-    net_client *p_client = (p_na->clients + cmd.client_aid);
+    net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.client_aid);
 
     switch (cmd.type) {
         default:
             cmd_out.type = NET_CMD_UNDEFINED;
             memcpy(cmd_out.data, "Cmd type unrecognised\0", 22);
+            netadapter_send_command(p_client, &cmd_out);
+            break;
+        case NET_CMD_ROOM_PLAYER_INTRODUCE:
+            net_client_set_name(p_client, cmd.data, cmd._length);
+            cmd_out.type = NET_CMD_LEAD_APPROVE;
             netadapter_send_command(p_client, &cmd_out);
             break;
         case NET_CMD_MSG_RCON:
