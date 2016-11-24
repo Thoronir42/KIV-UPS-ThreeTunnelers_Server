@@ -27,14 +27,14 @@ void _cli_list_clients(netadapter *p) {
         p_client = p->clients + i;
         if (p_client->status != NET_CLIENT_STATUS_EMPTY) {
             //idle = (now - p_client->last_active);
-            idle = now - p_client->last_active;
+            idle = now - p_client->connection.last_active;
             n++;
         } else {
             idle = 0;
         }
         status = client_status_letter(p_client->status);
         printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
-                i, p_client->socket, p_client->name,
+                i, p_client->connection.socket, p_client->name,
                 status, idle);
     }
 

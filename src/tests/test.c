@@ -78,9 +78,9 @@ void test_network_client_idle() {
     clients[0].status = NET_CLIENT_STATUS_DISCONNECTED;
     clients[2].status = NET_CLIENT_STATUS_DISCONNECTED;
 
-    clients[0].last_active = time(NULL);
+    clients[0].connection.last_active = time(NULL);
     sleep(1);
-    clients[2].last_active = time(NULL);
+    clients[2].connection.last_active = time(NULL);
     _cli_list_clients(&adapter);
 
     for (i = 1; i <= 3; i++) {

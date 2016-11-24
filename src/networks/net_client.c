@@ -15,12 +15,10 @@ char client_status_letter(unsigned char status) {
     }
 }
 
-int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len) {
+int net_client_init(net_client *p, client_connection connection) {
     memset(p, 0, sizeof (net_client));
-    p->socket = socket;
     p->status = NET_CLIENT_STATUS_CONNECTED;
-    p->addr = addr;
-    p->addr_len = addr_len;
+    p->connection = connection;
 
     return 0;
 }
@@ -28,7 +26,7 @@ int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr
 void net_client_disconnected(net_client *p, int bool_clean) {
     p->status = bool_clean ?
             NET_CLIENT_STATUS_EMPTY : NET_CLIENT_STATUS_DISCONNECTED;
-    p->socket = 0;
+    p->connection.socket = 0;
 }
 
 int net_client_set_name(net_client *p, const char *name, int length) {

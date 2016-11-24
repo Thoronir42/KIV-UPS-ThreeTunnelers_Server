@@ -129,7 +129,7 @@ void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
     if (p_cl->connection.a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
         if (p_cl->connection.a2read <= 0) {
             printf("Netadapter: something wrong happened with client on socket "
-                    "%02d. They will be put down now.\n", p_cl->socket);
+                    "%02d. They will be put down now.\n", p_cl->connection.socket);
             _netadapter_close_client(p, p_cl);
             return;
         } else {
@@ -146,14 +146,14 @@ void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
 }
 
 void _netadapter_ts_process_server_socket(netadapter *adapter) {
-    struct sockaddr_in addr;
-    int addr_len;
+    client_connection connection;
     net_client *p_client;
-    int new_socket;
+    
+    memset(&connection, 0, sizeof(client_connection));
 
-    new_socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
-    p_client = netadapter_get_client_by_socket(adapter, new_socket);
-    net_client_init(p_client, new_socket, addr, addr_len);
+    connection.socket = accept(adapter->socket, (struct sockaddr *) &connection.addr, &connection.addr_len);
+    p_client = netadapter_get_client_by_socket(adapter, connection.socket); // TODO: put in waiting queue
+    net_client_init(p_client, connection);
     p_client->connection.last_active = clock();
 
     FD_SET(p_client->connection.socket, &adapter->client_socks);

@@ -42,7 +42,7 @@ typedef struct net_client {
 
 char client_status_letter(unsigned char status);
 
-int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr_len);
+int net_client_init(net_client *p, client_connection connection);
 
 void net_client_disconnected(net_client *p, int bool_clean);
 

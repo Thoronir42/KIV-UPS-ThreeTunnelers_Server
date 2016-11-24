@@ -13,7 +13,7 @@ typedef struct colors {
 int colors_init(colors *p);
 
 int colors_is_in_use(colors *p, int n);
-void colors_set_in_use(colors *p, int n, bool value);
+int colors_set_in_use(colors *p, int n, int value);
 
 #endif /* COLORS_H */
 
