@@ -8,11 +8,13 @@
 
 #include "player.h"
 #include "../map/tunneler_map.h"
+#include "colors.h"
 
 typedef struct game_room {
     int id;
     char game_state;
 
+    colors player_colors;
     player *players;
     int players_size;
 
