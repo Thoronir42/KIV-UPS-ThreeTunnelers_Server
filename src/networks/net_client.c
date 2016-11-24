@@ -2,7 +2,7 @@
 
 #include "net_client.h"
 
-char net_client_get_status_letter(unsigned char status) {
+char client_status_letter(unsigned char status) {
     switch (status) {
         default:
             return '?';

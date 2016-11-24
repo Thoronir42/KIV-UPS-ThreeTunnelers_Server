@@ -20,22 +20,22 @@ int network_command_from_string(network_command *dest, char *src, int length) {
 
     //dest->id = read_hex_byte(src + scanned);
     //scanned += 2;
-    
+
     dest->type = read_hex_short(src + scanned);
     scanned += 4;
-    
+
     if (length - scanned > NETWORK_COMMAND_DATA_LENGTH) {
         length = NETWORK_COMMAND_DATA_LENGTH - scanned;
     }
 
     dest->_length = length - scanned;
     memcpy(dest->data, src + scanned, dest->_length);
-    
-    if(dest->data[dest->_length - 1] == '\n'){
+
+    if (dest->data[dest->_length - 1] == '\n') {
         dest->data[dest->_length - 1] = '\0';
         dest->_length--;
     }
-    
+
 
     return 0;
 }

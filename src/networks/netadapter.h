@@ -15,7 +15,7 @@
 #define NETADAPTER_STATUS_SELECT_ERROR -3
 
 #define NETADAPTER_FD_STD_SKIP 3
-#define NETADAPTER_SOCKET_RESERVE 20
+#define NETADAPTER_CONNECTIONS_RESERVE 20
 
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
@@ -34,14 +34,17 @@ typedef struct netadapter {
 
     fd_set client_socks;
 
+    network_command _cmd_in_buffer;
 
     net_client *clients;
+    client_connection connections[NETADAPTER_CONNECTIONS_RESERVE];
     int clients_size;
+
     short *soc_to_client;
 
     const short ALLOWED_IDLE_TIME;
     const short ALLOWED_INVALLID_MSG_COUNT;
-    
+
     void *command_handler;
     void (*command_handle_func)(void *handler, network_command cmd);
 } netadapter;
