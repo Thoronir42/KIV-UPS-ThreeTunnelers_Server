@@ -32,7 +32,7 @@ void _cli_list_clients(netadapter *p) {
         } else {
             idle = 0;
         }
-        status = net_client_get_status_letter(p_client->status);
+        status = client_status_letter(p_client->status);
         printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
                 i, p_client->socket, p_client->name,
                 status, idle);
