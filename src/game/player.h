@@ -11,7 +11,9 @@
 typedef struct player {
     unsigned short id;
     unsigned short client_aid;
+
     control_input input;
+    int color;
 
     int tank_id;
 } player;

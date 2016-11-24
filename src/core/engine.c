@@ -46,7 +46,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
     switch (cmd.type) {
         default:
             cmd_out.type = NET_CMD_UNDEFINED;
-            memcpy(cmd_out.data, "Cmd type unrecognised\0", 22);
+            memcpy(cmd_out.data, "Cmd type unrecognised", 22);
             netadapter_send_command(p_client, &cmd_out);
             break;
         case NET_CMD_ROOM_PLAYER_INTRODUCE:
