@@ -26,8 +26,8 @@ int net_client_init(net_client *p, int socket, struct sockaddr_in addr, int addr
 }
 
 void net_client_disconnected(net_client *p, int bool_clean) {
-    p->status = bool_clean ? 
-        NET_CLIENT_STATUS_EMPTY : NET_CLIENT_STATUS_DISCONNECTED;
+    p->status = bool_clean ?
+            NET_CLIENT_STATUS_EMPTY : NET_CLIENT_STATUS_DISCONNECTED;
     p->socket = 0;
 }
 

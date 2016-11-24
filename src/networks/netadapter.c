@@ -61,8 +61,7 @@ int _netadapter_bind_and_listen(netadapter *adapter) {
 }
 
 void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
-    printf("Unhandled command:\n");
-    network_command_print("Err", &cmd);
+    network_command_print("nohandle", &cmd);
 }
 
 int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *soc_to_client) {
@@ -103,8 +102,8 @@ int _netadapter_process_message(int socket, char *buffer, int read_size, network
 }
 
 void _netadapter_close_client(netadapter *adapter, net_client *p_cl) {
-    close(p_cl->socket);
-    FD_CLR(p_cl->socket, &adapter->client_socks);
+    close(p_cl->connection.socket);
+    FD_CLR(p_cl->connection.socket, &adapter->client_socks);
     net_client_disconnected(p_cl, 0);
 }
 
@@ -112,24 +111,23 @@ void _netadapter_handle_invalid_message(netadapter *adapter, net_client *p_cl) {
     network_command cmd;
     memset(&cmd, 0, sizeof (network_command));
 
-    cmd.type = NET_CMD_BAD_FORMAT;
-    read(p_cl->socket, cmd.data, p_cl->a2read);
+    cmd.type = NET_CMD_LEAD_BAD_FORMAT;
+    read(p_cl->connection.socket, cmd.data, p_cl->connection.a2read);
     netadapter_send_command(p_cl, &cmd);
 
-    if (++(p_cl->invalid_counter) > adapter->ALLOWED_INVALLID_MSG_COUNT) {
+    if (++(p_cl->connection.invalid_counter) > adapter->ALLOWED_INVALLID_MSG_COUNT) {
         printf("Netadapter: client on socket %02d kept sending gibberish. They "
-                "will be terminated immediately.\n", p_cl->socket);
+                "will be terminated immediately.\n", p_cl->connection.socket);
         _netadapter_close_client(adapter, p_cl);
     }
 }
 
 void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
-    network_command cmd_in;
     memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 
-    ioctl(p_cl->socket, FIONREAD, &p_cl->a2read);
-    if (p_cl->a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
-        if (p_cl->a2read <= 0) {
+    ioctl(p_cl->connection.socket, FIONREAD, &p_cl->connection.a2read);
+    if (p_cl->connection.a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
+        if (p_cl->connection.a2read <= 0) {
             printf("Netadapter: something wrong happened with client on socket "
                     "%02d. They will be put down now.\n", p_cl->socket);
             _netadapter_close_client(p, p_cl);
@@ -139,11 +137,11 @@ void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
         }
 
     } else {
-        p_cl->last_active = time(NULL);
-        _netadapter_process_message(p_cl->socket, p->_buffer, p_cl->a2read, &cmd_in);
-        cmd_in.client_aid = netadapter_client_aid_by_client(p, p_cl); // fixme: client_aid
+        p_cl->connection.last_active = time(NULL);
+        _netadapter_process_message(p_cl->connection.socket, p->_buffer, p_cl->connection.a2read, &p->_cmd_in_buffer);
+        p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_client(p, p_cl); // fixme: client_aid
 
-        p->command_handle_func(p->command_handler, cmd_in);
+        p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
     }
 }
 
@@ -151,15 +149,15 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     struct sockaddr_in addr;
     int addr_len;
     net_client *p_client;
-    int socket;
+    int new_socket;
 
-    socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
-    p_client = netadapter_get_client_by_socket(adapter, socket);
-    net_client_init(p_client, socket, addr, addr_len);
-    p_client->last_active = clock();
+    new_socket = accept(adapter->socket, (struct sockaddr *) &addr, &addr_len);
+    p_client = netadapter_get_client_by_socket(adapter, new_socket);
+    net_client_init(p_client, new_socket, addr, addr_len);
+    p_client->connection.last_active = clock();
 
-    FD_SET(p_client->socket, &adapter->client_socks);
-    printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_client->socket);
+    FD_SET(p_client->connection.socket, &adapter->client_socks);
+    printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_client->connection.socket);
     return;
 }
 ////  THREAD_SELECT
@@ -213,7 +211,7 @@ int netadapter_send_command(net_client *client, network_command *cmd) {
     a2write = network_command_to_string(buffer, cmd);
 
     memcpy(buffer + a2write, "\n\0", 2); // message footer
-    write(client->socket, buffer, a2write + 2);
+    write(client->connection.socket, buffer, a2write + 2);
 
     network_command_print("Sent", cmd);
 
@@ -249,6 +247,7 @@ short _netadapter_first_free_client_offset(netadapter *p) {
 net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
     return (p->clients + aid);
 }
+
 net_client *netadapter_get_client_by_socket(netadapter *p, int socket) {
     short offset;
     if (p->soc_to_client[socket] == NET_CLIENT_ID_EMPTY) {
@@ -283,11 +282,14 @@ void netadapter_check_idle_clients(netadapter *p) {
             continue;
         }
 
-        sec = now - p_client->last_active;
+        sec = now - p_client->connection.last_active;
 
         switch (p_client->status) {
             default:
             case NET_CLIENT_STATUS_CONNECTED:
+                if (sec > p->ALLOWED_IDLE_TIME) {
+
+                }
                 continue;
             case NET_CLIENT_STATUS_DISCONNECTED:
                 if (sec > p->ALLOWED_IDLE_TIME) {
@@ -298,6 +300,5 @@ void netadapter_check_idle_clients(netadapter *p) {
 
 
         }
-        sec = (double) (now - p_client->last_active);
     }
 }

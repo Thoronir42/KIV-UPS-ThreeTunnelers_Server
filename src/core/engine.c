@@ -37,9 +37,9 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 
 void _engine_handle_command(void *handler, const network_command cmd) {
     network_command cmd_out;
-    memset(&cmd_out, 0, sizeof(network_command));
-    
-    engine *p_engine = (engine *)handler;
+    memset(&cmd_out, 0, sizeof (network_command));
+
+    engine *p_engine = (engine *) handler;
     netadapter *p_na = &p_engine->netadapter;
     net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.client_aid);
 
@@ -69,7 +69,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
     }
 }
 
-int _engine_link_netadapter(engine *p){
+int _engine_link_netadapter(engine *p) {
     p->netadapter.command_handler = p;
     p->netadapter.command_handle_func = &_engine_handle_command;
 }
@@ -78,7 +78,7 @@ void *engine_run(void *args) {
     engine *p_engine = (engine *) args;
 
     _engine_link_netadapter(p_engine);
-    
+
     p_engine->summary.run_start = clock();
     printf("Engine: Starting\n");
     while (p_engine->keep_running) {
