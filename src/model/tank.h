@@ -1,7 +1,7 @@
 #ifndef TANK_H
 #define TANK_H
 
-#include "../data/intpoint.h"
+#include "intpoint.h"
 
 typedef struct tank {
     intpoint location;
