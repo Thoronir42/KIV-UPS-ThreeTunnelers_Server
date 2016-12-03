@@ -1,6 +1,6 @@
 #compiler
 CC=gcc
-OPTS=-c -Wall
+OPTS= -Wall
 CFLAGS=
 #source files
 ODIR = obj
@@ -30,7 +30,7 @@ clean:
 	rm -rf $(ODIR)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(ODIR)/*.o $(ODIR)/*/*.o -pthread -o $@
+	$(CC) $(ODIR)/*.o $(ODIR)/*/*.o $(OPTS) -pthread -o $@
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) 

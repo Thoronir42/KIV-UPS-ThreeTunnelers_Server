@@ -50,7 +50,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             netadapter_send_command(&p_client->connection, &cmd_out);
             break;
         case NET_CMD_ROOM_PLAYER_INTRODUCE:
-            net_client_set_name(p_client, cmd.data, cmd._length);
+            net_client_set_name(&p_client->connection, cmd.data, cmd._length);
             cmd_out.type = NET_CMD_LEAD_APPROVE;
             netadapter_send_command(&p_client->connection, &cmd_out);
             break;

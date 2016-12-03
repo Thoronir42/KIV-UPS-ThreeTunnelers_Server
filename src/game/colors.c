@@ -27,5 +27,4 @@ int colors_set_in_use(colors *p, int n, int value) {
     p->usage[n] = val;
 
     return 0;
-
 }
