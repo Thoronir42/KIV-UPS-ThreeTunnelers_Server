@@ -15,6 +15,7 @@
 #include "../my_strings.h"
 #include "network_command.h"
 #include "../core/engine.h"
+#include "../localisation.h"
 
 ////  NETADAPTER - initialisation
 
@@ -76,6 +77,7 @@ int netadapter_init(netadapter *p, int port, net_client *clients, int clients_si
     p->command_handle_func = &_netadapter_cmd_unhandled;
 
     *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
+    *(short *) &p->ALLOWED_UNRESPONSIVE_TIME = _NETADAPTER_MAX_IDLE_TIME + 4;
     *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
 
     return _netadapter_bind_and_listen(p);
@@ -148,8 +150,8 @@ void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
 void _netadapter_ts_process_server_socket(netadapter *adapter) {
     client_connection connection;
     net_client *p_client;
-    
-    memset(&connection, 0, sizeof(client_connection));
+
+    memset(&connection, 0, sizeof (client_connection));
 
     connection.socket = accept(adapter->socket, (struct sockaddr *) &connection.addr, &connection.addr_len);
     p_client = netadapter_get_client_by_socket(adapter, connection.socket); // TODO: put in waiting queue
@@ -267,38 +269,49 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
     if (offset < 0 || offset >= adapter->clients_size) {
         return -1;
     }
+
     return offset;
+}
+
+void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t now) {
+    client_connection *p_con = &p_client->connection;
+    int idle_time = now - p_con->last_active;
+
+    switch (p_client->status) {
+        default:
+        case NET_CLIENT_STATUS_CONNECTED:
+            if (idle_time > p->ALLOWED_IDLE_TIME) {
+                network_command_strprep(&p_con->_out_buffer,
+                        NET_CMD_LEAD_STILL_THERE, loc.netcli_dcreason_unresponsive);
+                netadapter_send_command(p_con, p_client);
+                p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
+            }
+            break;
+        case NET_CLIENT_STATUS_UNRESPONSIVE:
+            if (idle_time > p->ALLOWED_UNRESPONSIVE_TIME) {
+                _netadapter_close_client(p, p_client);
+            }
+            break;
+
+        case NET_CLIENT_STATUS_DISCONNECTED:
+            if (idle_time > p->ALLOWED_IDLE_TIME) {
+                net_client_disconnected(p_client, 1);
+            }
+            break;
+    }
 }
 
 void netadapter_check_idle_clients(netadapter *p) {
     int i;
     net_client *p_client;
     time_t now = time(NULL);
-    int sec;
 
     for (i = 0; i < p->clients_size; i++) {
         p_client = p->clients + i;
+
         if (p_client->status == NET_CLIENT_STATUS_EMPTY) {
             continue;
         }
-
-        sec = now - p_client->connection.last_active;
-
-        switch (p_client->status) {
-            default:
-            case NET_CLIENT_STATUS_CONNECTED:
-                if (sec > p->ALLOWED_IDLE_TIME) {
-
-                }
-                continue;
-            case NET_CLIENT_STATUS_DISCONNECTED:
-                if (sec > p->ALLOWED_IDLE_TIME) {
-                    net_client_disconnected(p_client, 1);
-                }
-                break;
-
-
-
-        }
+        _netadapter_check_idle_client(p, p_client, now);
     }
 }
