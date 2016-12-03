@@ -207,13 +207,13 @@ void *netadapter_thread_select(void *args) {
 
 ////  NETADAPTER - command sending
 
-int netadapter_send_command(net_client *client, network_command *cmd) {
+int netadapter_send_command(client_connection *connection, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
     a2write = network_command_to_string(buffer, cmd);
 
     memcpy(buffer + a2write, "\n\0", 2); // message footer
-    write(client->connection.socket, buffer, a2write + 2);
+    write(connection->socket, buffer, a2write + 2);
 
     network_command_print("Sent", cmd);
 
@@ -225,7 +225,7 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
     network_command_print("bc", cmd);
     for (i = 0; i < clients_size; i++) {
         if ((clients + i)->status == NET_CLIENT_STATUS_CONNECTED) {
-            netadapter_send_command(clients + i, cmd);
+            netadapter_send_command(&(clients + i)->connection, cmd);
             counter++;
         }
     }

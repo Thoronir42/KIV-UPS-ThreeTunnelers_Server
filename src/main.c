@@ -16,6 +16,7 @@
 #include "model/tank.h"
 #include "model/direction.h"
 #include "tests/test.h"
+#include "localisation.h"
 
 int define_consts() {
     // -1 on X (West)
@@ -47,6 +48,7 @@ int main(int argc, char* argv[]) {
     resources *p_resources = &s_resources;
     engine *p_engine = &s_engine;
 
+    init_locale();
     define_consts();
 
     printf("Main: Processing arguments\n");

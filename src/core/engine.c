@@ -47,12 +47,12 @@ void _engine_handle_command(void *handler, const network_command cmd) {
         default:
             cmd_out.type = NET_CMD_UNDEFINED;
             memcpy(cmd_out.data, "Cmd type unrecognised", 22);
-            netadapter_send_command(p_client, &cmd_out);
+            netadapter_send_command(&p_client->connection, &cmd_out);
             break;
         case NET_CMD_ROOM_PLAYER_INTRODUCE:
             net_client_set_name(p_client, cmd.data, cmd._length);
             cmd_out.type = NET_CMD_LEAD_APPROVE;
-            netadapter_send_command(p_client, &cmd_out);
+            netadapter_send_command(&p_client->connection, &cmd_out);
             break;
         case NET_CMD_MSG_RCON:
             memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);

@@ -8,6 +8,8 @@ char client_status_letter(unsigned char status) {
             return '?';
         case NET_CLIENT_STATUS_CONNECTED:
             return 'C';
+        case NET_CLIENT_STATUS_UNRESPONSIVE:
+            return 'U';
         case NET_CLIENT_STATUS_DISCONNECTED:
             return 'D';
         case NET_CLIENT_STATUS_EMPTY:
