@@ -6,11 +6,14 @@
 #include "../my_strings.h"
 #include "net_client.h"
 
-void network_command_prepare(network_command *p, short id, short type) {
-    p->id = id;
+void network_command_prepare(network_command *p, short type) {
+    memset(p, 0, sizeof (network_command));
     p->type = type;
+}
 
-    p->client_aid = NET_CLIENT_ID_EMPTY;
+void network_command_strprep(network_command *p, short type, char* message) {
+    network_command_prepare(p, type);
+    memcpy(p->data, message, strlen(message));
 }
 
 int network_command_from_string(network_command *dest, char *src, int length) {
@@ -54,5 +57,5 @@ int network_command_to_string(char *dest, network_command *src) {
 
 void network_command_print(const char *label, const network_command *command) {
     //printf("%8s: %03d:%05d:%05d - %s\n", label, command->id, command->type, command->length, command->data);
-    printf("%8s: %04d - %s\n", label, command->type, command->data);
+    printf("%8s: %04d - %s\n", label, (int)command->type, command->data);
 }
