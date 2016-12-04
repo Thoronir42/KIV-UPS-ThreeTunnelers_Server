@@ -17,9 +17,9 @@ int game_room_init(game_room *p, int id, player * players, int players_size) {
     for (i = 0; i < players_size; i++) {
         (p->players + i)->id = PLAYER_NONE;
     }
-    
+
     colors_init(&p->player_colors);
-    
+
     return 0;
 }
 

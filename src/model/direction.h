@@ -16,6 +16,7 @@ short
 DIRECTION_AXIS_X[9],
 DIRECTION_AXIS_Y[9];
 
+void directions_initialise();
 
 #endif /* INPUT_H */
 

@@ -17,18 +17,19 @@ int resources_allocate(resources *p, int rooms, int players_per_room, int connec
 
     *(int *) & p->game_rooms_length = rooms;
     *(int *) (&p->clients_length) = rooms * players_per_room;
+    *(int *) (&p->socket_identifier_length) = p->clients_length + connections_reserve;
 
-    _remaclr((void **)&p->clients, sizeof (net_client) * p->clients_length);
-    _remaclr((void **)&p->soc_to_client, sizeof (short) * (p->clients_length + connections_reserve));
-    _remaclr((void **)&p->game_rooms, sizeof (game_room) * rooms);
-    _remaclr((void **)&p->tanks, sizeof (tank) * p->clients_length);
+    _remaclr((void **) &p->clients, sizeof (net_client) * p->clients_length);
+    _remaclr((void **) &p->sockets, sizeof (struct socket_identifier) * p->socket_identifier_length);
+    _remaclr((void **) &p->game_rooms, sizeof (game_room) * rooms);
+    _remaclr((void **) &p->tanks, sizeof (tank) * p->clients_length);
 
     return 0;
 }
 
 int resources_free(resources *p) {
     free(p->clients);
-    free(p->soc_to_client);
+    free(p->sockets);
     free(p->game_rooms);
     free(p->tanks);
 

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 
-#include "../data/resources.h"
+#include "resources.h"
 #include "../networks/netadapter.h"
 #include "../settings.h"
 #include "summary.h"

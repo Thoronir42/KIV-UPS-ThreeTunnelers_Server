@@ -1,7 +1,7 @@
 #ifndef LOCALISATION_H
 #define LOCALISATION_H
 
-struct locale{
+struct locale {
     char *netcli_dcreason_unresponsive;
 };
 

@@ -5,11 +5,14 @@
 #include "../game/game_room.h"
 #include "../game/player.h"
 #include "../model/tank.h"
+#include "../networks/netadapter.h"
 
 typedef struct resources {
     net_client *clients;
-    short *soc_to_client;
     const int clients_length;
+
+    struct socket_identifier *sock_ids;
+    const int sock_ids_length;
 
 
     game_room *game_rooms;

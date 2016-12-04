@@ -5,8 +5,10 @@
 
 #include "core/engine.h"
 
-#define MAIN_ERR_BAD_ARGS 1
-#define MAIN_ERR_NETWORK_FAILED 2
+#define MAIN_ERR_TEST_RUN 1
+#define MAIN_ERR_BAD_ARGS 2
+#define MAIN_ERR_RES_ALLOCATION_FAIL 3
+#define MAIN_ERR_NETWORK_FAILED 4
 
 #define THR_ENGINE 0
 #define THR_ENGINE_CLI 1
@@ -15,7 +17,8 @@
 
 void print_help(const char *file, int err);
 
-void main_run_threads(pthread_t *threads, engine *p_engine);
+int main_startup(int argc, char *argv[], settings *p_settings, resources *p_resources);
+int main_run(settings *p_settings, resources *p_resources);
 
 
 #endif /* MAIN_H */
