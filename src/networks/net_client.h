@@ -49,5 +49,7 @@ void net_client_disconnected(net_client *p, int bool_clean);
 
 int net_client_set_name(net_client *p, const char *name, int length);
 
+void client_connection_reset(client_connection *p);
+
 #endif /* NET_CLIENT_H */
 

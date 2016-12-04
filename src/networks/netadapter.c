@@ -65,13 +65,18 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
     network_command_print("nohandle", &cmd);
 }
 
-int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *soc_to_client) {
+int netadapter_init(netadapter *p, int port,
+        net_client *clients, int clients_size,
+        struct socket_identifier *sock_ids, int *sock_ids_length) {
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
+
     p->clients = clients;
     p->clients_size = clients_size;
-    p->soc_to_client = soc_to_client;
+
+    p->sock_ids = sock_ids;
+    p->sock_ids = sock_ids_length;
 
     p->command_handler = p;
     p->command_handle_func = &_netadapter_cmd_unhandled;

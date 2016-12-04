@@ -20,8 +20,17 @@
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
 
+#define SOCKET_IDENTIFIER_TYPE_TBD 0
+#define SOCKET_IDENTIFIER_TYPE_CLIENT 1
+
+
 #define _NETADAPTER_MAX_WRONG_MSGS 3
 #define _NETADAPTER_MAX_IDLE_TIME 5
+
+struct socket_identifier {
+    unsigned char type;
+    unsigned short offset;
+};
 
 typedef struct netadapter {
     int status;
@@ -40,9 +49,10 @@ typedef struct netadapter {
     client_connection connections[NETADAPTER_CONNECTIONS_RESERVE];
     int clients_size;
 
-    short *soc_to_client;
+    struct socket_identifier *sock_ids;
 
     const short ALLOWED_IDLE_TIME;
+    const short ALLOWED_UNRESPONSIVE_TIME;
     const short ALLOWED_INVALLID_MSG_COUNT;
 
     void *command_handler;
@@ -50,7 +60,10 @@ typedef struct netadapter {
 } netadapter;
 
 
-int netadapter_init(netadapter *p, int port, net_client *clients, int clients_size, short *soc_to_client);
+int netadapter_init(netadapter *p, int port,
+        net_client *clients, int clients_size,
+        struct socket_identifier *sock_ids, int *sock_ids_length);
+
 void netadapter_shutdown(netadapter *p);
 
 void *netadapter_thread_select(void *args);

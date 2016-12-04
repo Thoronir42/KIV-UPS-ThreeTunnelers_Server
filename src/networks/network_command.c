@@ -57,5 +57,5 @@ int network_command_to_string(char *dest, network_command *src) {
 
 void network_command_print(const char *label, const network_command *command) {
     //printf("%8s: %03d:%05d:%05d - %s\n", label, command->id, command->type, command->length, command->data);
-    printf("%8s: %04d - %s\n", label, (int)command->type, command->data);
+    printf("%8s: %04d - %s\n", label, (int) command->type, command->data);
 }
