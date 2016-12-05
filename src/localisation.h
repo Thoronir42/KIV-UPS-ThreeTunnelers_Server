@@ -3,6 +3,8 @@
 
 struct locale {
     char *netcli_dcreason_unresponsive;
+    
+    char *socket_reject_no_room;
 };
 
 struct locale loc;

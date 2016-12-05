@@ -47,7 +47,7 @@ typedef struct netadapter {
     network_command _cmd_in_buffer;
 
     net_client *clients;
-    client_connection connections[NETADAPTER_CONNECTIONS_RESERVE];
+    tcp_connection connections[NETADAPTER_CONNECTIONS_RESERVE];
     int clients_size;
 
     struct socket_identifier *sock_ids;
@@ -70,9 +70,10 @@ void netadapter_shutdown(netadapter *p);
 
 //// thread select
 void *netadapter_thread_select(void *args);
+void netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con);
 
 //// netadapter controls
-int netadapter_send_command(client_connection *connection, network_command *cmd);
+int netadapter_send_command(tcp_connection *connection, network_command *cmd);
 int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd);
 
 void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli);

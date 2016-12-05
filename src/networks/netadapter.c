@@ -90,9 +90,25 @@ void netadapter_shutdown(netadapter *p) {
     p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
 }
 
+int netadapter_unpack_sid(netadapter *p, socket_identifier *sid,
+        tcp_connection **p_con, net_client **p_cli) {
+    switch (sid->type) {
+        case SOCKET_IDENTIFIER_TYPE_TBD:
+            *p_con = p->connections + sid->offset;
+            break;
+        case SOCKET_IDENTIFIER_TYPE_CLIENT:
+            *p_cli = p->clients + sid->offset;
+            *p_con = &(*p_cli)->connection;
+            break;
+        default:
+            return SOCKET_IDENTIFIER_TYPE_EMPTY;
+    }
+    return sid->type;
+}
+
 ////  NETADAPTER - command sending
 
-int netadapter_send_command(client_connection *connection, network_command *cmd) {
+int netadapter_send_command(tcp_connection *connection, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
     a2write = network_command_to_string(buffer, cmd);
@@ -118,7 +134,7 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
     return counter;
 }
 
-void _netadapter_connection_kill(netadapter *p, client_connection *p_con){
+void _netadapter_connection_kill(netadapter *p, tcp_connection *p_con) {
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
 }
@@ -129,7 +145,10 @@ void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli) {
 }
 
 void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
-
+    tcp_connection *p_con;
+    net_client *p_cli;
+    netadapter_unpack_sid(p, p_sid, &p_con, &p_cli);
+    
 }
 
 //// NETADAPTER - client controls
@@ -156,7 +175,7 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
 }
 
 void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t now) {
-    client_connection *p_con = &p_client->connection;
+    tcp_connection *p_con = &p_client->connection;
     int idle_time = now - p_con->last_active;
 
     switch (p_client->status) {

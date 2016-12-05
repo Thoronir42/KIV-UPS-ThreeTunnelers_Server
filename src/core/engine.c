@@ -36,12 +36,12 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 }
 
 void _engine_handle_command(void *handler, const network_command cmd) {
-    network_command cmd_out;
-    memset(&cmd_out, 0, sizeof (network_command));
-
     engine *p_engine = (engine *) handler;
     netadapter *p_na = &p_engine->netadapter;
-    net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.client_aid);
+    net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.remote_identifier);
+    
+    network_command cmd_out;
+    memset(&cmd_out, 0, sizeof (network_command));
 
     switch (cmd.type) {
         default:

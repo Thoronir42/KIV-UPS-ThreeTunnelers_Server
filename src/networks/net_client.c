@@ -17,7 +17,7 @@ char client_status_letter(unsigned char status) {
     }
 }
 
-int net_client_init(net_client *p, client_connection connection) {
+int net_client_init(net_client *p, tcp_connection connection) {
     memset(p, 0, sizeof (net_client));
     p->status = NET_CLIENT_STATUS_CONNECTED;
     p->connection = connection;
@@ -44,6 +44,6 @@ int net_client_set_name(net_client *p, const char *name, int length) {
     return diff;
 }
 
-void client_connection_reset(client_connection *p) {
-    memset(p, 0, sizeof (client_connection));
+void client_connection_reset(tcp_connection *p) {
+    memset(p, 0, sizeof (tcp_connection));
 }

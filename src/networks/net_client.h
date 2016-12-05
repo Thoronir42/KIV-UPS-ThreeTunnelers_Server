@@ -19,7 +19,7 @@
 #define NET_CLIENT_MAX_PLAYERS 2
 #define NET_CLIENT_SECRET_LENGTH 6
 
-typedef struct client_connection {
+typedef struct tcp_connection {
     int socket, a2read;
 
     struct sockaddr_in addr;
@@ -29,11 +29,11 @@ typedef struct client_connection {
     int invalid_counter;
 
     network_command _out_buffer;
-} client_connection;
+} tcp_connection;
 
 typedef struct net_client {
     unsigned char status;
-    client_connection connection;
+    tcp_connection connection;
     char connection_secret[NET_CLIENT_SECRET_LENGTH];
 
     char name[NET_CLIENT_NAME_MAX_LENGTH];
@@ -45,13 +45,13 @@ typedef struct net_client {
 
 char client_status_letter(unsigned char status);
 
-int net_client_init(net_client *p, client_connection connection);
+int net_client_init(net_client *p, tcp_connection connection);
 
 void net_client_disconnected(net_client *p, int bool_clean);
 
 int net_client_set_name(net_client *p, const char *name, int length);
 
-void client_connection_reset(client_connection *p);
+void client_connection_reset(tcp_connection *p);
 
 #endif /* NET_CLIENT_H */
 

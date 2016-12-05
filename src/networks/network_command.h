@@ -52,7 +52,7 @@ typedef struct network_command {
     short _length;
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
-    short client_aid;
+    int remote_identifier;
 
 } network_command;
 
@@ -60,6 +60,15 @@ void network_command_prepare(network_command *p, short type);
 
 void network_command_strprep(network_command *p, short type, char* message);
 
+int network_command_set_data(network_command *p, const char *str, int length);
+
+/**
+ * 
+ * @param dest
+ * @param src
+ * @param length
+ * @return status of parsing: 0 if ok, 1 if data was too long
+ */
 int network_command_from_string(network_command *dest, char *src, int length);
 
 int network_command_to_string(char *dest, network_command *src);

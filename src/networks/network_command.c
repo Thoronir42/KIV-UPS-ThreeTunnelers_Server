@@ -16,6 +16,16 @@ void network_command_strprep(network_command *p, short type, char* message) {
     memcpy(p->data, message, strlen(message));
 }
 
+int network_command_set_data(network_command *p, const char *str, int length) {
+    if(length > NETWORK_COMMAND_DATA_LENGTH){
+        return -1;
+    }
+    
+    memcpy(p->data, str, length);
+    
+    return 0;
+}
+
 int network_command_from_string(network_command *dest, char *src, int length) {
     int scanned;
     memset(dest, 0, sizeof (network_command));
@@ -28,8 +38,10 @@ int network_command_from_string(network_command *dest, char *src, int length) {
     scanned += 4;
 
     if (length - scanned > NETWORK_COMMAND_DATA_LENGTH) {
-        length = NETWORK_COMMAND_DATA_LENGTH - scanned;
+        return 1;
+        //length = NETWORK_COMMAND_DATA_LENGTH - scanned;
     }
+
 
     dest->_length = length - scanned;
     memcpy(dest->data, src + scanned, dest->_length);
@@ -38,7 +50,6 @@ int network_command_from_string(network_command *dest, char *src, int length) {
         dest->data[dest->_length - 1] = '\0';
         dest->_length--;
     }
-
 
     return 0;
 }
