@@ -27,6 +27,7 @@ tcp_connection *_netadapter_first_free_connection(netadapter *p) {
             return p->connections + i;
         }
     }
+
     return NULL;
 }
 
@@ -56,13 +57,43 @@ void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_c
     ++(p_con->invalid_counter);
 }
 
-void _netadapter_ts_process_client_socket(netadapter *p, int socket) {
+/**
+ * Tries to read from socket on provided connection and transform incomming
+ * message into command in provided netadapter's command buffer.
+ * If a valid message can be read, connection in question gets its last_active
+ * mark renewed.
+ * 
+ * @param p netadapter underneath which is connection is handled
+ * @param p_con connection in question
+ * @return 0 if ok or negative error code identificator
+ */
+int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) {
+    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 
+    ioctl(p_con->socket, FIONREAD, &p_con->a2read);
+
+    if (p_con->a2read <= 0) {
+        return NETADAPTER_SOCK_ERROR_NOTHING_TO_READ;
+    }
+
+    if (p_con->a2read < NETWORK_COMMAND_HEADER_SIZE) {
+        _netadapter_handle_invalid_message(p, p_con);
+        if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
+            return NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED;
+        }
+    }
+
+    _netadapter_process_socket(p_con->socket, p->_buffer, p_con->a2read, &p->_cmd_in_buffer);
+    p_con->last_active = time(NULL);
+
+    return 0;
 }
 
 int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) {
     net_client *p_cli;
     tcp_connection *p_con;
+    int ret_val;
+
     if (sid == NULL) {
         printf("TS-ERR: Attempted to process socket %d which is out of "
                 "identifier space.\n", socket);
@@ -75,34 +106,23 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
     }
 
     if (netadapter_unpack_sid(p, sid, &p_con, &p_cli) == SOCKET_IDENTIFIER_TYPE_EMPTY) {
-        printf("SID unpack fail");
+        printf("SID unpack fail\n");
         return -1;
     }
 
-    p_con->last_active = time(NULL);
-
-    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
-
-    ioctl(p_con->socket, FIONREAD, &p_con->a2read);
-
-    if (p_con->a2read <= 0) {
-        printf("Netadapter: something wrong happened on socket %02d. "
-                "They will be put down now.\n", p_con->socket);
-        return -1;
-    }
-
-    if (p_con->a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
-        _netadapter_handle_invalid_message(p, p_con);
-        if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
-            printf("Netadapter: client on socket %02d kept sending gibberish. They "
-                    "will be terminated immediately.\n", p_con->socket);
-            return -1;
-        }
-    }
-
-    _netadapter_process_socket(p_con->socket, p->_buffer, p_con->a2read, &p->_cmd_in_buffer);
-
+    ret_val = _netadapter_ts_process_raw_connection(p, p_con);
     p->_cmd_in_buffer.remote_identifier = sid->offset;
+
+    switch (ret_val) {
+        case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
+            printf("Netadapter: something wrong happened on socket %02d. "
+                    "They will be put down now.\n", p_con->socket);
+            return -1;
+        case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
+            printf("Netadapter: connection on socket %02d kept sending "
+                    "gibberish. It will be terminated soon.\n", p_con->socket);
+            return -1;
+    }
 
     switch (sid->type) {
         case SOCKET_IDENTIFIER_TYPE_TBD:
@@ -116,14 +136,14 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
 }
 
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
-    
+
 }
 
 void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
     network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DENY);
     network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
 
-    netadapter_send_command(p, &p_con->_out_buffer);
+    netadapter_send_command(p_con, &p_con->_out_buffer);
     close(p_con->socket);
 }
 
@@ -146,13 +166,14 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
         return;
     }
     if (p_con->socket > adapter->sock_ids_length) {
-        network_command_prepare(p_con->_out_buffer, NCT_LEAD_DENY);
+        netadapter_close_connection_msg(adapter, p_con, loc.socket_reject_invalid_number);
+        return;
     }
 
     p_con->last_active = time(NULL);
 
-            FD_SET(p_con->socket, &adapter->client_socks);
-            printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_con->socket);
+    FD_SET(p_con->socket, &adapter->client_socks);
+    printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_con->socket);
 
     return;
 }
@@ -160,24 +181,24 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
 
 void *netadapter_thread_select(void *args) {
     netadapter *adapter = (netadapter *) args;
-            socket_identifier *sid;
-            int return_value;
-            int fd;
+    socket_identifier *sid;
+    int return_value;
+    int fd;
 
-            fd_set tests;
+    fd_set tests;
 
-            // vyprazdnime sadu deskriptoru a vlozime server socket
-            FD_ZERO(&adapter->client_socks);
-            FD_SET(adapter->socket, &adapter->client_socks);
+    // vyprazdnime sadu deskriptoru a vlozime server socket
+    FD_ZERO(&adapter->client_socks);
+    FD_SET(adapter->socket, &adapter->client_socks);
 
     while (adapter->status == NETADAPTER_STATUS_OK) {
         tests = adapter->client_socks;
 
-                // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
-                return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, (struct timeval *) 0);
+        // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
+        return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, (struct timeval *) 0);
         if (return_value < 0) {
             printf("Select - ERR\n");
-                    adapter->status = NETADAPTER_STATUS_SELECT_ERROR;
+            adapter->status = NETADAPTER_STATUS_SELECT_ERROR;
             return NULL;
         }
         // vynechavame stdin, stdout, stderr
@@ -197,5 +218,5 @@ void *netadapter_thread_select(void *args) {
         }
     }
     printf("Netadapter: finished with status %d.\n", adapter->status);
-            adapter->status = NETADAPTER_STATUS_FINISHED;
+    adapter->status = NETADAPTER_STATUS_FINISHED;
 }
