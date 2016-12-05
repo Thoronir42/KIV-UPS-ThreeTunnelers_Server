@@ -20,17 +20,18 @@
 #define NETADAPTER_BACKLOG_SIZE 5
 #define NETADAPTER_BUFFER_SIZE 512
 
-#define SOCKET_IDENTIFIER_TYPE_TBD 0
-#define SOCKET_IDENTIFIER_TYPE_CLIENT 1
+#define SOCKET_IDENTIFIER_TYPE_EMPTY 0
+#define SOCKET_IDENTIFIER_TYPE_TBD 1
+#define SOCKET_IDENTIFIER_TYPE_CLIENT 2
 
 
 #define _NETADAPTER_MAX_WRONG_MSGS 3
 #define _NETADAPTER_MAX_IDLE_TIME 5
 
-struct socket_identifier {
+typedef struct socket_identifier {
     unsigned char type;
     unsigned short offset;
-};
+} socket_identifier;
 
 typedef struct netadapter {
     int status;
@@ -50,6 +51,7 @@ typedef struct netadapter {
     int clients_size;
 
     struct socket_identifier *sock_ids;
+    int sock_ids_length;
 
     const short ALLOWED_IDLE_TIME;
     const short ALLOWED_UNRESPONSIVE_TIME;
@@ -62,19 +64,25 @@ typedef struct netadapter {
 
 int netadapter_init(netadapter *p, int port,
         net_client *clients, int clients_size,
-        struct socket_identifier *sock_ids, int *sock_ids_length);
+        struct socket_identifier *sock_ids, int sock_ids_length);
 
 void netadapter_shutdown(netadapter *p);
 
+//// thread select
 void *netadapter_thread_select(void *args);
 
-int netadapter_send_command(net_client *client, network_command * cmd);
+//// netadapter controls
+int netadapter_send_command(client_connection *connection, network_command *cmd);
 int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd);
 
+void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli);
+void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid);
+
+//// netadapter accessors
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 
 net_client *netadapter_get_client_by_aid(netadapter *p, int aid);
-net_client *netadapter_get_client_by_socket(netadapter *p, int socket);
+socket_identifier *netadapter_get_sid_by_socket(netadapter *p, int socket);
 
 void netadapter_check_idle_clients(netadapter *p);
 

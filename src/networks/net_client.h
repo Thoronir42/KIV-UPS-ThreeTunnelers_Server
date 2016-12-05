@@ -6,6 +6,8 @@
 
 #include "network_command.h"
 
+#define CLIENT_CONNECTION_EMPTY_SOCKET -1
+
 #define NET_CLIENT_ID_EMPTY -1
 
 #define NET_CLIENT_STATUS_EMPTY 0

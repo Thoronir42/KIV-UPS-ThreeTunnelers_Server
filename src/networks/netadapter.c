@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <stdlib.h>
-// kvuli iotctl
-#include <sys/ioctl.h>
 #include <string.h>
 
 #include "net_client.h"
@@ -67,7 +65,7 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
 
 int netadapter_init(netadapter *p, int port,
         net_client *clients, int clients_size,
-        struct socket_identifier *sock_ids, int *sock_ids_length) {
+        struct socket_identifier *sock_ids, int sock_ids_length) {
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
@@ -76,7 +74,7 @@ int netadapter_init(netadapter *p, int port,
     p->clients_size = clients_size;
 
     p->sock_ids = sock_ids;
-    p->sock_ids = sock_ids_length;
+    p->sock_ids_length = sock_ids_length;
 
     p->command_handler = p;
     p->command_handle_func = &_netadapter_cmd_unhandled;
@@ -90,124 +88,6 @@ int netadapter_init(netadapter *p, int port,
 
 void netadapter_shutdown(netadapter *p) {
     p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
-
-}
-
-////  THREAD_SELECT - PROCESS INCOMMING STUFF
-
-int _netadapter_process_message(int socket, char *buffer, int read_size, network_command *command) {
-    int length;
-
-    length = NETADAPTER_BUFFER_SIZE - 2;
-    if (read_size < length) {
-        length = read_size;
-    }
-
-    read(socket, buffer, length);
-    return network_command_from_string(command, buffer, read_size);
-
-}
-
-void _netadapter_close_client(netadapter *adapter, net_client *p_cl) {
-    close(p_cl->connection.socket);
-    FD_CLR(p_cl->connection.socket, &adapter->client_socks);
-    net_client_disconnected(p_cl, 0);
-}
-
-void _netadapter_handle_invalid_message(netadapter *adapter, net_client *p_cl) {
-    network_command cmd;
-    memset(&cmd, 0, sizeof (network_command));
-
-    cmd.type = NET_CMD_LEAD_BAD_FORMAT;
-    read(p_cl->connection.socket, cmd.data, p_cl->connection.a2read);
-    netadapter_send_command(p_cl, &cmd);
-
-    if (++(p_cl->connection.invalid_counter) > adapter->ALLOWED_INVALLID_MSG_COUNT) {
-        printf("Netadapter: client on socket %02d kept sending gibberish. They "
-                "will be terminated immediately.\n", p_cl->connection.socket);
-        _netadapter_close_client(adapter, p_cl);
-    }
-}
-
-void _netadapter_ts_process_client_socket(netadapter *p, net_client *p_cl) {
-    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
-
-    ioctl(p_cl->connection.socket, FIONREAD, &p_cl->connection.a2read);
-    if (p_cl->connection.a2read < NETWORK_COMMAND_HEADER_SIZE) { // mame co cist
-        if (p_cl->connection.a2read <= 0) {
-            printf("Netadapter: something wrong happened with client on socket "
-                    "%02d. They will be put down now.\n", p_cl->connection.socket);
-            _netadapter_close_client(p, p_cl);
-            return;
-        } else {
-            _netadapter_handle_invalid_message(p, p_cl);
-        }
-
-    } else {
-        p_cl->connection.last_active = time(NULL);
-        _netadapter_process_message(p_cl->connection.socket, p->_buffer, p_cl->connection.a2read, &p->_cmd_in_buffer);
-        p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_client(p, p_cl); // fixme: client_aid
-
-        p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
-    }
-}
-
-void _netadapter_ts_process_server_socket(netadapter *adapter) {
-    client_connection connection;
-    net_client *p_client;
-
-    memset(&connection, 0, sizeof (client_connection));
-
-    connection.socket = accept(adapter->socket, (struct sockaddr *) &connection.addr, &connection.addr_len);
-    p_client = netadapter_get_client_by_socket(adapter, connection.socket); // TODO: put in waiting queue
-    net_client_init(p_client, connection);
-    p_client->connection.last_active = clock();
-
-    FD_SET(p_client->connection.socket, &adapter->client_socks);
-    printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_client->connection.socket);
-    return;
-}
-////  THREAD_SELECT
-
-void *netadapter_thread_select(void *args) {
-    netadapter *adapter = (netadapter *) args;
-    net_client *p_client;
-    int return_value;
-    int fd;
-
-    fd_set tests;
-
-    // vyprazdnime sadu deskriptoru a vlozime server socket
-    FD_ZERO(&adapter->client_socks);
-    FD_SET(adapter->socket, &adapter->client_socks);
-
-    while (adapter->status == NETADAPTER_STATUS_OK) {
-        tests = adapter->client_socks;
-
-        // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
-        return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, (struct timeval *) 0);
-        if (return_value < 0) {
-            printf("Select - ERR\n");
-            adapter->status = NETADAPTER_STATUS_SELECT_ERROR;
-            return NULL;
-        }
-        // vynechavame stdin, stdout, stderr
-        for (fd = NETADAPTER_FD_STD_SKIP; fd < FD_SETSIZE; fd++) {
-            // tento socket neni v setu - preskakuje se
-            if (!FD_ISSET(fd, &tests)) {
-                continue;
-            }
-            if (fd == adapter->socket) {
-                _netadapter_ts_process_server_socket(adapter);
-            } else {
-                p_client = netadapter_get_client_by_socket(adapter, fd);
-                _netadapter_ts_process_client_socket(adapter, p_client);
-            }
-        }
-    }
-    printf("Netadapter: finished with status %d.\n", adapter->status);
-
-    adapter->status = NETADAPTER_STATUS_FINISHED;
 }
 
 ////  NETADAPTER - command sending
@@ -238,35 +118,32 @@ int netadapter_broadcast_command(net_client *clients, int clients_size, network_
     return counter;
 }
 
-//// NETADAPTER - client controls
-
-short _netadapter_first_free_client_offset(netadapter *p) {
-    short i;
-    for (i = 0; i < p->clients_size; i++) {
-        if ((p->clients + i)->status == NET_CLIENT_STATUS_EMPTY) {
-            return i;
-        }
-    }
-
-    return -1;
+void _netadapter_connection_kill(netadapter *p, client_connection *p_con){
+    close(p_con->socket);
+    FD_CLR(p_con->socket, &p->client_socks);
 }
+
+void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli) {
+    _netadapter_connection_kill(p, &p_cli->connection);
+    net_client_disconnected(p_cli, 0);
+}
+
+void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
+
+}
+
+//// NETADAPTER - client controls
 
 net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
     return (p->clients + aid);
 }
 
-net_client *netadapter_get_client_by_socket(netadapter *p, int socket) {
-    short offset;
-    if (p->soc_to_client[socket] == NET_CLIENT_ID_EMPTY) {
-        offset = _netadapter_first_free_client_offset(p);
-        if (offset == -1) {
-            return NULL;
-        }
-
-        p->soc_to_client[socket] = offset;
+socket_identifier *netadapter_get_sid_by_socket(netadapter *p, int socket) {
+    // TODO: verify less part of unequation
+    if (socket < 0 || socket >= p->sock_ids_length) {
+        return NULL;
     }
-
-    return p->clients + p->soc_to_client[socket];
+    return p->sock_ids + socket;
 }
 
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
@@ -288,13 +165,13 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
             if (idle_time > p->ALLOWED_IDLE_TIME) {
                 network_command_strprep(&p_con->_out_buffer,
                         NET_CMD_LEAD_STILL_THERE, loc.netcli_dcreason_unresponsive);
-                netadapter_send_command(p_con, p_client);
+                netadapter_send_command(p_con, &p_con->_out_buffer);
                 p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
             }
             break;
         case NET_CLIENT_STATUS_UNRESPONSIVE:
             if (idle_time > p->ALLOWED_UNRESPONSIVE_TIME) {
-                _netadapter_close_client(p, p_client);
+                netadapter_close_socket_by_client(p, p_client);
             }
             break;
 

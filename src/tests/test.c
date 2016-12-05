@@ -66,7 +66,9 @@ void test_network_client_idle() {
     memset(clients, 0, sizeof (net_client) * 4);
     int i;
 
-    netadapter_init(&adapter, 0, clients, 4, NULL);
+    netadapter_init(&adapter, 0,
+            clients, 4,
+            NULL, 0);
     printf("Please ignore port related errors. Starting clients idle tests.\n"
             "Max allowed idletime set to %d", 2);
 

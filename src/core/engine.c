@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "engine.h"
-#include "../data/resources.h"
+#include "resources.h"
 
 #include "../networks/netadapter.h"
 
@@ -50,7 +50,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             netadapter_send_command(&p_client->connection, &cmd_out);
             break;
         case NET_CMD_ROOM_PLAYER_INTRODUCE:
-            net_client_set_name(&p_client->connection, cmd.data, cmd._length);
+            net_client_set_name(p_client, cmd.data, cmd._length);
             cmd_out.type = NET_CMD_LEAD_APPROVE;
             netadapter_send_command(&p_client->connection, &cmd_out);
             break;
@@ -58,7 +58,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);
             strrev(cmd_out.data, cmd.data, cmd._length);
 
-            netadapter_send_command(p_client, &cmd_out);
+            netadapter_send_command(&p_client->connection, &cmd_out);
             break;
         case NET_CMD_MSG_PLAIN:
             cmd_out.type = NET_CMD_MSG_PLAIN;
