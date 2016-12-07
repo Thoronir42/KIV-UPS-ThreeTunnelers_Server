@@ -31,12 +31,14 @@
 #define _NETADAPTER_MAX_WRONG_MSGS 3
 #define _NETADAPTER_MAX_IDLE_TIME 5
 
-typedef struct socket_identifier {
+typedef struct socket_identifier
+{
     unsigned char type;
     unsigned short offset;
 } socket_identifier;
 
-typedef struct netadapter {
+typedef struct netadapter
+{
     int status;
     char _buffer[NETADAPTER_BUFFER_SIZE];
 
@@ -50,8 +52,11 @@ typedef struct netadapter {
     network_command _cmd_in_buffer;
 
     net_client *clients;
-    tcp_connection connections[NETADAPTER_CONNECTIONS_RESERVE];
-    int clients_size;
+    int clients_length;
+    
+    tcp_connection *connections;
+    int connections_length;
+    
 
     struct socket_identifier *sock_ids;
     int sock_ids_length;
@@ -66,7 +71,8 @@ typedef struct netadapter {
 
 
 int netadapter_init(netadapter *p, int port,
-        net_client *clients, int clients_size,
+        net_client *clients, int clients_length,
+        tcp_connection *connections, int connections_length,
         struct socket_identifier *sock_ids, int sock_ids_length);
 
 void netadapter_shutdown(netadapter *p);
@@ -89,6 +95,8 @@ net_client *netadapter_get_client_by_aid(netadapter *p, int aid);
 socket_identifier *netadapter_get_sid_by_socket(netadapter *p, int socket);
 
 void netadapter_check_idle_clients(netadapter *p);
+
+int netadapter_set_sid(netadapter *p, int socket, int type, int offset);
 
 #endif /* NETADAPTER_H */
 

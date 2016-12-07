@@ -64,17 +64,21 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
 }
 
 int netadapter_init(netadapter *p, int port,
-        net_client *clients, int clients_size,
+        net_client *clients, int clients_length,
+        tcp_connection *connections, int connections_length,
         struct socket_identifier *sock_ids, int sock_ids_length) {
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
 
     p->clients = clients;
-    p->clients_size = clients_size;
+    p->clients_length = clients_length;
 
     p->sock_ids = sock_ids;
     p->sock_ids_length = sock_ids_length;
+    
+    p->connections = connections;
+    p->connections_length = connections_length;
 
     p->command_handler = p;
     p->command_handle_func = &_netadapter_cmd_unhandled;
@@ -148,7 +152,7 @@ void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
     tcp_connection *p_con;
     net_client *p_cli;
     netadapter_unpack_sid(p, p_sid, &p_con, &p_cli);
-    
+
 }
 
 //// NETADAPTER - client controls
@@ -167,7 +171,7 @@ socket_identifier *netadapter_get_sid_by_socket(netadapter *p, int socket) {
 
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
     int offset = p_cl - adapter->clients;
-    if (offset < 0 || offset >= adapter->clients_size) {
+    if (offset < 0 || offset >= adapter->clients_length) {
         return -1;
     }
 
@@ -207,7 +211,7 @@ void netadapter_check_idle_clients(netadapter *p) {
     net_client *p_client;
     time_t now = time(NULL);
 
-    for (i = 0; i < p->clients_size; i++) {
+    for (i = 0; i < p->clients_length; i++) {
         p_client = p->clients + i;
 
         if (p_client->status == NET_CLIENT_STATUS_EMPTY) {
@@ -215,4 +219,14 @@ void netadapter_check_idle_clients(netadapter *p) {
         }
         _netadapter_check_idle_client(p, p_client, now);
     }
+}
+
+int netadapter_set_sid(netadapter *p, int socket, int type, int offset) {
+    if(socket < 0 || socket > p->sock_ids_length){
+        return -1;
+    }
+    (p->sock_ids + socket)->type = type;
+    (p->sock_ids + socket)->offset = offset;
+    
+    return 0;
 }

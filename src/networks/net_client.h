@@ -6,7 +6,7 @@
 
 #include "network_command.h"
 
-#define CLIENT_CONNECTION_EMPTY_SOCKET -1
+#define TCP_CONNECTION_EMPTY_SOCKET -1
 
 #define NET_CLIENT_ID_EMPTY -1
 
@@ -27,7 +27,10 @@ typedef struct tcp_connection {
 
     time_t last_active;
     int invalid_counter;
-
+    
+    char _in_buffer[NETWORK_COMMAND_DATA_LENGTH + NETWORK_COMMAND_HEADER_SIZE];
+    int _in_buffer_ptr;
+    
     network_command _out_buffer;
 } tcp_connection;
 
@@ -51,7 +54,9 @@ void net_client_disconnected(net_client *p, int bool_clean);
 
 int net_client_set_name(net_client *p, const char *name, int length);
 
-void client_connection_reset(tcp_connection *p);
+int tcp_connection_process(tcp_connection *p, int a2read);
+
+void tcp_connection_reset(tcp_connection *p);
 
 #endif /* NET_CLIENT_H */
 

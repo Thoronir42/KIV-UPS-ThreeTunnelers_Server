@@ -11,7 +11,7 @@
 
 int _netadapter_first_free_client_offset(netadapter *p) {
     int i;
-    for (i = 0; i < p->clients_size; i++) {
+    for (i = 0; i < p->clients_length; i++) {
         if ((p->clients + i)->status == NET_CLIENT_STATUS_EMPTY) {
             return i;
         }
@@ -22,8 +22,8 @@ int _netadapter_first_free_client_offset(netadapter *p) {
 
 tcp_connection *_netadapter_first_free_connection(netadapter *p) {
     int i;
-    for (i = 0; i < NETADAPTER_CONNECTIONS_RESERVE; i++) {
-        if ((p->connections + i)->socket == CLIENT_CONNECTION_EMPTY_SOCKET) {
+    for (i = 0; i < p->connections_length; i++) {
+        if ((p->connections + i)->socket == TCP_CONNECTION_EMPTY_SOCKET) {
             return p->connections + i;
         }
     }
@@ -46,12 +46,12 @@ int _netadapter_process_socket(int socket, char *buffer, int read_size, network_
     return network_command_from_string(command, buffer, read_size);
 }
 
-void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_con) {
+void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_con, char *msg, int msg_len) {
     network_command cmd;
-    memset(&cmd, 0, sizeof (network_command));
-
-    cmd.type = NCT_LEAD_BAD_FORMAT;
-    read(p_con->socket, cmd.data, p_con->a2read);
+    network_command_prepare(&cmd, NCT_LEAD_BAD_FORMAT);
+    
+    network_command_set_data(&cmd, msg, msg_len);
+    
     netadapter_send_command(p_con, &cmd);
 
     ++(p_con->invalid_counter);
@@ -77,7 +77,8 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     }
 
     if (p_con->a2read < NETWORK_COMMAND_HEADER_SIZE) {
-        _netadapter_handle_invalid_message(p, p_con);
+        read(p_con->socket, p_con->_in_buffer, p_con->a2read);
+        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, p_con->a2read);
         if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
             return NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED;
         }
@@ -133,6 +134,8 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
             p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
             break;
     }
+    
+    return 0;
 }
 
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
@@ -151,6 +154,11 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
+    if(adapter->status != NETADAPTER_STATUS_OK){
+        printf("Server socket is not being processed as netadapter is not ok.");
+        return;
+    }
+    
     p_con = _netadapter_first_free_connection(adapter);
 
     if (p_con == NULL) {
@@ -160,16 +168,16 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     memset(p_con, 0, sizeof (tcp_connection));
 
     p_con->socket = accept(adapter->socket, (struct sockaddr *) &p_con->addr, &p_con->addr_len);
-
+    
     if (p_con == &tmp_con) {
         netadapter_close_connection_msg(adapter, p_con, loc.socket_reject_no_room);
         return;
     }
-    if (p_con->socket > adapter->sock_ids_length) {
+
+    if (netadapter_set_sid(adapter, p_con->socket, SOCKET_IDENTIFIER_TYPE_TBD, p_con - adapter->connections) != 0) {
         netadapter_close_connection_msg(adapter, p_con, loc.socket_reject_invalid_number);
         return;
     }
-
     p_con->last_active = time(NULL);
 
     FD_SET(p_con->socket, &adapter->client_socks);

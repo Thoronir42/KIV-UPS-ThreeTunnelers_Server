@@ -64,7 +64,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             cmd_out.type = NCT_MSG_PLAIN;
             memcpy(cmd_out.data, cmd.data, cmd._length);
             cmd_out.data[cmd._length] = '\0';
-            netadapter_broadcast_command(p_na->clients, p_na->clients_size, &cmd_out);
+            netadapter_broadcast_command(p_na->clients, p_na->clients_length, &cmd_out);
             break;
     }
 }

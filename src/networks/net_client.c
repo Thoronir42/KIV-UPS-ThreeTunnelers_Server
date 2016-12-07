@@ -44,6 +44,6 @@ int net_client_set_name(net_client *p, const char *name, int length) {
     return diff;
 }
 
-void client_connection_reset(tcp_connection *p) {
+void tcp_connection_reset(tcp_connection *p) {
     memset(p, 0, sizeof (tcp_connection));
 }

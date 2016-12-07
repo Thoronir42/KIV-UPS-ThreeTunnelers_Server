@@ -10,6 +10,9 @@
 typedef struct resources {
     net_client *clients;
     const int clients_length;
+    
+    tcp_connection *connections;
+    const int connectons_length;
 
     struct socket_identifier *sock_ids;
     const int sock_ids_length;

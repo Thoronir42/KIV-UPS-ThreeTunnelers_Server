@@ -117,6 +117,7 @@ int main_run(settings *p_settings, resources *p_resources) {
     engine_init(p_engine, p_settings, p_resources);
     ret_val = netadapter_init(&p_engine->netadapter, p_settings->port,
             p_resources->clients, p_resources->clients_length,
+            p_resources->connections, p_resources->connectons_length,
             p_resources->sock_ids, p_resources->sock_ids_length);
     if (ret_val) {
         printf("Network interface couldn't be created, exitting. \n");
