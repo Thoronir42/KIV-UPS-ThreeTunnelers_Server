@@ -13,6 +13,21 @@ void strrev(char *dest, const char *src, int length) {
     }
 }
 
+int strpos(char *haystack, char *needle) {
+    char *p = strstr(haystack, needle);
+    if (p)
+        return p - haystack;
+    return STR_NOT_FOUND;
+}
+
+void strshift(char *str, int length, int positions){
+    int i;
+    for(i = 0; i + positions < length; i++){
+        str[i] = str[i + positions];
+    }
+    memset(str + length - positions, '\0', positions);
+}
+
 long read_hex_long(const char *src) {
     char tmp[17];
     memset(tmp, 0, 17);
