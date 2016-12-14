@@ -33,25 +33,12 @@ tcp_connection *_netadapter_first_free_connection(netadapter *p) {
 
 //// thread select file
 
-int _netadapter_process_socket(int socket, char *buffer, int read_size, network_command *command) {
-    int length;
-
-    length = NETADAPTER_BUFFER_SIZE - 2;
-    if (read_size < length) {
-        length = read_size;
-    }
-
-    read(socket, buffer, length);
-
-    return network_command_from_string(command, buffer, read_size);
-}
-
 void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_con, char *msg, int msg_len) {
     network_command cmd;
     network_command_prepare(&cmd, NCT_LEAD_BAD_FORMAT);
-    
+
     network_command_set_data(&cmd, msg, msg_len);
-    
+
     netadapter_send_command(p_con, &cmd);
 
     ++(p_con->invalid_counter);
@@ -68,38 +55,55 @@ void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_c
  * @return 0 if ok or negative error code identificator
  */
 int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) {
-    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
+    int read_size;
 
-    ioctl(p_con->socket, FIONREAD, &p_con->a2read);
+    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 
     if (p_con->a2read <= 0) {
         return NETADAPTER_SOCK_ERROR_NOTHING_TO_READ;
     }
 
-    if (p_con->a2read < NETWORK_COMMAND_HEADER_SIZE) {
-        read(p_con->socket, p_con->_in_buffer, p_con->a2read);
-        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, p_con->a2read);
-        if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
-            return NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED;
-        }
+    // how many chars can still be stuffed into buffer
+    read_size = NETADAPTER_BUFFER_SIZE - 2 - p_con->_in_buffer_ptr;
+    if (p_con->a2read < read_size) {
+        read_size = p_con->a2read;
+    }
+    if (read_size < 1) {
+        return NETADAPTER_SOCK_ERROR_MSG_TOO_LONG;
     }
 
-    _netadapter_process_socket(p_con->socket, p->_buffer, p_con->a2read, &p->_cmd_in_buffer);
+    // read available chars
+    read(p_con->socket, p_con->_in_buffer + p_con->_in_buffer_ptr, read_size);
+    p_con->a2read -= read_size;
+    p_con->_in_buffer_ptr += read_size;
+
     p_con->last_active = time(NULL);
 
     return 0;
+}
+
+int _netadapter_handle_command(netadapter *p, network_command cmd, socket_identifier *sid) {
+    cmd.remote_identifier = sid->offset;
+    switch (sid->type) {
+        case SOCKET_IDENTIFIER_TYPE_TBD:
+            printf("Processing uncliented socket %d", sid->offset);
+            // net_client_init(p_client, connection); todo: pair with client
+            return 0;
+        case SOCKET_IDENTIFIER_TYPE_CLIENT:
+            printf("Processing cliented socket %d", sid->offset);
+            p->command_handle_func(p->command_handler, cmd);
+            return 0;
+    }
 }
 
 int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) {
     net_client *p_cli;
     tcp_connection *p_con;
     int ret_val;
+    int socket = sid - p->sock_ids;
 
-    if (sid == NULL) {
-        printf("TS-ERR: Attempted to process socket %d which is out of "
-                "identifier space.\n", socket);
-        return -1;
-    }
+    int cr_pos;
+
     if (sid->type == SOCKET_IDENTIFIER_TYPE_EMPTY) {
         printf("TS-ERR: Attempted to process socket %d but its identifier "
                 "is empty.\n", socket);
@@ -111,35 +115,31 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
         return -1;
     }
 
-    ret_val = _netadapter_ts_process_raw_connection(p, p_con);
-    p->_cmd_in_buffer.remote_identifier = sid->offset;
+    ioctl(p_con->socket, FIONREAD, &p_con->a2read);
 
-    switch (ret_val) {
-        case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
-            printf("Netadapter: something wrong happened on socket %02d. "
-                    "They will be put down now.\n", p_con->socket);
-            return -1;
-        case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
-            printf("Netadapter: connection on socket %02d kept sending "
-                    "gibberish. It will be terminated soon.\n", p_con->socket);
-            return -1;
-    }
+    // this read cycle might have more chars than buffer can contain
+    do {
+        ret_val = _netadapter_ts_process_raw_connection(p, p_con);
 
-    switch (sid->type) {
-        case SOCKET_IDENTIFIER_TYPE_TBD:
-            printf("Processing uncliented socket %d", socket);
-            // net_client_init(p_client, connection); todo: pair with client
-            break;
-        case SOCKET_IDENTIFIER_TYPE_CLIENT:
-            p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
-            break;
-    }
-    
-    return 0;
-}
+        switch (ret_val) {
+            case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
+                printf("Netadapter: something wrong happened on socket %02d. "
+                        "They will be put down now.\n", p_con->socket);
+                return -1;
+            case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
+                printf("Netadapter: connection on socket %02d kept sending "
+                        "gibberish. It will be terminated soon.\n", p_con->socket);
+                return -1;
+        }
 
-void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
+        // multiple commands might have arrived in this read cycle
+        while ((cr_pos = strpos(p_con->_in_buffer, '\n') != STR_NOT_FOUND)) {
+            network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
+            _netadapter_handle_command(p, *p->_cmd_in_buffer, sid);
+        }
 
+        return 0;
+    } while (p_con->a2read > 0);
 }
 
 void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
@@ -154,11 +154,11 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
-    if(adapter->status != NETADAPTER_STATUS_OK){
+    if (adapter->status != NETADAPTER_STATUS_OK) {
         printf("Server socket is not being processed as netadapter is not ok.");
         return;
     }
-    
+
     p_con = _netadapter_first_free_connection(adapter);
 
     if (p_con == NULL) {
@@ -168,7 +168,7 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     memset(p_con, 0, sizeof (tcp_connection));
 
     p_con->socket = accept(adapter->socket, (struct sockaddr *) &p_con->addr, &p_con->addr_len);
-    
+
     if (p_con == &tmp_con) {
         netadapter_close_connection_msg(adapter, p_con, loc.socket_reject_no_room);
         return;
@@ -219,6 +219,10 @@ void *netadapter_thread_select(void *args) {
                 _netadapter_ts_process_server_socket(adapter);
             } else {
                 sid = netadapter_get_sid_by_socket(adapter, fd);
+                //                if (sid == NULL) {
+                //                    printf("TS-ERR: Attempted to process socket %d which is out of "
+                //                            "identifier space.\n", fd);
+                //                }
                 if (_netadapter_ts_process_remote_socket(adapter, sid) < 0) {
                     netadapter_close_socket_by_sid(adapter, sid);
                 }
