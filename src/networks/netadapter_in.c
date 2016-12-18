@@ -78,7 +78,7 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     p_con->_in_buffer_ptr += read_size;
 
     p_con->last_active = time(NULL);
-
+    
     return 0;
 }
 
@@ -86,11 +86,11 @@ int _netadapter_handle_command(netadapter *p, network_command cmd, socket_identi
     cmd.remote_identifier = sid->offset;
     switch (sid->type) {
         case SOCKET_IDENTIFIER_TYPE_TBD:
-            printf("Processing uncliented socket %d", sid->offset);
+            printf("Processing uncliented socket %d\n", sid->offset);
             // net_client_init(p_client, connection); todo: pair with client
             return 0;
         case SOCKET_IDENTIFIER_TYPE_CLIENT:
-            printf("Processing cliented socket %d", sid->offset);
+            printf("Processing cliented socket %d\n", sid->offset);
             p->command_handle_func(p->command_handler, cmd);
             return 0;
     }
@@ -103,12 +103,9 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
     int socket = sid - p->sock_ids;
 
     int cr_pos;
+    int processed_commands = 0;
 
-    if (sid->type == SOCKET_IDENTIFIER_TYPE_EMPTY) {
-        printf("TS-ERR: Attempted to process socket %d but its identifier "
-                "is empty.\n", socket);
-        return -1;
-    }
+//    printf("Processing remote socket %d(%d)\n", sid - p->sock_ids, sid->type);
 
     if (netadapter_unpack_sid(p, sid, &p_con, &p_cli) == SOCKET_IDENTIFIER_TYPE_EMPTY) {
         printf("SID unpack fail\n");
@@ -132,10 +129,21 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
                 return -1;
         }
 
+        
+        printf("Processing message buffer:\n%s\n", p_con->_in_buffer);
         // multiple commands might have arrived in this read cycle
-        while ((cr_pos = strpos(p_con->_in_buffer, "\n") != STR_NOT_FOUND)) {
+        cr_pos = strpos(p_con->_in_buffer, "\n");
+        while (cr_pos != STR_NOT_FOUND) {
+            // TODO: check for minimal message length
+            printf("Parsing command #%d from [%02d]%s\n", ++processed_commands, cr_pos, p_con->_in_buffer);
             network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
+            
+            strshift(p_con->_in_buffer, TCP_CONNECTION_BUFFER_SIZE, cr_pos + 1);
+            p_con->_in_buffer_ptr -= (cr_pos + 1);
+            
             _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
+            
+            cr_pos = strpos(p_con->_in_buffer, "\n");
         }
 
         return 0;

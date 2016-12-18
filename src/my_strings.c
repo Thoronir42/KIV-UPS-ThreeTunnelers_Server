@@ -15,9 +15,10 @@ void strrev(char *dest, const char *src, int length) {
 
 int strpos(char *haystack, char *needle) {
     char *p = strstr(haystack, needle);
-    if (p)
-        return p - haystack;
-    return STR_NOT_FOUND;
+    if (!p){
+        return STR_NOT_FOUND;
+    }
+    return p - haystack;
 }
 
 void strshift(char *str, int length, int positions) {

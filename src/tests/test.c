@@ -10,10 +10,10 @@
 void test_strpos() {
     printf("Strpos test\n");
 
-    char *haystack = "PEPA\nZ\nDEPA";
+    char *haystack = "0004ASDF\n";
     char *needle = "\n";
 
-    int expected = 4;
+    int expected = 8;
     int pos = strpos(haystack, needle);
 
     printf(" %d expected: %d, got %d\n", pos == expected, expected, pos);
