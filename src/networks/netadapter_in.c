@@ -23,7 +23,7 @@ int _netadapter_first_free_client_offset(netadapter *p) {
 tcp_connection *_netadapter_first_free_connection(netadapter *p) {
     int i;
     for (i = 0; i < p->connections_length; i++) {
-        if ((p->connections + i)->socket == TCP_CONNECTION_EMPTY_SOCKET) {
+        if ((p->connections + i)->status == TCP_CONNECTION_STATUS_EMPTY) {
             return p->connections + i;
         }
     }
@@ -155,7 +155,7 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     tcp_connection tmp_con;
 
     printf("Processign server socket\n");
-    
+
     if (adapter->status != NETADAPTER_STATUS_OK) {
         printf("Server socket is not being processed as netadapter is not ok.");
         return;
@@ -207,7 +207,7 @@ void *netadapter_thread_select(void *args) {
 
         select_timeout.tv_sec = 1;
         select_timeout.tv_usec = 0;
-        
+
         // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
         return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, &select_timeout);
         if (return_value < 0) {
@@ -225,10 +225,10 @@ void *netadapter_thread_select(void *args) {
                 _netadapter_ts_process_server_socket(adapter);
             } else {
                 sid = netadapter_get_sid_by_socket(adapter, fd);
-                //                if (sid == NULL) {
-                //                    printf("TS-ERR: Attempted to process socket %d which is out of "
-                //                            "identifier space.\n", fd);
-                //                }
+//                if (sid == NULL) {
+//                    printf("TS-ERR: Attempted to process socket %d which is out of "
+//                            "identifier space.\n", fd);
+//                }
                 if (_netadapter_ts_process_remote_socket(adapter, sid) < 0) {
                     netadapter_close_socket_by_sid(adapter, sid);
                 }

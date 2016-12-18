@@ -159,7 +159,20 @@ void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli) {
 void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
     tcp_connection *p_con;
     net_client *p_cli;
-    netadapter_unpack_sid(p, p_sid, &p_con, &p_cli);
+    int type;
+    type = netadapter_unpack_sid(p, p_sid, &p_con, &p_cli);
+    
+    switch(type){
+        case SOCKET_IDENTIFIER_TYPE_CLIENT:
+            netadapter_close_socket_by_client(p, p_cli);
+            break;
+        case SOCKET_IDENTIFIER_TYPE_TBD:
+            _netadapter_connection_kill(p, p_con);
+            break;
+        default:
+            printf("Closing unclosable sock identifier\n");
+            break;
+    }
 
 }
 
