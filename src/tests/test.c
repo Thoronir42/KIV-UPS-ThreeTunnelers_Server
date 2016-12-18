@@ -7,6 +7,32 @@
 #include "../networks/net_client.h"
 #include "../networks/netadapter.h"
 
+void test_strpos() {
+    printf("Strpos test\n");
+
+    char *haystack = "PEPA\nZ\nDEPA";
+    char *needle = "\n";
+
+    int expected = 4;
+    int pos = strpos(haystack, needle);
+
+    printf(" %d expected: %d, got %d\n", pos == expected, expected, pos);
+}
+
+void test_strshift() {
+    printf("strshift test \n");
+    char string[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    int len = strlen(string);
+    int i, positions = 1;
+
+    printf(" 0: %s\n", string);
+    for (i = 0; i < 3; i++) {
+        strshift(string, len, positions);
+        printf(" %d: %s\n" ,positions, string);
+        positions *= 2;
+    }
+}
+
 void test_hex_formatting() {
     char strings[4][17] = {"FF", "1234", "12345678", "123456789ABCDEF0"};
     char output[4][17];
@@ -98,5 +124,8 @@ void run_tests() {
     test_hex_formatting();
     test_command_parsing();
 
-    test_network_client_idle();
+    test_strpos();
+    test_strshift();
+
+    //test_network_client_idle();
 }
