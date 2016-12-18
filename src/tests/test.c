@@ -104,8 +104,8 @@ void test_network_client_idle() {
     memcpy(clients[0].name, "Adam", 5);
     memcpy(clients[2].name, "Barbara", 8);
 
-    clients[0].status = NET_CLIENT_STATUS_DISCONNECTED;
-    clients[2].status = NET_CLIENT_STATUS_DISCONNECTED;
+    clients[0].connection.status = TCP_CONNECTION_STATUS_DISCONNECTED;
+    clients[2].connection.status = TCP_CONNECTION_STATUS_DISCONNECTED;
 
     clients[0].connection.last_active = time(NULL);
     sleep(1);

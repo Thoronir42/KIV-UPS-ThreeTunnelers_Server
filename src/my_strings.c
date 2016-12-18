@@ -20,9 +20,9 @@ int strpos(char *haystack, char *needle) {
     return STR_NOT_FOUND;
 }
 
-void strshift(char *str, int length, int positions){
+void strshift(char *str, int length, int positions) {
     int i;
-    for(i = 0; i + positions < length; i++){
+    for (i = 0; i + positions < length; i++) {
         str[i] = str[i + positions];
     }
     memset(str + length - positions, '\0', positions);

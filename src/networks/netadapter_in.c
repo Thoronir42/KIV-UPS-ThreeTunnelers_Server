@@ -12,7 +12,7 @@
 int _netadapter_first_free_client_offset(netadapter *p) {
     int i;
     for (i = 0; i < p->clients_length; i++) {
-        if ((p->clients + i)->status == NET_CLIENT_STATUS_EMPTY) {
+        if ((p->clients + i)->connection.status == TCP_CONNECTION_STATUS_EMPTY) {
             return i;
         }
     }
@@ -133,9 +133,9 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
         }
 
         // multiple commands might have arrived in this read cycle
-        while ((cr_pos = strpos(p_con->_in_buffer, '\n') != STR_NOT_FOUND)) {
+        while ((cr_pos = strpos(p_con->_in_buffer, "\n") != STR_NOT_FOUND)) {
             network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
-            _netadapter_handle_command(p, *p->_cmd_in_buffer, sid);
+            _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
         }
 
         return 0;
@@ -154,6 +154,8 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
+    printf("Processign server socket\n");
+    
     if (adapter->status != NETADAPTER_STATUS_OK) {
         printf("Server socket is not being processed as netadapter is not ok.");
         return;
@@ -194,6 +196,7 @@ void *netadapter_thread_select(void *args) {
     int fd;
 
     fd_set tests;
+    struct timeval select_timeout;
 
     // vyprazdnime sadu deskriptoru a vlozime server socket
     FD_ZERO(&adapter->client_socks);
@@ -202,10 +205,13 @@ void *netadapter_thread_select(void *args) {
     while (adapter->status == NETADAPTER_STATUS_OK) {
         tests = adapter->client_socks;
 
+        select_timeout.tv_sec = 1;
+        select_timeout.tv_usec = 0;
+        
         // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
-        return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, (struct timeval *) 0);
+        return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, &select_timeout);
         if (return_value < 0) {
-            printf("Select - ERR\n");
+            printf("Select - ERR:%d\n", return_value);
             adapter->status = NETADAPTER_STATUS_SELECT_ERROR;
             return NULL;
         }

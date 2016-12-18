@@ -39,7 +39,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
     engine *p_engine = (engine *) handler;
     netadapter *p_na = &p_engine->netadapter;
     net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.remote_identifier);
-    
+
     network_command cmd_out;
     memset(&cmd_out, 0, sizeof (network_command));
 
@@ -93,4 +93,25 @@ void *engine_run(void *args) {
     printf("Engine: Finished\n");
     netadapter_shutdown(&p_engine->netadapter);
     return NULL;
+}
+
+int engine_count_temp_connections(engine *p, unsigned char status) {
+    int i, n = 0;
+    for (i = 0; i < p->resources->connectons_length; i++) {
+        if (status == TCP_CONNECTION_STATUS_ANY || (p->resources->connections + i)->status == status) {
+            n++;
+        }
+    }
+    return n;
+}
+
+int engine_count_clients(engine *p, unsigned char status) {
+    int i, n = 0;
+    for (i = 0; i < p->resources->clients_length; i++) {
+        if (status == TCP_CONNECTION_STATUS_ANY || (p->resources->clients + i)->connection.status == status) {
+            n++;
+        }
+    }
+    
+    return n;
 }

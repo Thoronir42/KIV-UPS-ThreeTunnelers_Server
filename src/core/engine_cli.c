@@ -3,12 +3,38 @@
 
 #include "engine.h"
 
-_list_page_count(int items, int ipp){
+#define STATUS_VALUE_SIZE 24
+
+_list_page_count(int items, int ipp) {
     return items / ipp + (items % ipp > 0 ? 1 : 0);
 }
 
 void _cli_shutdown(engine *p) {
     p->keep_running = 0;
+}
+
+void _cli_status(engine *p) {
+    char * format = " %16s : %s\n";
+    char value[STATUS_VALUE_SIZE];
+
+    clock_t now = clock();
+    
+    int run_length = (now - p->summary.run_start) / 1000;
+    int run_mins = run_length / 60;
+    int run_sec = run_length % 60;
+    
+    memset(value, '\0', STATUS_VALUE_SIZE);
+    sprintf(value, "%3d:%02d\n", run_mins, run_sec);
+    printf(format, "Uptime", value);
+    
+    memset(value, '\0', STATUS_VALUE_SIZE);
+    sprintf(value, "%3d / %3d", engine_count_temp_connections(p, TCP_CONNECTION_STATUS_CONNECTED), p->resources->connectons_length);
+    printf(format, "Temp connections", value);
+
+    memset(value, '\0', STATUS_VALUE_SIZE);
+    sprintf(value, "%3d / %3d", engine_count_clients(p, TCP_CONNECTION_STATUS_CONNECTED), p->resources->clients_length);
+    printf(format, "Current clients", value);
+
 }
 
 void _cli_list_clients(netadapter *p) {
@@ -29,14 +55,14 @@ void _cli_list_clients(netadapter *p) {
             printf("╞════╪════╪══════════════╪═════╪════════╪═════════╛\n");
         }
         p_client = p->clients + i;
-        if (p_client->status != NET_CLIENT_STATUS_EMPTY) {
+        if (p_client->connection.status != TCP_CONNECTION_STATUS_EMPTY) {
             //idle = (now - p_client->last_active);
             idle = now - p_client->connection.last_active;
             n++;
         } else {
             idle = 0;
         }
-        status = client_status_letter(p_client->status);
+        status = tcp_connection_status_letter(p_client->connection.status);
         printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
                 i, p_client->connection.socket, p_client->name,
                 status, idle);
@@ -64,7 +90,7 @@ void _cli_list_connections(netadapter *p) {
         }
         p_con = p->connections + i;
         idle = now - p_con->last_active;
-        
+
         printf("│ %02d │ %02d │ %6d │\n",
                 i, p_con->socket, idle);
     }
@@ -86,6 +112,8 @@ void *engine_cli_run(void *args) {
             _cli_list_clients(&p_engine->netadapter);
         } else if (!strcmp(input, "connections")) {
             _cli_list_clients(&p_engine->netadapter);
+        } else if (!strcmp(input, "status")) {
+            _cli_status(p_engine);
         }
     }
 

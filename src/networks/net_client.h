@@ -10,10 +10,11 @@
 
 #define NET_CLIENT_ID_EMPTY -1
 
-#define NET_CLIENT_STATUS_EMPTY 0
-#define NET_CLIENT_STATUS_CONNECTED 1
-#define NET_CLIENT_STATUS_UNRESPONSIVE 2
-#define NET_CLIENT_STATUS_DISCONNECTED 3
+#define TCP_CONNECTION_STATUS_ANY -1
+#define TCP_CONNECTION_STATUS_EMPTY 0
+#define TCP_CONNECTION_STATUS_CONNECTED 1
+#define TCP_CONNECTION_STATUS_UNRESPONSIVE 2
+#define TCP_CONNECTION_STATUS_DISCONNECTED 3
 
 #define NET_CLIENT_NAME_MAX_LENGTH 24
 #define NET_CLIENT_MAX_PLAYERS 2
@@ -21,6 +22,7 @@
 
 typedef struct tcp_connection {
     int socket, a2read;
+    unsigned char status;
 
     struct sockaddr_in addr;
     int addr_len;
@@ -35,7 +37,6 @@ typedef struct tcp_connection {
 } tcp_connection;
 
 typedef struct net_client {
-    unsigned char status;
     tcp_connection connection;
     char connection_secret[NET_CLIENT_SECRET_LENGTH];
 
@@ -46,7 +47,7 @@ typedef struct net_client {
 
 } net_client;
 
-char client_status_letter(unsigned char status);
+char tcp_connection_status_letter(unsigned char status);
 
 int net_client_init(net_client *p, tcp_connection connection);
 
