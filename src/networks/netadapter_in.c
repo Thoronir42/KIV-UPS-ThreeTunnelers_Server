@@ -132,9 +132,12 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
         
         printf("Processing message buffer:\n%s\n", p_con->_in_buffer);
         // multiple commands might have arrived in this read cycle
-        cr_pos = strpos(p_con->_in_buffer, "\n");
-        while (cr_pos != STR_NOT_FOUND) {
-            // TODO: check for minimal message length
+        while ((cr_pos = strpos(p_con->_in_buffer, "\n")) != STR_NOT_FOUND) {
+            if(cr_pos < NETWORK_COMMAND_HEADER_SIZE){
+                printf("Client %02d sent too short message and is going to be "
+                        "termitnated immediately.\n", p_con->socket);
+                return -1;
+            }
             printf("Parsing command #%d from [%02d]%s\n", ++processed_commands, cr_pos, p_con->_in_buffer);
             network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
             
@@ -142,8 +145,6 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
             p_con->_in_buffer_ptr -= (cr_pos + 1);
             
             _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
-            
-            cr_pos = strpos(p_con->_in_buffer, "\n");
         }
 
         return 0;
@@ -164,6 +165,8 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
 
     printf("Processign server socket\n");
 
+    // todo: closing server socket does not alert the select, so a timeout
+    // has been implemented as a quick-fix, look into it later pls
     if (adapter->status != NETADAPTER_STATUS_OK) {
         printf("Server socket is not being processed as netadapter is not ok.");
         return;
