@@ -49,7 +49,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             memcpy(cmd_out.data, "Cmd type unrecognised", 22);
             netadapter_send_command(&p_client->connection, &cmd_out);
             break;
-        case NCT_ROOM_PLAYER_INTRODUCE:
+        case NCT_ROOM_CLIENT_INTRODUCE:
             net_client_set_name(p_client, cmd.data, cmd._length);
             cmd_out.type = NCT_LEAD_APPROVE;
             netadapter_send_command(&p_client->connection, &cmd_out);

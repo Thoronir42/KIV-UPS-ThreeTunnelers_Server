@@ -29,6 +29,20 @@ void strshift(char *str, int length, int positions) {
     memset(str + length - positions, '\0', positions);
 }
 
+void strrand(char *s, const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+    static const int alphanum_len = sizeof(alphanum) - 1;
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % alphanum_len];
+    }
+
+    s[len] = 0;
+}
+
 long read_hex_long(const char *src) {
     char tmp[17];
     memset(tmp, 0, 17);

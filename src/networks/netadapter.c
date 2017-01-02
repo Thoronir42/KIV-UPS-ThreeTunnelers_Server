@@ -208,7 +208,7 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
         case TCP_CONNECTION_STATUS_CONNECTED:
             if (idle_time > p->ALLOWED_IDLE_TIME) {
                 network_command_strprep(&p_con->_out_buffer,
-                        NCT_LEAD_STILL_THERE, loc.netcli_dcreason_unresponsive);
+                        NCT_LEAD_ECHO_REQUEST, loc.netcli_dcreason_unresponsive);
                 netadapter_send_command(p_con, &p_con->_out_buffer);
                 p_client->connection.status = TCP_CONNECTION_STATUS_UNRESPONSIVE;
             }

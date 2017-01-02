@@ -31,6 +31,17 @@ tcp_connection *_netadapter_first_free_connection(netadapter *p) {
     return NULL;
 }
 
+net_client *_netadapter_find_client_by_secret(netadapter *p, char *secret) {
+    int i;
+    for (i = 0; i < p->clients_length; i++) {
+        if (!strcmp((p->clients + i)->connection_secret, secret)) {
+            return p->clients + i;
+        }
+    }
+
+    return NULL;
+}
+
 //// thread select file
 
 void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_con, char *msg, int msg_len) {
@@ -78,7 +89,7 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     p_con->_in_buffer_ptr += read_size;
 
     p_con->last_active = time(NULL);
-    
+
     return 0;
 }
 
@@ -105,7 +116,7 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
     int cr_pos;
     int processed_commands = 0;
 
-//    printf("Processing remote socket %d(%d)\n", sid - p->sock_ids, sid->type);
+    //    printf("Processing remote socket %d(%d)\n", sid - p->sock_ids, sid->type);
 
     if (netadapter_unpack_sid(p, sid, &p_con, &p_cli) == SOCKET_IDENTIFIER_TYPE_EMPTY) {
         printf("SID unpack fail\n");
@@ -129,21 +140,21 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
                 return -1;
         }
 
-        
+
         printf("Processing message buffer:\n%s\n", p_con->_in_buffer);
         // multiple commands might have arrived in this read cycle
         while ((cr_pos = strpos(p_con->_in_buffer, "\n")) != STR_NOT_FOUND) {
-            if(cr_pos < NETWORK_COMMAND_HEADER_SIZE){
+            if (cr_pos < NETWORK_COMMAND_HEADER_SIZE) {
                 printf("Client %02d sent too short message and is going to be "
                         "termitnated immediately.\n", p_con->socket);
                 return -1;
             }
             printf("Parsing command #%d from [%02d]%s\n", ++processed_commands, cr_pos, p_con->_in_buffer);
             network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
-            
+
             strshift(p_con->_in_buffer, TCP_CONNECTION_BUFFER_SIZE, cr_pos + 1);
             p_con->_in_buffer_ptr -= (cr_pos + 1);
-            
+
             _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
         }
 
