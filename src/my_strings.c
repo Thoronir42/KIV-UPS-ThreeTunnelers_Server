@@ -35,8 +35,8 @@ void strrand(char *s, const int len) {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
     static const int alphanum_len = sizeof(alphanum) - 1;
-
-    for (int i = 0; i < len; ++i) {
+    int i;
+    for (i = 0; i < len; ++i) {
         s[i] = alphanum[rand() % alphanum_len];
     }
 
