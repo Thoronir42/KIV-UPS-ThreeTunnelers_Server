@@ -88,11 +88,12 @@ void test_command_parsing() {
 
 void test_network_client_idle() {
     net_client clients[4];
+    statistics s_stats;
     netadapter adapter;
     memset(clients, 0, sizeof (net_client) * 4);
     int i;
 
-    netadapter_init(&adapter, 0,
+    netadapter_init(&adapter, 0, &s_stats,
             clients, 4,
             NULL, 0,
             NULL, 0);

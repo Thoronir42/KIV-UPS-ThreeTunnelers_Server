@@ -3,15 +3,15 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "summary.h"
+#include "statistics.h"
 
-int summary_init(summary *p) {
-    memset(p, 0, sizeof (summary));
+int statistics_init(statistics *p) {
+    memset(p, 0, sizeof (statistics));
 
     return 0;
 }
 
-void summary_print(summary *p) {
+void statistics_print(statistics *p) {
     int run_length = (p->run_end - p->run_start) / 1000;
     int run_mins = run_length / 60;
     int run_sec = run_length % 60;

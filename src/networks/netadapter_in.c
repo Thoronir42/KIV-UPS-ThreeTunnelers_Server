@@ -44,13 +44,14 @@ net_client *_netadapter_find_client_by_secret(netadapter *p, char *secret) {
 
 //// thread select file
 
-void _netadapter_handle_invalid_message(netadapter *adapter, tcp_connection *p_con, char *msg, int msg_len) {
+void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, char *msg, int msg_len) {
     network_command cmd;
     network_command_prepare(&cmd, NCT_LEAD_BAD_FORMAT);
 
     network_command_set_data(&cmd, msg, msg_len);
 
-    netadapter_send_command(p_con, &cmd);
+    netadapter_send_command(p, p_con, &cmd);
+    p->stats->commands_received_invalid++;
 
     ++(p_con->invalid_counter);
 }
@@ -156,6 +157,7 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
             p_con->_in_buffer_ptr -= (cr_pos + 1);
 
             _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
+            p->stats->commands_received++;
         }
 
         return 0;
@@ -166,7 +168,7 @@ void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const
     network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DENY);
     network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
 
-    netadapter_send_command(p_con, &p_con->_out_buffer);
+    netadapter_send_command(p, p_con, &p_con->_out_buffer);
     close(p_con->socket);
 }
 

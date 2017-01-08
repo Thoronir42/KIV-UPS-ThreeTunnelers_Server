@@ -100,7 +100,7 @@ void _main_run_threads(engine *p_engine) {
     printf("Run: Engine has ended");
     if (p_engine->settings->show_summaries) {
         printf(", printing sumamry: \n");
-        summary_print(&p_engine->summary);
+        statistics_print(&p_engine->stats);
     }
 
     printf("\n");
@@ -115,7 +115,7 @@ int main_run(settings *p_settings, resources *p_resources) {
     printf("Main: Initialising engine and netadapter\n");
     ////
     engine_init(p_engine, p_settings, p_resources);
-    ret_val = netadapter_init(&p_engine->netadapter, p_settings->port,
+    ret_val = netadapter_init(&p_engine->netadapter, p_settings->port, &p_engine->stats,
             p_resources->clients, p_resources->clients_length,
             p_resources->connections, p_resources->connectons_length,
             p_resources->sock_ids, p_resources->sock_ids_length);

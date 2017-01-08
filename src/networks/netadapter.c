@@ -63,7 +63,7 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
     network_command_print("nohandle", &cmd);
 }
 
-int netadapter_init(netadapter *p, int port,
+int netadapter_init(netadapter *p, int port, statistics *stats,
         net_client *clients, int clients_length,
         tcp_connection *connections, int connections_length,
         struct socket_identifier *sock_ids, int sock_ids_length) {
@@ -120,7 +120,7 @@ int netadapter_unpack_sid(netadapter *p, socket_identifier *sid,
 
 ////  NETADAPTER - command sending
 
-int netadapter_send_command(tcp_connection *connection, network_command *cmd) {
+int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
     a2write = network_command_to_string(buffer, cmd);
@@ -128,17 +128,25 @@ int netadapter_send_command(tcp_connection *connection, network_command *cmd) {
     memcpy(buffer + a2write, "\n\0", 2); // message footer
     write(connection->socket, buffer, a2write + 2);
 
+    p->stats->commands_sent++;
+    
     network_command_print("Sent", cmd);
 
     return 0;
 }
 
-int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd) {
+int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd) {
+    return netadapter_broadcast_command_p(p, (net_client **)clients, clients_size, cmd, 0);
+}
+
+int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointer) {
     int i, counter = 0;
+    net_client *p_cli;
     network_command_print("bc", cmd);
     for (i = 0; i < clients_size; i++) {
-        if ((clients + i)->connection.status == TCP_CONNECTION_STATUS_CONNECTED) {
-            netadapter_send_command(&(clients + i)->connection, cmd);
+        p_cli = ref_pointer ? *(clients + i) : (net_client *)(clients + i);
+        if (p_cli->connection.status == TCP_CONNECTION_STATUS_CONNECTED) {
+            netadapter_send_command(p, &p_cli->connection, cmd);
             counter++;
         }
     }
@@ -209,7 +217,7 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
             if (idle_time > p->ALLOWED_IDLE_TIME) {
                 network_command_strprep(&p_con->_out_buffer,
                         NCT_LEAD_ECHO_REQUEST, loc.netcli_dcreason_unresponsive);
-                netadapter_send_command(p_con, &p_con->_out_buffer);
+                netadapter_send_command(p, p_con, &p_con->_out_buffer);
                 p_client->connection.status = TCP_CONNECTION_STATUS_UNRESPONSIVE;
             }
             break;

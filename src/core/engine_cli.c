@@ -19,7 +19,7 @@ void _cli_status(engine *p) {
 
     clock_t now = clock();
     
-    int run_length = (now - p->summary.run_start) / 1000;
+    int run_length = (now - p->stats.run_start) / 1000;
     int run_mins = run_length / 60;
     int run_sec = run_length % 60;
     

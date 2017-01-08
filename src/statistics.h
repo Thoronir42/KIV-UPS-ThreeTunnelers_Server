@@ -1,16 +1,16 @@
-#ifndef SUMMARY_H
-#define SUMMARY_H
+#ifndef STATISTICS_H
+#define STATISTICS_H
 
 #include <time.h>
 
-typedef struct summary {
+typedef struct statistics {
     clock_t run_start, run_end;
     unsigned int commands_sent, commands_received, commands_received_invalid;
-} summary;
+} statistics;
 
-int summary_init(summary *p);
+int statistics_init(statistics *p);
 
-void summary_print(summary *p);
+void statistics_print(statistics *p);
 
 
 #endif /* SUMMARY_H */

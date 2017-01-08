@@ -4,6 +4,7 @@
 
 #include <netinet/in.h>
 
+#include "../statistics.h"
 #include "net_client.h"
 #include "network_command.h"
 
@@ -68,10 +69,12 @@ typedef struct netadapter
 
     void *command_handler;
     void (*command_handle_func)(void *handler, network_command cmd);
+    
+    statistics *stats;
 } netadapter;
 
 
-int netadapter_init(netadapter *p, int port,
+int netadapter_init(netadapter *p, int port, statistics *stats,
         net_client *clients, int clients_length,
         tcp_connection *connections, int connections_length,
         struct socket_identifier *sock_ids, int sock_ids_length);
@@ -83,8 +86,9 @@ void *netadapter_thread_select(void *args);
 void netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con);
 
 //// netadapter controls
-int netadapter_send_command(tcp_connection *connection, network_command *cmd);
-int netadapter_broadcast_command(net_client *clients, int clients_size, network_command *cmd);
+int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd);
+int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd);
+int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointers);
 
 void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli);
 void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid);

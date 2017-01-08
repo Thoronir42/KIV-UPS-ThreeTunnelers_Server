@@ -7,7 +7,7 @@
 #include "resources.h"
 #include "../networks/netadapter.h"
 #include "../settings.h"
-#include "summary.h"
+#include "../statistics.h"
 
 #define ENGINE_CLI_BUFFER_SIZE 24
 
@@ -15,7 +15,7 @@ typedef struct engine {
     settings *settings;
     resources *resources;
     netadapter netadapter;
-    summary summary;
+    statistics stats;
 
     struct timespec sleep;
     unsigned long total_ticks;

@@ -11,7 +11,7 @@
 #include "../networks/netadapter.h"
 
 #include "../settings.h"
-#include "summary.h"
+#include "../statistics.h"
 #include "../game/control_input.h"
 
 #define CLOCK CLOCK_MONOTONIC
@@ -30,7 +30,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     p_engine->sleep.tv_nsec = (milliseconds % 1000) * 1000000;
 
     printf("Engine: Initialising summaries\n");
-    summary_init(&p_engine->summary);
+    statistics_init(&p_engine->stats);
 
     return 0;
 }
@@ -47,24 +47,24 @@ void _engine_handle_command(void *handler, const network_command cmd) {
         default:
             cmd_out.type = NCT_UNDEFINED;
             memcpy(cmd_out.data, "Cmd type unrecognised", 22);
-            netadapter_send_command(&p_client->connection, &cmd_out);
+            netadapter_send_command(p_na, &p_client->connection, &cmd_out);
             break;
         case NCT_ROOM_CLIENT_INTRODUCE:
             net_client_set_name(p_client, cmd.data, cmd._length);
             cmd_out.type = NCT_LEAD_APPROVE;
-            netadapter_send_command(&p_client->connection, &cmd_out);
+            netadapter_send_command(p_na, &p_client->connection, &cmd_out);
             break;
         case NCT_MSG_RCON:
             memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);
             strrev(cmd_out.data, cmd.data, cmd._length);
 
-            netadapter_send_command(&p_client->connection, &cmd_out);
+            netadapter_send_command(p_na, &p_client->connection, &cmd_out);
             break;
         case NCT_MSG_PLAIN:
             cmd_out.type = NCT_MSG_PLAIN;
             memcpy(cmd_out.data, cmd.data, cmd._length);
             cmd_out.data[cmd._length] = '\0';
-            netadapter_broadcast_command(p_na->clients, p_na->clients_length, &cmd_out);
+            netadapter_broadcast_command(p_na, p_na->clients, p_na->clients_length, &cmd_out);
             break;
     }
 }
@@ -79,7 +79,7 @@ void *engine_run(void *args) {
 
     _engine_link_netadapter(p_engine);
 
-    p_engine->summary.run_start = clock();
+    p_engine->stats.run_start = clock();
     printf("Engine: Starting\n");
     while (p_engine->keep_running) {
         p_engine->total_ticks++;
@@ -89,7 +89,7 @@ void *engine_run(void *args) {
         nanosleep(&p_engine->sleep, NULL);
     }
 
-    p_engine->summary.run_end = clock();
+    p_engine->stats.run_end = clock();
     printf("Engine: Finished\n");
     netadapter_shutdown(&p_engine->netadapter);
     return NULL;
