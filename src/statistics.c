@@ -24,7 +24,7 @@ void statistics_print(statistics *p) {
 │ TCP │ sent  │ rcv-ok│ rcv-er│\n\
 └─────┼───────┼───────┼───────┤\n\
       │%7d│%7d│%7d│\n\
-      └───────┴───────┴───────┘",
+      └───────┴───────┴───────┘\n",
             p->commands_sent, p->commands_received, p->commands_received_invalid);
 
 }

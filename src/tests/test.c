@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../logger.h"
 #include "../my_strings.h"
 #include "../networks/network_command.h"
 #include "../networks/net_client.h"
@@ -121,12 +122,19 @@ void test_network_client_idle() {
     }
 }
 
+void test_logger_formatting(){
+    glog(LOG_INFO, "Tester tests");
+    glog(LOG_WARNING, "Is six six? Eg %d == 6", 6);
+    glog(LOG_ERROR, "I'm affraid, %s, I can not let you do that ( division by %d ).", "Dave", 0);
+}
+
 void run_tests() {
     test_hex_formatting();
     test_command_parsing();
 
     test_strpos();
     test_strshift();
+    test_logger_formatting();
 
     //test_network_client_idle();
 }

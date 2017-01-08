@@ -20,17 +20,11 @@ typedef struct resources {
 
     game_room *game_rooms;
     const int game_rooms_length;
-
-    player *players;
-    const int players_length;
-
-    tank *tanks;
-    const int tanks_length;
 } resources;
 
 int resources_allocate(resources *p, int rooms, int players_per_room, int soc_reserve);
 
-int resources_free(resources *p);
+void resources_free(resources *p);
 
 #endif /* RESOURCES_H */
 

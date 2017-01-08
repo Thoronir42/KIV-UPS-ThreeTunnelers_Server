@@ -29,7 +29,7 @@ typedef struct settings {
     const unsigned int MAX_TICKRATE;
 
 
-    char show_summaries;
+    char show_statistics;
 
     int port;
 

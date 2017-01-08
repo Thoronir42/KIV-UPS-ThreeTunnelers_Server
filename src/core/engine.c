@@ -10,6 +10,7 @@
 
 #include "../networks/netadapter.h"
 
+#include "../logger.h"
 #include "../settings.h"
 #include "../statistics.h"
 #include "../game/control_input.h"
@@ -24,12 +25,12 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 
     unsigned long milliseconds = 1000 / p_settings->MAX_TICKRATE;
 
-    printf("Engine: Sleep millis = %lu\n", milliseconds);
+    glog(LOG_FINE, "Engine: Sleep millis = %lu", milliseconds);
 
     p_engine->sleep.tv_sec = milliseconds / 1000;
     p_engine->sleep.tv_nsec = (milliseconds % 1000) * 1000000;
 
-    printf("Engine: Initialising summaries\n");
+    glog(LOG_INFO, "Engine: Initialising summaries");
     statistics_init(&p_engine->stats);
 
     return 0;
@@ -80,7 +81,7 @@ void *engine_run(void *args) {
     _engine_link_netadapter(p_engine);
 
     p_engine->stats.run_start = clock();
-    printf("Engine: Starting\n");
+    glog(LOG_INFO, "Engine: Starting");
     while (p_engine->keep_running) {
         p_engine->total_ticks++;
         if (p_engine->total_ticks > p_engine->settings->MAX_TICKRATE * 30) {
@@ -90,7 +91,7 @@ void *engine_run(void *args) {
     }
 
     p_engine->stats.run_end = clock();
-    printf("Engine: Finished\n");
+    glog(LOG_INFO, "Engine: Finished");
     netadapter_shutdown(&p_engine->netadapter);
     return NULL;
 }

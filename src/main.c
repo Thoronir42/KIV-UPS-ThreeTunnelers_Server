@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "main.h"
+#include "logger.h"
 #include "settings.h"
 #include "core/resources.h"
 
@@ -32,7 +33,6 @@ void print_help(const char *file, int err) {
 
 int main(int argc, char* argv[]) {
     int ret_val;
-
     settings s_settings;
     resources s_resources;
 
@@ -44,36 +44,40 @@ int main(int argc, char* argv[]) {
     ret_val = main_run(&s_settings, &s_resources);
 
 
-    printf("Main: Freeing resources.\n");
     resources_free(&s_resources);
 
-    printf("Main: Program exited gracefully.\n");
+    glog(LOG_INFO, "Main: Program exited gracefully.");
+    printf("Thank you for using Three Tunnelers server software\n");
+    
     return ret_val;
 }
 
 int main_startup(int argc, char *argv[], settings *p_settings, resources *p_resources) {
     int ret_val;
-    printf("Main: Initialising enviroment\n");
-
-    init_locale();
-    directions_initialise();
-
-    ////
+    time_t now;
     printf("Main: Processing arguments\n");
     ////
     ret_val = settings_process_arguments(p_settings, argc, argv);
     switch (ret_val) {
         case 0:
+            now = time(NULL);
+            logger_init(now);
             break;
         case ARGERR_RUN_TESTS:
+            logger_init_file(stdout);
             run_tests();
             return MAIN_ERR_TEST_RUN;
         default:
             print_help(argv[0], ret_val);
             return MAIN_ERR_BAD_ARGS;
     }
+    
+    glog(LOG_INFO, "Main: Initialising enviroment");
 
-    printf("Main: Allocating resources\n");
+    init_locale();
+    directions_initialise();
+
+    glog(LOG_INFO, "Main: Allocating resources");
     ret_val = resources_allocate(p_resources, p_settings->MAX_ROOMS,
             p_settings->MAX_PLAYERS_PER_ROOM, NETADAPTER_CONNECTIONS_RESERVE);
 
@@ -87,23 +91,21 @@ int main_startup(int argc, char *argv[], settings *p_settings, resources *p_reso
 void _main_run_threads(engine *p_engine) {
     pthread_t threads[3];
 
-    printf("Run: Starting threads\n");
+    glog(LOG_INFO, "Run: Starting threads");
     pthread_create(threads + THR_ENGINE, NULL, engine_run, p_engine);
     pthread_create(threads + THR_ENGINE_CLI, NULL, engine_cli_run, p_engine);
     pthread_create(threads + THR_NETADAPTER, NULL, netadapter_thread_select, &p_engine->netadapter);
 
-    printf("Run: Waiting for threads to finish\n");
+    glog(LOG_INFO, "Run: Waiting for threads to finish");
     pthread_join(threads[THR_ENGINE], NULL);
     pthread_join(threads[THR_ENGINE_CLI], NULL);
     pthread_join(threads[THR_NETADAPTER], NULL);
 
-    printf("Run: Engine has ended");
-    if (p_engine->settings->show_summaries) {
-        printf(", printing sumamry: \n");
+    glog(LOG_INFO, "Run: Engine has ended");
+    if (p_engine->settings->show_statistics) {
+        printf("Run: printing run statistics : \n");
         statistics_print(&p_engine->stats);
     }
-
-    printf("\n");
 }
 
 int main_run(settings *p_settings, resources *p_resources) {
@@ -112,7 +114,7 @@ int main_run(settings *p_settings, resources *p_resources) {
     engine *p_engine = &s_engine;
 
     ////
-    printf("Main: Initialising engine and netadapter\n");
+    glog(LOG_INFO, "Main: Initialising engine and netadapter");
     ////
     engine_init(p_engine, p_settings, p_resources);
     ret_val = netadapter_init(&p_engine->netadapter, p_settings->port, &p_engine->stats,
@@ -120,7 +122,7 @@ int main_run(settings *p_settings, resources *p_resources) {
             p_resources->connections, p_resources->connectons_length,
             p_resources->sock_ids, p_resources->sock_ids_length);
     if (ret_val) {
-        printf("Network interface couldn't be created, exitting. \n");
+        glog(LOG_WARNING, "Network interface couldn't be created, exitting.");
         ret_val = MAIN_ERR_NETWORK_FAILED;
     } else {
         _main_run_threads(p_engine);

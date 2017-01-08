@@ -10,6 +10,7 @@
 #include "net_client.h"
 #include "netadapter.h"
 
+#include "../logger.h"
 #include "../my_strings.h"
 #include "network_command.h"
 #include "../core/engine.h"
@@ -44,17 +45,18 @@ int _netadapter_bind_and_listen(netadapter *adapter) {
         printf("ER\n");
         switch (adapter->status) {
             default:
-                printf("Unidentified error on initialising adapter\n");
+                glog(LOG_ERROR, "Unidentified error on initialising adapter");
                 break;
             case NETADAPTER_STATUS_BIND_ERROR:
-                printf("Failed to bind to port %d\n", adapter->port);
+                glog(LOG_ERROR, "Failed to bind to port %d", adapter->port);
                 break;
             case NETADAPTER_STATUS_LISTEN_ERROR:
-                printf("Failed to listen at port %d\n", adapter->port);
+                glog(LOG_ERROR, "Failed to listen at port %d", adapter->port);
                 break;
         }
     } else {
-        printf("OK:%03d\n", adapter->socket);
+        printf("OK\n");
+        glog(LOG_INFO, "Port %d is bound and being listened on", adapter->port);
     }
     return adapter->status;
 }
@@ -92,14 +94,17 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
 
 void netadapter_shutdown(netadapter *p) {
     int ret_val;
-    p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
-    printf("Closing netadapter socket(%03d)... ", p->socket);
-    ret_val = close(p->socket);
-    printf("%s\n", ret_val == 0 ? "OK" : "ERR");
     
     FD_CLR(p->socket, &p->client_socks);
+    p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
     
-    
+    shutdown(p->socket, SHUT_RDWR);
+    ret_val = close(p->socket);
+    if(!ret_val){
+        glog(LOG_INFO, "Netadapter socket closed");
+    } else {
+        glog(LOG_WARNING, "Netadapter socket could not be closed: %d", ret_val);
+    }
 }
 
 int netadapter_unpack_sid(netadapter *p, socket_identifier *sid,
@@ -178,7 +183,7 @@ void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
             _netadapter_connection_kill(p, p_con);
             break;
         default:
-            printf("Closing unclosable sock identifier\n");
+            glog(LOG_WARNING, "Closing unclosable sock identifier");
             break;
     }
 
