@@ -3,16 +3,17 @@
 
 #include "intpoint.h"
 
-typedef struct projectile {
+typedef struct projectile
+{
     intpoint location;
     int direction;
 
     unsigned char player_rid;
 } projectile;
 
-projectile *projectile_create(int x, int y, int direction);
+void projectile_init(projectile *p, int x, int y, int direction, int player_rid);
 
-void projectile_delete(projectile *p_proj);
+void projectile_clear(projectile *p);
 
 #endif /* PROJECTILE_H */
 

@@ -7,7 +7,7 @@ int colors_init(colors *p) {
     for (i = 0; i < p->capacity; i++) {
         p->usage[i] = false;
     }
-
+    
     return 0;
 }
 

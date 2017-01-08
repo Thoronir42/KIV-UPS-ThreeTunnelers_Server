@@ -13,8 +13,7 @@ typedef struct tank {
     int player_rid;
 } tank;
 
-int tank_init(tank *p, int x, int y, int energy, int hitpoints);
-
+void tank_init(tank *p, int x, int y, int direction, int energy, int hitpoints);
 
 
 #endif /* TANK_H */

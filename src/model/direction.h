@@ -1,6 +1,7 @@
 #ifndef DIRECTION_H
 #define DIRECTION_H
 
+#include "intpoint.h"
 
 #define DIRECTION_0 0
 #define DIRECTION_N 1
@@ -12,9 +13,7 @@
 #define DIRECTION_W 7
 #define DIRECTION_NW 8
 
-short
-DIRECTION_AXIS_X[9],
-DIRECTION_AXIS_Y[9];
+intpoint DIRECTIONS[9];
 
 void directions_initialise();
 

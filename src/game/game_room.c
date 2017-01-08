@@ -5,32 +5,56 @@
 #include "colors.h"
 #include "player.h"
 
-int game_room_init(game_room *p, int id, player * players, int players_size) {
-    int i;
-
-    p->id = id;
+int game_room_init(game_room *p, int size) {
+    game_room_clean_up(p);
+    
     p->game_state = GAME_ROOM_STATE_LOBBY;
-
-    p->players = players;
-    p->players_size = players_size;
-
-    for (i = 0; i < players_size; i++) {
-        (p->players + i)->id = PLAYER_NONE;
-    }
-
+    p->size = size > GAME_ROOM_MAX_PLAYERS ? GAME_ROOM_MAX_PLAYERS : size;
     colors_init(&p->player_colors);
 
     return 0;
 }
 
-int game_room_get_open_slots(game_room *p_game_room) {
+void game_room_clean_up(game_room *p) {
+    int i;
+    
+    for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
+        p->clients[i] = NULL;
+    }
+    
+    
+    memset(p->players, 0, sizeof (player) * GAME_ROOM_MAX_PLAYERS);
+    memset(p->tanks, 0, sizeof(tank) * GAME_ROOM_MAX_PLAYERS);
+    memset(p->projectiles, 0, sizeof(projectile) * GAME_ROOM_MAX_PROJECTILES);
+    p->size = 0;
+    p->game_state = GAME_ROOM_STATE_IDLE;
+    
+}
+
+int game_room_get_open_player_slots(game_room *p_game_room) {
     int i, n = 0;
 
-    for (i = 0; i < p_game_room->players_size; i++) {
+    for (i = 0; i < p_game_room->size; i++) {
         if ((p_game_room->players + i)->client_aid == PLAYER_NONE) {
             n++;
         }
     }
 
     return n;
+}
+
+int game_room_get_open_client_slots(game_room *p_game_room) {
+    int i, n = 0;
+
+    for (i = 0; i < p_game_room->size; i++) {
+        if ((p_game_room->clients + i) == NULL) {
+            n++;
+        }
+    }
+
+    return n;
+}
+
+void game_room_update(game_room *p) {
+
 }

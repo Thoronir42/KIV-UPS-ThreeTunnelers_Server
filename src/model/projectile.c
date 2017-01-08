@@ -1,11 +1,15 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "projectile.h"
 
-projectile *projectile_create(int x, int y, int direction) {
-    projectile* p_proj = malloc(sizeof (projectile));
+void projectile_init(projectile *p, int x, int y, int direction, int player_rid) {
+    p->location.x = x;
+    p->location.y = y;
+    p->direction = direction;
+    p->player_rid = player_rid;
+}
 
-    p_proj->location.x = x;
-    p_proj->location.y = y;
-    p_proj->direction = direction;
+void projectile_clear(projectile *p) {
+    memset(p, 0, sizeof(projectile));
 }
