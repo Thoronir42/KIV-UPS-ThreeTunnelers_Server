@@ -4,4 +4,4 @@ nbproject/
 
 TT_server
 obj
-
+logs/*

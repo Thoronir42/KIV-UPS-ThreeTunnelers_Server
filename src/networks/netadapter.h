@@ -42,11 +42,9 @@ typedef struct socket_identifier
 typedef struct netadapter
 {
     int status;
-    char _buffer[NETADAPTER_BUFFER_SIZE];
 
     struct sockaddr_in addr;
     int port;
-
     int socket;
 
     fd_set client_socks;

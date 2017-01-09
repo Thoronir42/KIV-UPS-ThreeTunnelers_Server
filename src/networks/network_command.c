@@ -6,6 +6,9 @@
 #include "../my_strings.h"
 #include "net_client.h"
 
+#define NETCMD_TYPE_UNKNOWN 1
+#define NETCMD_DATA_TOO_LONG 2
+
 void network_command_prepare(network_command *p, short type) {
     memset(p, 0, sizeof (network_command));
     p->type = type;
@@ -36,9 +39,13 @@ int network_command_from_string(network_command *dest, char *src, int length) {
 
     dest->type = read_hex_short(src + scanned);
     scanned += 4;
+    
+    if(dest->type == NCT_UNDEFINED){
+        return NETCMD_TYPE_UNKNOWN;
+    }
 
     if (length - scanned > NETWORK_COMMAND_DATA_LENGTH) {
-        return 1;
+        return NETCMD_DATA_TOO_LONG;
         //length = NETWORK_COMMAND_DATA_LENGTH - scanned;
     }
 

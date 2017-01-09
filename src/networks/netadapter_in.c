@@ -6,6 +6,7 @@
 
 #include "netadapter.h"
 #include "../localisation.h"
+#include "../logger.h"
 
 //// accessors
 
@@ -55,6 +56,9 @@ void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, ch
 
     ++(p_con->invalid_counter);
 }
+void _netadapter_handle_invalid_command(netadapter *p, tcp_connection *p_con, network_command cmd){
+    // TODO: implement
+}
 
 /**
  * Tries to read from socket on provided connection and transform incomming
@@ -68,8 +72,6 @@ void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, ch
  */
 int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) {
     int read_size;
-
-    memset(p->_buffer, 0, NETADAPTER_BUFFER_SIZE);
 
     if (p_con->a2read <= 0) {
         return NETADAPTER_SOCK_ERROR_NOTHING_TO_READ;
@@ -96,6 +98,7 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
 
 int _netadapter_handle_command(netadapter *p, network_command cmd, socket_identifier *sid) {
     cmd.remote_identifier = sid->offset;
+    // todo: remove processing messages
     switch (sid->type) {
         case SOCKET_IDENTIFIER_TYPE_TBD:
             printf("Processing uncliented socket %d\n", sid->offset);
@@ -105,6 +108,9 @@ int _netadapter_handle_command(netadapter *p, network_command cmd, socket_identi
             printf("Processing cliented socket %d\n", sid->offset);
             p->command_handle_func(p->command_handler, cmd);
             return 0;
+        default:
+            glog(LOG_WARNING, "Attempted to process socket %d which belongs to "
+            "neither temporary nor client connection!", sid->offset);
     }
 }
 
@@ -114,13 +120,12 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
     int ret_val;
     int socket = sid - p->sock_ids;
 
-    int cr_pos;
+    int cr_pos; // carriage return - to recognise end of command
     int processed_commands = 0;
 
-    //    printf("Processing remote socket %d(%d)\n", sid - p->sock_ids, sid->type);
-
     if (netadapter_unpack_sid(p, sid, &p_con, &p_cli) == SOCKET_IDENTIFIER_TYPE_EMPTY) {
-        printf("SID unpack fail\n");
+        glog(LOG_WARNING, "Netadapter: Could not unpack socket identifier for "
+                "socket %d. Terminating connection.", socket);
         return -1;
     }
 
@@ -132,36 +137,43 @@ int _netadapter_ts_process_remote_socket(netadapter *p, socket_identifier *sid) 
 
         switch (ret_val) {
             case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
-                printf("Netadapter: something wrong happened on socket %02d. "
-                        "They will be put down now.\n", p_con->socket);
+                glog(LOG_INFO, "Netadapter: Connection reset on socket %02d. "
+                        "Terminating connection.", p_con->socket);
                 return -1;
             case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
-                printf("Netadapter: connection on socket %02d kept sending "
-                        "gibberish. It will be terminated soon.\n", p_con->socket);
+                glog(LOG_INFO, "Netadapter: Connection on socket %02d sent too "
+                        "many malformed messages. Terminating connection.", p_con->socket);
                 return -1;
         }
 
 
-        printf("Processing message buffer:\n%s\n", p_con->_in_buffer);
+        glog(LOG_FINE, "Processing message buffer: [%s]", p_con->_in_buffer);
         // multiple commands might have arrived in this read cycle
         while ((cr_pos = strpos(p_con->_in_buffer, "\n")) != STR_NOT_FOUND) {
             if (cr_pos < NETWORK_COMMAND_HEADER_SIZE) {
-                printf("Client %02d sent too short message and is going to be "
-                        "termitnated immediately.\n", p_con->socket);
+                glog(LOG_FINE, "Connection on socket %02d sent too short "
+                        "message. Terminating connection.", p_con->socket);
                 return -1;
             }
-            printf("Parsing command #%d from [%02d]%s\n", ++processed_commands, cr_pos, p_con->_in_buffer);
-            network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
-
+            
+            glog(LOG_FINE, "Parsing command #%d from [%02d]%s\n",
+                    ++processed_commands, cr_pos, p_con->_in_buffer);
+            ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, cr_pos);
+            
+            if(!ret_val){
+                _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
+                p->stats->commands_received++;
+            } else {
+                _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, cr_pos);
+                p->stats->commands_received_invalid++;
+            }
+            
             strshift(p_con->_in_buffer, TCP_CONNECTION_BUFFER_SIZE, cr_pos + 1);
             p_con->_in_buffer_ptr -= (cr_pos + 1);
-
-            _netadapter_handle_command(p, p->_cmd_in_buffer, sid);
-            p->stats->commands_received++;
         }
-
-        return 0;
     } while (p_con->a2read > 0);
+    
+    return 0;
 }
 
 void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
@@ -176,12 +188,10 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
-    printf("Processign server socket\n");
-
     // todo: closing server socket does not alert the select, so a timeout
     // has been implemented as a quick-fix, look into it later pls
     if (adapter->status != NETADAPTER_STATUS_OK) {
-        printf("Server socket is not being processed as netadapter is not ok.");
+        glog(LOG_INFO, "Server socket is not being processed as netadapter is not ok.");
         return;
     }
 
@@ -207,7 +217,8 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
     p_con->last_active = time(NULL);
 
     FD_SET(p_con->socket, &adapter->client_socks);
-    printf("Pripojen novy klient(%02d) a pridan do sady socketu\n", p_con->socket);
+    glog(LOG_INFO, "New connection on socket %02d has been added "
+            "to socket set.", p_con->socket);
 
     return;
 }
@@ -216,7 +227,7 @@ void _netadapter_ts_process_server_socket(netadapter *adapter) {
 void *netadapter_thread_select(void *args) {
     netadapter *adapter = (netadapter *) args;
     socket_identifier *sid;
-    int return_value;
+    int ret_val;
     int fd;
 
     fd_set tests;
@@ -232,10 +243,12 @@ void *netadapter_thread_select(void *args) {
         select_timeout.tv_sec = 1;
         select_timeout.tv_usec = 0;
 
-        // sada deskriptoru je po kazdem volani select prepsana sadou deskriptoru kde se neco delo
-        return_value = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, &select_timeout);
-        if (return_value < 0) {
-            printf("Select - ERR:%d\n", return_value);
+        // sada deskriptoru je po kazdem volani select prepsana
+        // sadou deskriptoru kde se neco delo
+        ret_val = select(FD_SETSIZE, &tests, (fd_set *) 0, (fd_set *) 0, &select_timeout);
+        if (ret_val < 0) {
+            fprintf(stderr, "Select error no.: %d", ret_val);
+            glog(LOG_ERROR, "Error at select(), errno: %d", ret_val);
             adapter->status = NETADAPTER_STATUS_SELECT_ERROR;
             return NULL;
         }
@@ -259,6 +272,8 @@ void *netadapter_thread_select(void *args) {
             }
         }
     }
-    printf("Netadapter: finished with status %d.\n", adapter->status);
+    glog(LOG_INFO, "Netadapter: finished with status %d.", adapter->status);
     adapter->status = NETADAPTER_STATUS_FINISHED;
+    
+    return NULL;
 }

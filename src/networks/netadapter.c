@@ -72,6 +72,7 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
+    p->stats = stats;
 
     p->clients = clients;
     p->clients_length = clients_length;
@@ -162,11 +163,13 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
 void _netadapter_connection_kill(netadapter *p, tcp_connection *p_con) {
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
+    glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
 }
 
 void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli) {
     _netadapter_connection_kill(p, &p_cli->connection);
     net_client_disconnected(p_cli, 0);
+    // todo: inform other clients of disconnection
 }
 
 void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
