@@ -21,17 +21,6 @@ int _netadapter_first_free_client_offset(netadapter *p) {
     return NETADAPTER_ITEM_EMPTY;
 }
 
-int _netadapter_first_free_connection_offset(netadapter *p) {
-    int i;
-    for (i = 0; i < p->connections_length; i++) {
-        if ((p->connections + i)->socket == 0) {
-            i;
-        }
-    }
-
-    return NETADAPTER_ITEM_EMPTY;
-}
-
 net_client *_netadapter_find_client_by_secret(netadapter *p, char *secret) {
     int i;
     for (i = 0; i < p->clients_length; i++) {
@@ -166,16 +155,9 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
     return 0;
 }
 
-void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
-    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DENY);
-    network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
-
-    netadapter_send_command(p, p_con, &p_con->_out_buffer);
-    close(p_con->socket);
-}
+////  THREAD_SELECT
 
 void _netadapter_ts_process_server_socket(netadapter *p) {
-    int n;
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
@@ -186,26 +168,19 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
         return;
     }
 
-    n = _netadapter_first_free_connection_offset(p);
+    
 
-    p_con = n == NETADAPTER_ITEM_EMPTY ? &tmp_con : p->connections + n;
-    if (p_con == NULL) {
-        p_con = &tmp_con;
-    }
+    memset(&tmp_con, 0, sizeof (tcp_connection));
 
-    memset(p_con, 0, sizeof (tcp_connection));
+    tmp_con.socket = accept(p->socket, (struct sockaddr *) &tmp_con.addr, &tmp_con.addr_len);
 
-    p_con->socket = accept(p->socket, (struct sockaddr *) &p_con->addr, &p_con->addr_len);
-
-    if (p_con == &tmp_con) {
-        netadapter_close_connection_msg(p, p_con, loc.socket_reject_no_room);
-        return;
-    }
-
-    if (p_con->socket > p->connections_length) {
+    if(tmp_con.socket >= p->connections_length){
         netadapter_close_connection_msg(p, p_con, loc.socket_reject_invalid_number);
         return;
     }
+    
+    p_con = p->connections + tmp_con.socket;
+    *p_con = tmp_con;
 
     p_con->last_active = time(NULL);
 
@@ -215,7 +190,6 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
 
     return;
 }
-////  THREAD_SELECT
 
 void *netadapter_thread_select(void *args) {
     netadapter *adapter = (netadapter *) args;
@@ -255,7 +229,7 @@ void *netadapter_thread_select(void *args) {
             } else {
                 ret_val = _netadapter_ts_process_remote_socket(adapter, fd);
                 if (ret_val < 0) {
-                    netadapter_term_connection_by_socket(adapter, fd);
+                    netadapter_close_connection_by_socket(adapter, fd);
                 }
             }
         }

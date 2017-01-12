@@ -74,10 +74,11 @@ void netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con);
 //// netadapter controls
 int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd);
 int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd);
-int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointers);
+int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd);
 
-void netadapter_term_connection_by_client(netadapter *p, net_client *p_cli);
-void netadapter_term_connection_by_socket(netadapter *p, int socket);
+void netadapter_close_connection(netadapter *p, tcp_connection *p_con);
+void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli);
+void netadapter_close_connection_by_socket(netadapter *p, int socket);
 //// netadapter accessors
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 

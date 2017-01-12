@@ -6,6 +6,8 @@ struct locale {
     
     char *socket_reject_no_room;
     char *socket_reject_invalid_number;
+    
+    char *server_shutting_down;
 };
 
 struct locale loc;

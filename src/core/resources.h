@@ -7,16 +7,19 @@
 #include "../model/tank.h"
 #include "../networks/netadapter.h"
 
+#define RESOURCES_ERROR_ALLOCATION_FAILED 1
+#define RESOURCES_ERROR_NOT_ENOUGH_CONNECTIONS_AVAILABLE 2
+
+
+#define RESOURCES_SPARE_CONNECTIONS 20
+
 typedef struct resources {
     net_client *clients;
     const int clients_length;
     
     tcp_connection *connections;
     int *con_to_cli;
-    const int connectons_length;
-
-    
-
+    const int connections_length;
 
     game_room *game_rooms;
     const int game_rooms_length;

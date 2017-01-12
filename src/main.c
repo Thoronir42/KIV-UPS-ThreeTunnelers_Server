@@ -83,6 +83,7 @@ int main_startup(int argc, char *argv[], settings *p_settings, resources *p_reso
             p_settings->MAX_PLAYERS_PER_ROOM, FD_SETSIZE);
 
     if (ret_val) {
+        glog(LOG_ERROR, "Main: Could not allocate resources. Colde = %d", ret_val);
         return MAIN_ERR_RES_ALLOCATION_FAIL;
     }
 
@@ -120,7 +121,7 @@ int main_run(settings *p_settings, resources *p_resources) {
     engine_init(p_engine, p_settings, p_resources);
     ret_val = netadapter_init(&p_engine->netadapter, p_settings->port, &p_engine->stats,
             p_resources->clients, p_resources->clients_length,
-            p_resources->connections, p_resources->con_to_cli, p_resources->connectons_length);
+            p_resources->connections, p_resources->con_to_cli, p_resources->connections_length);
     if (ret_val) {
         glog(LOG_WARNING, "Network interface couldn't be created, exitting.");
         ret_val = MAIN_ERR_NETWORK_FAILED;

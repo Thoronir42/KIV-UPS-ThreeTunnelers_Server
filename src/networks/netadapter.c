@@ -68,6 +68,7 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
 int netadapter_init(netadapter *p, int port, statistics *stats,
         net_client *clients, int clients_length,
         tcp_connection *connections, int *con_to_cli, int connections_length) {
+    int i;
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
@@ -75,8 +76,9 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
 
     p->clients = clients;
     p->clients_length = clients_length;
-    
+
     p->connections = connections;
+    p->connection_to_client = con_to_cli;
     p->connections_length = connections_length;
 
     p->command_handler = p;
@@ -85,19 +87,46 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
     *(short *) &p->ALLOWED_UNRESPONSIVE_TIME = _NETADAPTER_MAX_IDLE_TIME + 4;
     *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
+    
+    for(i = 0; i < connections_length; i++){
+        (p->connections + i)->socket = NETADAPTER_ITEM_EMPTY;
+    }
 
     return _netadapter_bind_and_listen(p);
 }
 
+void _netadapter_shutdown_connections(netadapter *p){
+    network_command cmd;
+    int i, n = 0;
+    
+    glog(LOG_INFO, "Netadapter: shutting down all remaining connections");
+    
+    network_command_prepare(&cmd, NCT_CONNECTION_DISCONNECT);
+    network_command_set_data(&cmd, loc.server_shutting_down, strlen(loc.server_shutting_down));
+    
+    for(i = 0; i < p->connections_length; i++){
+        if((p->connections + i)->socket != NETADAPTER_ITEM_EMPTY){
+            netadapter_send_command(p, p->connections + i, &cmd);
+            netadapter_close_connection(p, p->connections + i);
+            n++;
+        }
+    }
+    
+    glog(LOG_INFO, "Netadapter: %d connections terminated", n);
+    
+}
+
 void netadapter_shutdown(netadapter *p) {
     int ret_val;
+
+    _netadapter_shutdown_connections(p);
     
     FD_CLR(p->socket, &p->client_socks);
     p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
-    
+
     shutdown(p->socket, SHUT_RDWR);
     ret_val = close(p->socket);
-    if(!ret_val){
+    if (!ret_val) {
         glog(LOG_INFO, "Netadapter socket closed");
     } else {
         glog(LOG_WARNING, "Netadapter socket could not be closed: %d", ret_val);
@@ -106,31 +135,25 @@ void netadapter_shutdown(netadapter *p) {
 
 ////  NETADAPTER - command sending
 
-int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd) {
+int netadapter_send_command(netadapter *p, tcp_connection *p_con, network_command *cmd) {
     char buffer[sizeof (network_command) + 2];
     int a2write;
     a2write = network_command_to_string(buffer, cmd);
 
     memcpy(buffer + a2write, "\n\0", 2); // message footer
-    write(connection->socket, buffer, a2write + 2);
+    write(p_con->socket, buffer, a2write + 2);
 
     p->stats->commands_sent++;
+    //    network_command_print("Sent", cmd);
     
-    network_command_print("Sent", cmd);
-
     return 0;
 }
 
-int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd) {
-    return netadapter_broadcast_command_p(p, (net_client **)clients, clients_size, cmd, 0);
-}
-
-int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointer) {
+int _netadapter_broadcast_command(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointer) {
     int i, counter = 0;
     net_client *p_cli;
-    network_command_print("bc", cmd);
     for (i = 0; i < clients_size; i++) {
-        p_cli = ref_pointer ? *(clients + i) : (net_client *)(clients + i);
+        p_cli = ref_pointer ? *(clients + i) : (net_client *) (clients + i);
         if (p_cli->status == NET_CLIENT_STATUS_CONNECTED) {
             netadapter_send_command(p, p_cli->connection, cmd);
             counter++;
@@ -140,22 +163,40 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
     return counter;
 }
 
-void _netadapter_connection_kill(netadapter *p, tcp_connection *p_con) {
+int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd) {
+    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size, cmd, 0);
+}
+
+int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd) {
+    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size, cmd, 1);
+}
+
+void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
+    if(p->connection_to_client[p_con->socket] != NETADAPTER_ITEM_EMPTY){
+        net_client_disconnected(p->clients + p->connection_to_client[p_con->socket], 0);
+    }
     p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
-    p_con->socket = 0;
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
+    p_con->socket = NETADAPTER_ITEM_EMPTY;
 }
 
-void netadapter_term_connection_by_client(netadapter *p, net_client *p_cli) {
-    _netadapter_connection_kill(p, p_cli->connection);
-    net_client_disconnected(p_cli, 0);
-    // todo: inform other clients of disconnection
+void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli) {
+    netadapter_close_connection(p, p_cli->connection);
+    
 }
 
-void netadapter_term_connection_by_socket(netadapter *p, int socket){
-    _netadapter_connection_kill(p, p->connections + socket);
+void netadapter_close_connection_by_socket(netadapter *p, int socket) {
+    netadapter_close_connection(p, p->connections + socket);
+}
+
+void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
+    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DENY);
+    network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
+
+    netadapter_send_command(p, p_con, &p_con->_out_buffer);
+    netadapter_close_connection(p, p_con);
 }
 
 //// NETADAPTER - client controls
@@ -164,11 +205,11 @@ net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
     return (p->clients + aid);
 }
 
-int netadapter_client_aid_by_socket(netadapter *p, int socket){
-    if(socket < 0 || socket > p->clients_length){
+int netadapter_client_aid_by_socket(netadapter *p, int socket) {
+    if (socket < 0 || socket > p->clients_length) {
         return NETADAPTER_ITEM_EMPTY;
     }
-    
+
     return p->connection_to_client[socket];
 }
 
@@ -196,7 +237,7 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
             break;
         case NET_CLIENT_STATUS_UNRESPONSIVE:
             if (idle_time > p->ALLOWED_UNRESPONSIVE_TIME) {
-                netadapter_term_connection_by_client(p, p_client);
+                netadapter_close_connection_by_client(p, p_client);
             }
             break;
     }

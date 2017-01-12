@@ -78,26 +78,30 @@ void _cli_list_connections(netadapter *p) {
     tcp_connection *p_con;
     time_t now = time(NULL);
     int idle;
-    char status;
 
     int pages = _list_page_count(p->connections_length, cpp);
 
     printf("Temp connections listing: \n");
 
-    for (i = 0; i < p->clients_length; i++) {
+    for (i = 0; i < p->connections_length; i++) {
         if (i % cpp == 0) {
-            printf("╒════╤════╤════════╤═════════╕\n");
-            printf("│ ID │ soc│ Idle T │ %02d / %02d │\n", (i / cpp) + 1, pages);
-            printf("╞════╪════╪════════╪═════════╛\n");
+            printf("╒════╤════╤════╤════════╤═════════╕\n");
+            printf("│ ID │ soc│ cli│ Idle T │ %02d / %02d │\n", (i / cpp) + 1, pages);
+            printf("╞════╪════╪════╪════════╪═════════╛\n");
         }
         p_con = p->connections + i;
         idle = now - p_con->last_active;
+        if(p_con->socket != NETADAPTER_ITEM_EMPTY){
+            n++;
+        } else {
+            idle = 0;
+        }
 
-        printf("│ %02d │ %02d │ %6d │\n",
-                i, p_con->socket, idle);
+        printf("│ %02d │ %02d │ %02d │ %6d │\n",
+                i, p_con->socket, p->connection_to_client[i], idle);
     }
 
-    printf("Total active temp connections: %02d\n", n);
+    printf("Total open connections: %02d\n", n);
 }
 
 void *engine_cli_run(void *args) {
@@ -113,7 +117,7 @@ void *engine_cli_run(void *args) {
         } else if (!strcmp(input, "clients")) {
             _cli_list_clients(&p_engine->netadapter);
         } else if (!strcmp(input, "connections")) {
-            _cli_list_clients(&p_engine->netadapter);
+            _cli_list_connections(&p_engine->netadapter);
         } else if (!strcmp(input, "status")) {
             _cli_status(p_engine);
         }

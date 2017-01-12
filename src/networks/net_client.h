@@ -14,6 +14,7 @@
 #define NET_CLIENT_STATUS_EMPTY 0
 #define NET_CLIENT_STATUS_CONNECTED 1
 #define NET_CLIENT_STATUS_UNRESPONSIVE 2
+#define NET_CLIENT_STATUS_DISCONNECTED 3
 
 #define NET_CLIENT_NAME_MAX_LENGTH 24
 #define NET_CLIENT_MAX_PLAYERS 2
@@ -50,7 +51,6 @@ typedef struct net_client {
 
 char net_client_status_letter(unsigned char status);
 int  tcp_connection_process(tcp_connection *p, int a2read);
-void tcp_connection_reset(tcp_connection *p);
 
 int  net_client_init(net_client *p, tcp_connection *connection);
 void net_client_disconnected(net_client *p, int bool_clean);
