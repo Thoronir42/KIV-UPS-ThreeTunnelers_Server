@@ -88,16 +88,22 @@ void test_command_parsing() {
 }
 
 void test_network_client_idle() {
-    net_client clients[4];
     statistics s_stats;
     netadapter adapter;
+    
+    net_client clients[4];
+    tcp_connection connections[4];
     memset(clients, 0, sizeof (net_client) * 4);
+    memset(connections, 0, sizeof(net_client) * 4);
     int i;
+    
+    for(i = 0; i < 4; i++){
+        clients[i].connection = connections + i;
+    }
 
     netadapter_init(&adapter, 0, &s_stats,
             clients, 4,
-            NULL, 0,
-            NULL, 0);
+            NULL, NULL, 0);
     printf("Please ignore port related errors. Starting clients idle tests.\n"
             "Max allowed idletime set to %d", 2);
 
@@ -106,12 +112,12 @@ void test_network_client_idle() {
     memcpy(clients[0].name, "Adam", 5);
     memcpy(clients[2].name, "Barbara", 8);
 
-    clients[0].connection.status = TCP_CONNECTION_STATUS_DISCONNECTED;
-    clients[2].connection.status = TCP_CONNECTION_STATUS_DISCONNECTED;
+    clients[0].connection = connections + 0;
+    clients[2].connection = connections + 1;
 
-    clients[0].connection.last_active = time(NULL);
+    clients[0].connection->last_active = time(NULL);
     sleep(1);
-    clients[2].connection.last_active = time(NULL);
+    clients[2].connection->last_active = time(NULL);
     _cli_list_clients(&adapter);
 
     for (i = 1; i <= 3; i++) {

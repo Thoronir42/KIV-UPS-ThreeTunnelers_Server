@@ -67,8 +67,7 @@ void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
 
 int netadapter_init(netadapter *p, int port, statistics *stats,
         net_client *clients, int clients_length,
-        tcp_connection *connections, int connections_length,
-        struct socket_identifier *sock_ids, int sock_ids_length) {
+        tcp_connection *connections, int *con_to_cli, int connections_length) {
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
@@ -76,9 +75,6 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
 
     p->clients = clients;
     p->clients_length = clients_length;
-
-    p->sock_ids = sock_ids;
-    p->sock_ids_length = sock_ids_length;
     
     p->connections = connections;
     p->connections_length = connections_length;
@@ -108,22 +104,6 @@ void netadapter_shutdown(netadapter *p) {
     }
 }
 
-int netadapter_unpack_sid(netadapter *p, socket_identifier *sid,
-        tcp_connection **p_con, net_client **p_cli) {
-    switch (sid->type) {
-        case SOCKET_IDENTIFIER_TYPE_TBD:
-            *p_con = p->connections + sid->offset;
-            break;
-        case SOCKET_IDENTIFIER_TYPE_CLIENT:
-            *p_cli = p->clients + sid->offset;
-            *p_con = &(*p_cli)->connection;
-            break;
-        default:
-            return SOCKET_IDENTIFIER_TYPE_EMPTY;
-    }
-    return sid->type;
-}
-
 ////  NETADAPTER - command sending
 
 int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd) {
@@ -151,8 +131,8 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
     network_command_print("bc", cmd);
     for (i = 0; i < clients_size; i++) {
         p_cli = ref_pointer ? *(clients + i) : (net_client *)(clients + i);
-        if (p_cli->connection.status == TCP_CONNECTION_STATUS_CONNECTED) {
-            netadapter_send_command(p, &p_cli->connection, cmd);
+        if (p_cli->status == NET_CLIENT_STATUS_CONNECTED) {
+            netadapter_send_command(p, p_cli->connection, cmd);
             counter++;
         }
     }
@@ -163,33 +143,19 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
 void _netadapter_connection_kill(netadapter *p, tcp_connection *p_con) {
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
+    p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
+    p_con->socket = 0;
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
 }
 
-void netadapter_close_socket_by_client(netadapter *p, net_client *p_cli) {
-    _netadapter_connection_kill(p, &p_cli->connection);
+void netadapter_term_connection_by_client(netadapter *p, net_client *p_cli) {
+    _netadapter_connection_kill(p, p_cli->connection);
     net_client_disconnected(p_cli, 0);
     // todo: inform other clients of disconnection
 }
 
-void netadapter_close_socket_by_sid(netadapter *p, socket_identifier *p_sid) {
-    tcp_connection *p_con;
-    net_client *p_cli;
-    int type;
-    type = netadapter_unpack_sid(p, p_sid, &p_con, &p_cli);
-    
-    switch(type){
-        case SOCKET_IDENTIFIER_TYPE_CLIENT:
-            netadapter_close_socket_by_client(p, p_cli);
-            break;
-        case SOCKET_IDENTIFIER_TYPE_TBD:
-            _netadapter_connection_kill(p, p_con);
-            break;
-        default:
-            glog(LOG_WARNING, "Closing unclosable sock identifier");
-            break;
-    }
-
+void netadapter_term_connection_by_socket(netadapter *p, int socket){
+    _netadapter_connection_kill(p, p->connections + socket);
 }
 
 //// NETADAPTER - client controls
@@ -198,46 +164,39 @@ net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
     return (p->clients + aid);
 }
 
-socket_identifier *netadapter_get_sid_by_socket(netadapter *p, int socket) {
-    // TODO: verify less part of unequation
-    if (socket < 0 || socket >= p->sock_ids_length) {
-        return NULL;
+int netadapter_client_aid_by_socket(netadapter *p, int socket){
+    if(socket < 0 || socket > p->clients_length){
+        return NETADAPTER_ITEM_EMPTY;
     }
-    return p->sock_ids + socket;
+    
+    return p->connection_to_client[socket];
 }
 
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
     int offset = p_cl - adapter->clients;
     if (offset < 0 || offset >= adapter->clients_length) {
-        return -1;
+        return NETADAPTER_ITEM_EMPTY;
     }
 
     return offset;
 }
 
 void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t now) {
-    tcp_connection *p_con = &p_client->connection;
+    tcp_connection *p_con = p_client->connection;
     int idle_time = now - p_con->last_active;
 
-    switch (p_client->connection.status) {
+    switch (p_client->status) {
         default:
-        case TCP_CONNECTION_STATUS_CONNECTED:
+        case NET_CLIENT_STATUS_CONNECTED:
             if (idle_time > p->ALLOWED_IDLE_TIME) {
-                network_command_strprep(&p_con->_out_buffer,
-                        NCT_LEAD_ECHO_REQUEST, loc.netcli_dcreason_unresponsive);
+                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_ECHO_REQUEST, loc.netcli_dcreason_unresponsive);
                 netadapter_send_command(p, p_con, &p_con->_out_buffer);
-                p_client->connection.status = TCP_CONNECTION_STATUS_UNRESPONSIVE;
+                p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
             }
             break;
-        case TCP_CONNECTION_STATUS_UNRESPONSIVE:
+        case NET_CLIENT_STATUS_UNRESPONSIVE:
             if (idle_time > p->ALLOWED_UNRESPONSIVE_TIME) {
-                netadapter_close_socket_by_client(p, p_client);
-            }
-            break;
-
-        case TCP_CONNECTION_STATUS_DISCONNECTED:
-            if (idle_time > p->ALLOWED_IDLE_TIME) {
-                net_client_disconnected(p_client, 1);
+                netadapter_term_connection_by_client(p, p_client);
             }
             break;
     }
@@ -251,19 +210,9 @@ void netadapter_check_idle_clients(netadapter *p) {
     for (i = 0; i < p->clients_length; i++) {
         p_client = p->clients + i;
 
-        if (p_client->connection.status == TCP_CONNECTION_STATUS_EMPTY) {
+        if (p_client->connection == NULL) {
             continue;
         }
         _netadapter_check_idle_client(p, p_client, now);
     }
-}
-
-int netadapter_set_sid(netadapter *p, int socket, int type, int offset) {
-    if(socket < 0 || socket > p->sock_ids_length){
-        return -1;
-    }
-    (p->sock_ids + socket)->type = type;
-    (p->sock_ids + socket)->offset = offset;
-    
-    return 0;
 }

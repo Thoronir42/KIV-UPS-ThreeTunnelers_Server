@@ -12,17 +12,17 @@ typedef struct resources {
     const int clients_length;
     
     tcp_connection *connections;
+    int *con_to_cli;
     const int connectons_length;
 
-    struct socket_identifier *sock_ids;
-    const int sock_ids_length;
+    
 
 
     game_room *game_rooms;
     const int game_rooms_length;
 } resources;
 
-int resources_allocate(resources *p, int rooms, int players_per_room, int soc_reserve);
+int resources_allocate(resources *p, int rooms, int players_per_room, int connections);
 
 void resources_free(resources *p);
 

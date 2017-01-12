@@ -44,6 +44,7 @@
 #define NCT_MAP_SPECIFICATION 140
 #define NCT_MAP_CHUNK_DATA 141
 #define NCT_MAP_CHUNK_REQUEST 142
+#define NCT_MAP_BLOCK_CHANGES 143
 
 #define NCT_GAME_CONTROLS_SET 201
 #define NCT_GAME_TANK_REQUEST 210
@@ -57,7 +58,7 @@ typedef struct network_command {
     short _length;
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
-    int remote_identifier;
+    int client_aid;
 
 } network_command;
 

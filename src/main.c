@@ -61,7 +61,8 @@ int main_startup(int argc, char *argv[], settings *p_settings, resources *p_reso
     switch (ret_val) {
         case 0:
             now = time(NULL);
-            logger_init(now);
+//            logger_init(now);
+            logger_init_file(stdout);
             break;
         case ARGERR_RUN_TESTS:
             logger_init_file(stdout);
@@ -79,7 +80,7 @@ int main_startup(int argc, char *argv[], settings *p_settings, resources *p_reso
 
     glog(LOG_INFO, "Main: Allocating resources");
     ret_val = resources_allocate(p_resources, p_settings->MAX_ROOMS,
-            p_settings->MAX_PLAYERS_PER_ROOM, NETADAPTER_CONNECTIONS_RESERVE);
+            p_settings->MAX_PLAYERS_PER_ROOM, FD_SETSIZE);
 
     if (ret_val) {
         return MAIN_ERR_RES_ALLOCATION_FAIL;
@@ -93,13 +94,13 @@ void _main_run_threads(engine *p_engine) {
 
     glog(LOG_INFO, "Run: Starting threads");
     pthread_create(threads + THR_ENGINE, NULL, engine_run, p_engine);
-    pthread_create(threads + THR_ENGINE_CLI, NULL, engine_cli_run, p_engine);
     pthread_create(threads + THR_NETADAPTER, NULL, netadapter_thread_select, &p_engine->netadapter);
+    pthread_create(threads + THR_ENGINE_CLI, NULL, engine_cli_run, p_engine);
 
     glog(LOG_INFO, "Run: Waiting for threads to finish");
     pthread_join(threads[THR_ENGINE], NULL);
-    pthread_join(threads[THR_ENGINE_CLI], NULL);
     pthread_join(threads[THR_NETADAPTER], NULL);
+    pthread_join(threads[THR_ENGINE_CLI], NULL);
 
     glog(LOG_INFO, "Run: Engine has ended");
     if (p_engine->settings->show_statistics) {
@@ -119,8 +120,7 @@ int main_run(settings *p_settings, resources *p_resources) {
     engine_init(p_engine, p_settings, p_resources);
     ret_val = netadapter_init(&p_engine->netadapter, p_settings->port, &p_engine->stats,
             p_resources->clients, p_resources->clients_length,
-            p_resources->connections, p_resources->connectons_length,
-            p_resources->sock_ids, p_resources->sock_ids_length);
+            p_resources->connections, p_resources->con_to_cli, p_resources->connectons_length);
     if (ret_val) {
         glog(LOG_WARNING, "Network interface couldn't be created, exitting.");
         ret_val = MAIN_ERR_NETWORK_FAILED;

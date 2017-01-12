@@ -34,8 +34,6 @@ void *engine_run(void *args);
 
 void *engine_cli_run(void *args);
 
-int engine_count_temp_connections(engine *p, unsigned char status);
-
 int engine_count_clients(engine *p, unsigned char status);
 
 #endif

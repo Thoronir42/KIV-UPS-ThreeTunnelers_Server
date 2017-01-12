@@ -18,21 +18,17 @@ void _cli_status(engine *p) {
     char value[STATUS_VALUE_SIZE];
 
     clock_t now = clock();
-    
+
     int run_length = (now - p->stats.run_start) / 1000;
     int run_mins = run_length / 60;
     int run_sec = run_length % 60;
-    
+
     memset(value, '\0', STATUS_VALUE_SIZE);
     sprintf(value, "%3d:%02d\n", run_mins, run_sec);
     printf(format, "Uptime", value);
-    
-    memset(value, '\0', STATUS_VALUE_SIZE);
-    sprintf(value, "%3d / %3d", engine_count_temp_connections(p, TCP_CONNECTION_STATUS_CONNECTED), p->resources->connectons_length);
-    printf(format, "Temp connections", value);
 
     memset(value, '\0', STATUS_VALUE_SIZE);
-    sprintf(value, "%3d / %3d", engine_count_clients(p, TCP_CONNECTION_STATUS_CONNECTED), p->resources->clients_length);
+    sprintf(value, "%3d / %3d", engine_count_clients(p, NET_CLIENT_STATUS_CONNECTED), p->resources->clients_length);
     printf(format, "Current clients", value);
 
 }
@@ -43,8 +39,11 @@ void _cli_list_clients(netadapter *p) {
     time_t now = time(NULL);
     int idle;
     char status;
+    tcp_connection empty_connection;
+    tcp_connection *p_con;
 
     int pages = _list_page_count(p->clients_length, cpp);
+    memset(&empty_connection, 0, sizeof (tcp_connection));
 
     printf("Clients listing: \n");
 
@@ -55,16 +54,18 @@ void _cli_list_clients(netadapter *p) {
             printf("╞════╪════╪══════════════╪═════╪════════╪═════════╛\n");
         }
         p_client = p->clients + i;
-        if (p_client->connection.status != TCP_CONNECTION_STATUS_EMPTY) {
+        p_con = p_client->connection != NULL ? p_client->connection : &empty_connection;
+
+        if (p_client->status != NET_CLIENT_STATUS_EMPTY) {
             //idle = (now - p_client->last_active);
-            idle = now - p_client->connection.last_active;
+            idle = now - p_con->last_active;
             n++;
         } else {
             idle = 0;
         }
-        status = tcp_connection_status_letter(p_client->connection.status);
+        status = net_client_status_letter(p_client->status);
         printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
-                i, p_client->connection.socket, p_client->name,
+                i, p_client->connection->socket, p_client->name,
                 status, idle);
     }
 
