@@ -102,9 +102,9 @@ void _main_run_threads(engine *p_engine) {
     pthread_join(threads[THR_NETADAPTER], NULL);
     pthread_join(threads[THR_ENGINE_CLI], NULL);
 
-    glog(LOG_INFO, "Run: Engine has ended");
+    glog(LOG_INFO, "Run: Threads have ended");
     if (p_engine->settings->show_statistics) {
-        printf("Run: printing run statistics : \n");
+        printf("Printing runtime statistics : \n");
         statistics_print(&p_engine->stats);
     }
 }

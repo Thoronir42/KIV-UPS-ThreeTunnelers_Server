@@ -187,7 +187,7 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
     }
 
     n = _netadapter_first_free_connection_offset(p);
-    
+
     p_con = n == NETADAPTER_ITEM_EMPTY ? &tmp_con : p->connections + n;
     if (p_con == NULL) {
         p_con = &tmp_con;
@@ -201,12 +201,12 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
         netadapter_close_connection_msg(p, p_con, loc.socket_reject_no_room);
         return;
     }
-    
-    if(p_con->socket > p->connections_length){
+
+    if (p_con->socket > p->connections_length) {
         netadapter_close_connection_msg(p, p_con, loc.socket_reject_invalid_number);
         return;
     }
-    
+
     p_con->last_active = time(NULL);
 
     FD_SET(p_con->socket, &p->client_socks);
@@ -260,7 +260,26 @@ void *netadapter_thread_select(void *args) {
             }
         }
     }
-    glog(LOG_INFO, "Netadapter: finished with status %d.", adapter->status);
+    char *status_label;
+    switch (adapter->status) {
+        case NETADAPTER_STATUS_SHUTTING_DOWN:
+            status_label = "Shutting down";
+            break;
+        case NETADAPTER_STATUS_BIND_ERROR:
+            status_label = "Bind error";
+            break;
+        case NETADAPTER_STATUS_LISTEN_ERROR:
+            status_label = "Listen error";
+            break;
+        case NETADAPTER_STATUS_SELECT_ERROR:
+            status_label = "Select error";
+            break;
+        default:
+            status_label = "???";
+            break;
+    }
+
+    glog(LOG_INFO, "Netadapter: finished with status %d: %s.", adapter->status, status_label);
     adapter->status = NETADAPTER_STATUS_FINISHED;
 
     return NULL;

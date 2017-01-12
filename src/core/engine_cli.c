@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "engine.h"
+#include "../logger.h"
 
 #define STATUS_VALUE_SIZE 24
 
@@ -44,6 +45,7 @@ void _cli_list_clients(netadapter *p) {
 
     int pages = _list_page_count(p->clients_length, cpp);
     memset(&empty_connection, 0, sizeof (tcp_connection));
+    empty_connection.last_active = now;
 
     printf("Clients listing: \n");
 
@@ -57,7 +59,6 @@ void _cli_list_clients(netadapter *p) {
         p_con = p_client->connection != NULL ? p_client->connection : &empty_connection;
 
         if (p_client->status != NET_CLIENT_STATUS_EMPTY) {
-            //idle = (now - p_client->last_active);
             idle = now - p_con->last_active;
             n++;
         } else {
@@ -65,7 +66,7 @@ void _cli_list_clients(netadapter *p) {
         }
         status = net_client_status_letter(p_client->status);
         printf("│ %02d │ %02d │ %12s │   %c │ %6d │\n",
-                i, p_client->connection->socket, p_client->name,
+                i, p_con->socket, p_client->name,
                 status, idle);
     }
 
@@ -118,6 +119,6 @@ void *engine_cli_run(void *args) {
         }
     }
 
-    printf("Engine CLI: Exittig\n");
+    glog(LOG_FINE, "Engine CLI: Exittig");
     return NULL;
 }

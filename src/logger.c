@@ -68,7 +68,7 @@ void glog(int level, const char *msg_format, ...) {
     va_end(args);
     lvl_label = _logger_label(level);
     
-    fprintf(g_logger.f, "%02d:%02d:%02d[%8s]: %s\n", 
+    fprintf(g_logger.f, "%02d:%02d:%02d <%8s> : %s\n", 
             now->tm_hour, now->tm_min, now->tm_sec, lvl_label, message);
     fflush(g_logger.f);
 }
