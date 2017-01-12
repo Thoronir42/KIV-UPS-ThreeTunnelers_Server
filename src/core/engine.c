@@ -36,7 +36,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     return 0;
 }
 
-void _engine_handle_command(void *handler, const network_command cmd) {
+int _engine_handle_command(void *handler, const network_command cmd) {
     engine *p_engine = (engine *) handler;
     netadapter *p_na = &p_engine->netadapter;
     net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.client_aid);
@@ -68,6 +68,8 @@ void _engine_handle_command(void *handler, const network_command cmd) {
             netadapter_broadcast_command(p_na, p_na->clients, p_na->clients_length, &cmd_out);
             break;
     }
+    
+    return 0;
 }
 
 int _engine_link_netadapter(engine *p) {

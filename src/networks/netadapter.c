@@ -61,8 +61,9 @@ int _netadapter_bind_and_listen(netadapter *adapter) {
     return adapter->status;
 }
 
-void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
+int _netadapter_cmd_unhandled(void *handler, network_command cmd) {
     network_command_print("nohandle", &cmd);
+    return 1;
 }
 
 int netadapter_init(netadapter *p, int port, statistics *stats,
@@ -89,7 +90,7 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
     
     for(i = 0; i < connections_length; i++){
-        (p->connections + i)->socket = NETADAPTER_ITEM_EMPTY;
+        p->connection_to_client[i] = (p->connections + i)->socket = NETADAPTER_ITEM_EMPTY;
     }
 
     return _netadapter_bind_and_listen(p);
@@ -101,7 +102,7 @@ void _netadapter_shutdown_connections(netadapter *p){
     
     glog(LOG_INFO, "Netadapter: shutting down all remaining connections");
     
-    network_command_prepare(&cmd, NCT_CONNECTION_DISCONNECT);
+    network_command_prepare(&cmd, NCT_CLIENT_DISCONNECT);
     network_command_set_data(&cmd, loc.server_shutting_down, strlen(loc.server_shutting_down));
     
     for(i = 0; i < p->connections_length; i++){
@@ -230,7 +231,7 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
         default:
         case NET_CLIENT_STATUS_CONNECTED:
             if (idle_time > p->ALLOWED_IDLE_TIME) {
-                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_ECHO_REQUEST, loc.netcli_dcreason_unresponsive);
+                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_MARCO, loc.netcli_dcreason_unresponsive);
                 netadapter_send_command(p, p_con, &p_con->_out_buffer);
                 p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
             }

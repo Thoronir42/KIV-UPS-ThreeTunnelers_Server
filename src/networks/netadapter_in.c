@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-// kvuli iotctl
 #include <sys/ioctl.h>
 #include <unistd.h>
 
@@ -8,12 +7,12 @@
 #include "../localisation.h"
 #include "../logger.h"
 
-//// accessors
+////  accessors
 
 int _netadapter_first_free_client_offset(netadapter *p) {
     int i;
     for (i = 0; i < p->clients_length; i++) {
-        if ((p->clients + i)->connection) {
+        if ((p->clients + i)->status == NET_CLIENT_STATUS_EMPTY) {
             return i;
         }
     }
@@ -21,18 +20,18 @@ int _netadapter_first_free_client_offset(netadapter *p) {
     return NETADAPTER_ITEM_EMPTY;
 }
 
-net_client *_netadapter_find_client_by_secret(netadapter *p, char *secret) {
+int _netadapter_find_client_by_secret(netadapter *p, char *secret) {
     int i;
     for (i = 0; i < p->clients_length; i++) {
         if (!strcmp((p->clients + i)->connection_secret, secret)) {
-            return p->clients + i;
+            i;
         }
     }
 
-    return NULL;
+    return NETADAPTER_ITEM_EMPTY;
 }
 
-//// thread select file
+////  THREAD_SELECT
 
 void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, char *msg, int msg_len) {
     network_command cmd;
@@ -44,10 +43,6 @@ void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, ch
     p->stats->commands_received_invalid++;
 
     ++(p_con->invalid_counter);
-}
-
-void _netadapter_handle_invalid_command(netadapter *p, tcp_connection *p_con, network_command cmd) {
-    // TODO: implement
 }
 
 /**
@@ -86,6 +81,68 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     return 0;
 }
 
+int _netadapter_authorize_connection(netadapter *p, int connection_offset, network_command cmd) {
+    int client_offset;
+    net_client* p_cli;
+    network_command cmd_out;
+    my_byte reintroduce;
+    
+    if (cmd.type != NCT_CLIENT_INTRODUCE || cmd._length < 2) {
+        glog(LOG_FINE, "Authorization of connection %02d failed because command"
+                "type was not correct. Expected %d, got %d", connection_offset, NCT_CLIENT_INTRODUCE, cmd.type);
+        return 1;
+    }
+
+    reintroduce = read_hex_byte(cmd.data);
+    if (reintroduce) {
+        client_offset = _netadapter_find_client_by_secret(p, cmd.data + 2);
+        if(client_offset == NETADAPTER_ITEM_EMPTY){
+            client_offset = _netadapter_first_free_client_offset(p);
+            reintroduce = 0;
+        }
+    } else {
+        client_offset = _netadapter_first_free_client_offset(p);
+    }
+
+    if (client_offset == NETADAPTER_ITEM_EMPTY) {
+        glog(LOG_FINE, "Authorization of connection %02d failed because there"
+                "was no more room for new client", connection_offset);
+        return 1;
+    }
+
+    p->connection_to_client[connection_offset] = client_offset;
+
+    p_cli = (p->clients + client_offset);
+    p_cli->connection = p->connections + connection_offset;
+    p_cli->status = NET_CLIENT_STATUS_CONNECTED;
+
+    if(!reintroduce){
+        strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
+        p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
+    }
+
+    network_command_prepare(&cmd_out, NCT_CLIENT_INTRODUCE);
+    write_hex_byte(cmd_out.data, reintroduce);
+    memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
+    
+
+    netadapter_send_command(p, p_cli->connection, &cmd_out);
+
+    glog(LOG_INFO, "Connection %02d authorized as client %02d", connection_offset, client_offset);
+    return 0;
+}
+
+int _netadapter_pass_command(netadapter *p, network_command cmd) {
+    glog(LOG_FINE, "Passing command to %d", cmd.client_aid);
+    return p->command_handle_func(p->command_handler, cmd);
+}
+
+/**
+ * TODO: refactor this huge beast of a function
+ * @param p
+ * @param socket
+ * @return 
+ */
 int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
     net_client *p_cli;
     tcp_connection *p_con;
@@ -110,11 +167,11 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
             case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
                 glog(LOG_INFO, "Netadapter: Connection reset on socket %02d. "
                         "Terminating connection.", p_con->socket);
-                return -1;
+                return ret_val;
             case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
                 glog(LOG_INFO, "Netadapter: Connection on socket %02d sent too "
                         "many malformed messages. Terminating connection.", p_con->socket);
-                return -1;
+                return ret_val;
             default: break;
         }
 
@@ -127,24 +184,36 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
                         "message. Terminating connection.", p_con->socket);
                 return NETADAPTER_SOCK_ERROR_MSG_TOO_SHORT;
             }
-
-            glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"\n",
-                    ++processed_commands, lf_pos, p_con->_in_buffer);
-            ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
+            p_con->_in_buffer[lf_pos] = '\0';
+            glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
+                    ++processed_commands, lf_pos - 1, p_con->_in_buffer);
+            ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos - 1);
 
             if (!ret_val) {
                 p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_socket(p, socket);
-                if (p->_cmd_in_buffer.client_aid == NETADAPTER_ITEM_EMPTY) {
-                    printf("Processing cliented socket %d\n", socket);
-                    p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
+                if (p->_cmd_in_buffer.client_aid != NETADAPTER_ITEM_EMPTY) {
+                    if (_netadapter_pass_command(p, p->_cmd_in_buffer)) {
+                        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos - 1);
+                        p->stats->commands_received_invalid++;
+                    } else {
+                        p->stats->commands_received++;
+                    }
                 } else {
-                    printf("Processing uncliented socket %d\n", socket);
-                    // net_client_init(p_client, connection); todo: pair with client
+                    if (_netadapter_authorize_connection(p, socket, p->_cmd_in_buffer)) {
+                        glog(LOG_INFO, "Connection authorization failed on "
+                                "socket %d. Terminating connection", socket);
+                        p->stats->commands_received_invalid++;
+                        return NETADAPTER_SOCK_ERROR_AUTHORIZATION_FAIL;
+                    } else {
+                        p->stats->commands_received++;
+                    }
                 }
-                p->stats->commands_received++;
             } else {
                 _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos);
                 p->stats->commands_received_invalid++;
+            }
+            if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
+                return NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED;
             }
 
             strshift(p_con->_in_buffer, TCP_CONNECTION_BUFFER_SIZE, lf_pos + 1);
@@ -154,8 +223,6 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
 
     return 0;
 }
-
-////  THREAD_SELECT
 
 void _netadapter_ts_process_server_socket(netadapter *p) {
     tcp_connection *p_con;
@@ -168,17 +235,17 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
         return;
     }
 
-    
+
 
     memset(&tmp_con, 0, sizeof (tcp_connection));
 
     tmp_con.socket = accept(p->socket, (struct sockaddr *) &tmp_con.addr, &tmp_con.addr_len);
 
-    if(tmp_con.socket >= p->connections_length){
+    if (tmp_con.socket >= p->connections_length) {
         netadapter_close_connection_msg(p, p_con, loc.socket_reject_invalid_number);
         return;
     }
-    
+
     p_con = p->connections + tmp_con.socket;
     *p_con = tmp_con;
 

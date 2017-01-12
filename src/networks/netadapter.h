@@ -26,6 +26,7 @@
 #define NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED -2
 #define NETADAPTER_SOCK_ERROR_MSG_TOO_LONG -3
 #define NETADAPTER_SOCK_ERROR_MSG_TOO_SHORT -4
+#define NETADAPTER_SOCK_ERROR_AUTHORIZATION_FAIL -5
 
 
 #define _NETADAPTER_MAX_WRONG_MSGS 3
@@ -55,7 +56,7 @@ typedef struct netadapter
     const short ALLOWED_INVALLID_MSG_COUNT;
 
     void *command_handler;
-    void (*command_handle_func)(void *handler, network_command cmd);
+    int (*command_handle_func)(void *handler, network_command cmd);
     
     statistics *stats;
 } netadapter;
@@ -69,7 +70,6 @@ void netadapter_shutdown(netadapter *p);
 
 //// thread select
 void *netadapter_thread_select(void *args);
-void netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con);
 
 //// netadapter controls
 int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd);
@@ -79,9 +79,9 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con);
 void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli);
 void netadapter_close_connection_by_socket(netadapter *p, int socket);
+
 //// netadapter accessors
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
-
 int netadapter_client_aid_by_socket(netadapter *p, int socket);
 net_client *netadapter_get_client_by_aid(netadapter *p, int aid);
 

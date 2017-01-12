@@ -40,7 +40,7 @@ typedef struct tcp_connection {
 typedef struct net_client {
     tcp_connection *connection;
     unsigned char status;
-    char connection_secret[NET_CLIENT_SECRET_LENGTH];
+    char connection_secret[NET_CLIENT_SECRET_LENGTH + 1];
 
     char name[NET_CLIENT_NAME_MAX_LENGTH];
 
