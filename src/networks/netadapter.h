@@ -38,6 +38,8 @@ typedef struct netadapter
 
     struct sockaddr_in addr;
     int port;
+    
+    int socket_reuse;
     int socket;
 
     fd_set client_socks;

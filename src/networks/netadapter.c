@@ -27,6 +27,8 @@ int _netadapter_init_socket(netadapter *p) {
     p->addr.sin_port = htons(p->port);
     p->addr.sin_addr.s_addr = INADDR_ANY;
 
+    setsockopt(p->socket,SOL_SOCKET,SO_REUSEADDR, &p->socket_reuse, sizeof p->socket_reuse);
+    
     if (bind(p->socket, (struct sockaddr *) &p->addr, \
 		sizeof (struct sockaddr_in))) {
         return NETADAPTER_STATUS_BIND_ERROR;
@@ -73,6 +75,7 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     memset(p, 0, sizeof (netadapter));
 
     p->port = port;
+    p->socket_reuse = 1;
     p->stats = stats;
 
     p->clients = clients;
@@ -102,7 +105,7 @@ void _netadapter_shutdown_connections(netadapter *p){
     
     glog(LOG_INFO, "Netadapter: shutting down all remaining connections");
     
-    network_command_prepare(&cmd, NCT_CLIENT_DISCONNECT);
+    network_command_prepare(&cmd, NCT_LEAD_DISCONNECT);
     network_command_set_data(&cmd, loc.server_shutting_down, strlen(loc.server_shutting_down));
     
     for(i = 0; i < p->connections_length; i++){
@@ -193,7 +196,7 @@ void netadapter_close_connection_by_socket(netadapter *p, int socket) {
 }
 
 void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
-    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DENY);
+    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DISCONNECT);
     network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
 
     netadapter_send_command(p, p_con, &p_con->_out_buffer);

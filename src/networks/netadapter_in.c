@@ -87,9 +87,9 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     network_command cmd_out;
     my_byte reintroduce;
     
-    if (cmd.type != NCT_CLIENT_INTRODUCE || cmd._length < 2) {
+    if (cmd.type != NCT_LEAD_INTRODUCE || cmd._length < 2) {
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
-                "type was not correct. Expected %d, got %d", connection_offset, NCT_CLIENT_INTRODUCE, cmd.type);
+                "type was not correct. Expected %d, got %d", connection_offset, NCT_LEAD_INTRODUCE, cmd.type);
         return 1;
     }
 
@@ -121,7 +121,7 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
         p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
     }
 
-    network_command_prepare(&cmd_out, NCT_CLIENT_INTRODUCE);
+    network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);
     write_hex_byte(cmd_out.data, reintroduce);
     memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
     
