@@ -87,9 +87,14 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     network_command cmd_out;
     my_byte reintroduce;
     
-    if (cmd.type != NCT_LEAD_INTRODUCE || cmd._length < 2) {
+    if (cmd.type != NCT_LEAD_INTRODUCE) {
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
                 "type was not correct. Expected %d, got %d", connection_offset, NCT_LEAD_INTRODUCE, cmd.type);
+        return 1;
+    }
+    if(cmd._length < 2){
+        glog(LOG_FINE, "Authorization of connection %02d failed because command"
+                " was too short", connection_offset);
         return 1;
     }
 
@@ -186,14 +191,14 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
             }
             p_con->_in_buffer[lf_pos] = '\0';
             glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
-                    ++processed_commands, lf_pos - 1, p_con->_in_buffer);
-            ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos - 1);
+                    ++processed_commands, lf_pos, p_con->_in_buffer);
+            ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
 
             if (!ret_val) {
                 p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_socket(p, socket);
                 if (p->_cmd_in_buffer.client_aid != NETADAPTER_ITEM_EMPTY) {
                     if (_netadapter_pass_command(p, p->_cmd_in_buffer)) {
-                        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos - 1);
+                        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos);
                         p->stats->commands_received_invalid++;
                     } else {
                         p->stats->commands_received++;
