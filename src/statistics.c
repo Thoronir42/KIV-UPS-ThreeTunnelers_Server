@@ -20,11 +20,14 @@ void statistics_print(statistics *p) {
     printf("Run length: %3d:%02d\n", run_mins, run_sec);
 
     printf("\
-┌─────┬───────┬───────┬───────┐\n\
-│ TCP │ sent  │ rcv-ok│ rcv-er│\n\
-└─────┼───────┼───────┼───────┤\n\
-      │%7d│%7d│%7d│\n\
-      └───────┴───────┴───────┘\n",
-            p->commands_sent, p->commands_received, p->commands_received_invalid);
+┌───────┬───────┬───────┬───────┐\n\
+│  TCP  │  sent │ rcv-ok│ rcv-er│\n\
+└───────┼───────┼───────┼───────┤\n\
+        │%7d│%7d│%7d│\n\
+┌───────┴───────┼───────┴───────┤\n\
+│%15lu│%15lu│\n\
+└───────────────┴───────────────┘\n",
+            p->commands_sent, p->commands_received, p->commands_received_invalid,
+            p->bytes_sent, p->bytes_received);
 
 }

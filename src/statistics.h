@@ -6,6 +6,7 @@
 typedef struct statistics {
     clock_t run_start, run_end;
     unsigned int commands_sent, commands_received, commands_received_invalid;
+    unsigned long bytes_sent, bytes_received;
 } statistics;
 
 int statistics_init(statistics *p);

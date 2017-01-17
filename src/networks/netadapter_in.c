@@ -75,8 +75,9 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     read(p_con->socket, p_con->_in_buffer + p_con->_in_buffer_ptr, read_size);
     p_con->a2read -= read_size;
     p_con->_in_buffer_ptr += read_size;
-
     p_con->last_active = time(NULL);
+    
+    p->stats->bytes_received +=read_size;
 
     return 0;
 }
@@ -193,15 +194,16 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
             glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
                     ++processed_commands, lf_pos, p_con->_in_buffer);
             ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
-
             if (!ret_val) {
+                p->stats->commands_received++;
+                
                 p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_socket(p, socket);
                 if (p->_cmd_in_buffer.client_aid != NETADAPTER_ITEM_EMPTY) {
                     if (_netadapter_pass_command(p, p->_cmd_in_buffer)) {
                         _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos);
                         p->stats->commands_received_invalid++;
                     } else {
-                        p->stats->commands_received++;
+                        
                     }
                 } else {
                     if (_netadapter_authorize_connection(p, socket, p->_cmd_in_buffer)) {
@@ -209,8 +211,6 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
                                 "socket %d. Terminating connection", socket);
                         p->stats->commands_received_invalid++;
                         return NETADAPTER_SOCK_ERROR_AUTHORIZATION_FAIL;
-                    } else {
-                        p->stats->commands_received++;
                     }
                 }
             } else {

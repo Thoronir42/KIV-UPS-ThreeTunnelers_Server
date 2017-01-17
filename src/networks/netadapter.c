@@ -145,9 +145,11 @@ int netadapter_send_command(netadapter *p, tcp_connection *p_con, network_comman
     a2write = network_command_to_string(buffer, cmd);
 
     memcpy(buffer + a2write, "\n\0", 2); // message footer
-    write(p_con->socket, buffer, a2write + 2);
+    a2write += 2;
+    write(p_con->socket, buffer, a2write);
 
     p->stats->commands_sent++;
+    p->stats->bytes_sent += a2write;
     //    network_command_print("Sent", cmd);
     
     return 0;
