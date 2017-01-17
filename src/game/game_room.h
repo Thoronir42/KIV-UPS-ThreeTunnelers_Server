@@ -22,9 +22,11 @@ typedef struct game_room {
     char game_state;
 
     int size;
-    colors player_colors;
+
+    int leaderClient;
     net_client *clients[GAME_ROOM_MAX_PLAYERS];
     
+    colors player_colors;
     player players[GAME_ROOM_MAX_PLAYERS];
     tank tanks[GAME_ROOM_MAX_PLAYERS];
     projectile projectiles[GAME_ROOM_MAX_PROJECTILES];
@@ -36,10 +38,10 @@ int game_room_init(game_room *p, int size);
 
 void game_room_clean_up(game_room *p);
 
-void game_room_update(game_room *p);
 
 int game_room_get_open_player_slots(game_room *p_game_room);
 int game_room_get_open_client_slots(game_room *p_game_room);
+int game_room_put_client(game_room *p_gr, net_client *p_cli);
 
 #endif /* _GAME_ROOM_H */
 

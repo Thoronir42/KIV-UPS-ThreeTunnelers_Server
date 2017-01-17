@@ -7,7 +7,7 @@
 
 int game_room_init(game_room *p, int size) {
     game_room_clean_up(p);
-    
+
     p->game_state = GAME_ROOM_STATE_LOBBY;
     p->size = size > GAME_ROOM_MAX_PLAYERS ? GAME_ROOM_MAX_PLAYERS : size;
     colors_init(&p->player_colors);
@@ -17,18 +17,18 @@ int game_room_init(game_room *p, int size) {
 
 void game_room_clean_up(game_room *p) {
     int i;
-    
+
     for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
         p->clients[i] = NULL;
     }
-    
-    
+
+
     memset(p->players, 0, sizeof (player) * GAME_ROOM_MAX_PLAYERS);
-    memset(p->tanks, 0, sizeof(tank) * GAME_ROOM_MAX_PLAYERS);
-    memset(p->projectiles, 0, sizeof(projectile) * GAME_ROOM_MAX_PROJECTILES);
+    memset(p->tanks, 0, sizeof (tank) * GAME_ROOM_MAX_PLAYERS);
+    memset(p->projectiles, 0, sizeof (projectile) * GAME_ROOM_MAX_PROJECTILES);
     p->size = 0;
     p->game_state = GAME_ROOM_STATE_IDLE;
-    
+
 }
 
 int game_room_get_open_player_slots(game_room *p_game_room) {
@@ -47,7 +47,7 @@ int game_room_get_open_client_slots(game_room *p_game_room) {
     int i, n = 0;
 
     for (i = 0; i < p_game_room->size; i++) {
-        if ((p_game_room->clients + i) == NULL) {
+        if (p_game_room->clients[i] == NULL) {
             n++;
         }
     }
@@ -55,6 +55,19 @@ int game_room_get_open_client_slots(game_room *p_game_room) {
     return n;
 }
 
-void game_room_update(game_room *p) {
+int game_room_put_client(game_room *p_game_room, net_client *p_cli) {
+    int i, n = -1;
 
+    for (i = 0; i < p_game_room->size; i++) {
+        if (p_game_room->clients[i] == p_cli) {
+            return i;
+        }
+        if (p_game_room->clients[i] == NULL && n == -1) {
+            n = i;
+        }
+    }
+    if (n != -1) {
+        p_game_room->clients[n] = p_cli;
+    }
+    return n;
 }

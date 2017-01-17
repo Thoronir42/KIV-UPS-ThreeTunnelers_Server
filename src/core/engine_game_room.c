@@ -1,9 +1,13 @@
 #include "engine.h"
 
+void _engine_update_game_room(game_room *p_gr){
+    
+}
+
 void _engine_update_game_rooms(engine *p) {
     int i;
     for (i = 0; i < p->resources->game_rooms_length; i++) {
-        game_room_update(p->resources->game_rooms + 1);
+        _engine_update_game_room(p->resources->game_rooms + 1);
     }
 }
 

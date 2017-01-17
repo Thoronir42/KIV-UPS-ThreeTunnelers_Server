@@ -44,7 +44,7 @@ typedef struct net_client {
     
     char connection_secret[NET_CLIENT_SECRET_LENGTH + 1];
 
-    char name[NET_CLIENT_NAME_MAX_LENGTH];
+    char name[NET_CLIENT_NAME_MAX_LENGTH + 1];
 
     int room_id;
     int player_rids[NET_CLIENT_MAX_PLAYERS];
