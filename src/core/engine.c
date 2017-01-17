@@ -33,49 +33,44 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     glog(LOG_INFO, "Engine: Initialising summaries");
     statistics_init(&p_engine->stats);
 
+    _engine_init_solo_commands(p_engine->command_proccess_func);
+    _engine_init_game_prep_commands(p_engine->command_proccess_func);
+    _engine_init_game_play_commands(p_engine->command_proccess_func);
+
+    p_engine->p_netadapter = &p_engine->netadapter;
+    p_engine->p_cmd_out = &p_engine->cmd_out;
+
     return 0;
 }
 
 int _engine_handle_command(void *handler, const network_command cmd) {
     engine *p_engine = (engine *) handler;
-    netadapter *p_na = &p_engine->netadapter;
-    net_client *p_client = netadapter_get_client_by_aid(p_na, cmd.client_aid);
+    net_client *p_client = netadapter_get_client_by_aid(&p_engine->netadapter, cmd.client_aid);
+    int(* handle_action) ENGINE_HANDLE_FUNC_HEADER;
+    str_scanner scanner;
 
-    network_command cmd_out;
-    memset(&cmd_out, 0, sizeof (network_command));
+    memset(p_engine->p_cmd_out, 0, sizeof (network_command));
 
-    switch (cmd.type) {
-        default:
-            cmd_out.type = NCT_UNDEFINED;
-            memcpy(cmd_out.data, "Cmd type unrecognised", 22);
-            netadapter_send_command(p_na, p_client->connection, &cmd_out);
-            break;
-        case NCT_MSG_RCON:
-            memset(cmd_out.data, 0, NETWORK_COMMAND_DATA_LENGTH);
-            strrev(cmd_out.data, cmd.data, cmd._length);
-
-            netadapter_send_command(p_na, p_client->connection, &cmd_out);
-            break;
-        case NCT_MSG_PLAIN:
-            cmd_out.type = NCT_MSG_PLAIN;
-            memcpy(cmd_out.data, cmd.data, cmd._length);
-            cmd_out.data[cmd._length] = '\0';
-            netadapter_broadcast_command(p_na, p_na->clients, p_na->clients_length, &cmd_out);
-            break;
+    if (cmd.type == NCT_UNDEFINED) {
+        return 1;
     }
-    
-    return 0;
-}
 
-int _engine_link_netadapter(engine *p) {
-    p->netadapter.command_handler = p;
-    p->netadapter.command_handle_func = &_engine_handle_command;
+    handle_action = p_engine->command_proccess_func[cmd.type];
+    if (handle_action == NULL) {
+        glog(LOG_WARNING, "Engine: No handle action for %d", cmd.type);
+        return 2;
+    }
+
+    str_scanner_set(&scanner, cmd.data, cmd.length);
+
+    return handle_action(p_engine, p_client, &scanner);
 }
 
 void *engine_run(void *args) {
     engine *p_engine = (engine *) args;
 
-    _engine_link_netadapter(p_engine);
+    p_engine->netadapter.command_handler = p_engine;
+    p_engine->netadapter.command_handle_func = &_engine_handle_command;
 
     p_engine->stats.run_start = clock();
     glog(LOG_INFO, "Engine: Starting");
@@ -93,7 +88,6 @@ void *engine_run(void *args) {
     return NULL;
 }
 
-
 int engine_count_clients(engine *p, unsigned char status) {
     int i, n = 0;
     net_client *p_client;
@@ -108,4 +102,29 @@ int engine_count_clients(engine *p, unsigned char status) {
     }
 
     return n;
+}
+
+int engine_client_rid_by_client(engine *p, net_client *p_cli) {
+    int i;
+    game_room *p_gr = engine_room_by_client(p, p_cli);
+    if (p_gr == NULL) {
+        return NETADAPTER_ITEM_EMPTY;
+    }
+
+    for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
+        if (p_gr->clients[i] == p_cli) {
+            return i + 1;
+        }
+    }
+
+    return NETADAPTER_ITEM_EMPTY;
+
+}
+
+game_room *engine_room_by_client(engine *p, net_client *p_cli) {
+    if (p_cli->room_id == NETADAPTER_ITEM_EMPTY) {
+        return NULL;
+    }
+
+    return p->resources->game_rooms + p_cli->room_id;
 }
