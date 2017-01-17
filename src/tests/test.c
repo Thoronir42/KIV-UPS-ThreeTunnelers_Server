@@ -7,6 +7,7 @@
 #include "../networks/network_command.h"
 #include "../networks/net_client.h"
 #include "../networks/netadapter.h"
+#include "../core/str_scanner.h"
 
 void test_strpos() {
     printf("Strpos test\n");
@@ -29,7 +30,7 @@ void test_strshift() {
     printf(" 0: %s\n", string);
     for (i = 0; i < 3; i++) {
         strshift(string, len, positions);
-        printf(" %d: %s\n" ,positions, string);
+        printf(" %d: %s\n", positions, string);
         positions *= 2;
     }
 }
@@ -89,14 +90,14 @@ void test_command_parsing() {
 void test_network_client_idle() {
     statistics s_stats;
     netadapter adapter;
-    
+
     net_client clients[4];
     tcp_connection connections[4];
     memset(clients, 0, sizeof (net_client) * 4);
-    memset(connections, 0, sizeof(net_client) * 4);
+    memset(connections, 0, sizeof (net_client) * 4);
     int i;
-    
-    for(i = 0; i < 4; i++){
+
+    for (i = 0; i < 4; i++) {
         clients[i].connection = connections + i;
     }
 
@@ -127,10 +128,82 @@ void test_network_client_idle() {
     }
 }
 
-void test_logger_formatting(){
+void test_logger_formatting() {
     glog(LOG_INFO, "Tester tests");
     glog(LOG_WARNING, "Is six six? Eg %d == 6", 6);
     glog(LOG_ERROR, "I'm affraid, %s, I can not let you do that ( division by %d ).", "Dave", 0);
+}
+
+void test_command_appending() {
+    network_command cmd;
+    network_command *p_cmd = &cmd;
+    char *str = "Ahoj";
+    my_byte b = 12;
+    short s = 176;
+    int i = 640;
+    long l = 1280L;
+
+    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+
+    network_command_append_str(p_cmd, str, 4);
+    network_command_append_str(p_cmd, str, 4);
+
+    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+    network_command_append_byte(p_cmd, b);
+    network_command_append_byte(p_cmd, b);
+
+    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+    network_command_append_short(p_cmd, s);
+    network_command_append_short(p_cmd, s);
+
+    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+    network_command_append_int(p_cmd, i);
+    network_command_append_int(p_cmd, i);
+
+    //    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+    //    printf("Command to be extended by %ld\n", l);
+    //    network_command_append_long(p_cmd, l);
+    //    printf("Command extended 1, long = %ld?\n", l);
+    //    l = 2048L;
+    //    network_command_append_long(p_cmd, l);
+    //    printf("Command extended 2?\n");
+}
+
+void test_str_scanner() {
+    char *src = "AHOJ1111222233334444";
+    char dst[10];
+    str_scanner scanner;
+    
+    memset(dst, 0, 10);
+    str_scanner_set(&scanner, src, strlen(src));
+    
+    my_byte b;
+    short s;
+    int i;
+    long l;
+    
+    str_scanner_print(&scanner);
+    
+    strsc_str(&scanner, dst, 4);
+    printf("%s, ", dst);
+    str_scanner_print(&scanner);
+    
+    b = strsc_byte(&scanner);
+    printf("%u, ", b);    
+    str_scanner_print(&scanner);
+    
+    s = strsc_short(&scanner);
+    printf("%d, ", s);
+    str_scanner_print(&scanner);
+    
+    printf("Setting scanner for long.. \n");
+    str_scanner_print(&scanner);
+    scanner.read = 4;
+    l = strsc_long(&scanner);
+    printf("%ld, ", l);    
+    str_scanner_print(&scanner);
+    
+    
 }
 
 void run_tests() {
@@ -141,5 +214,7 @@ void run_tests() {
     test_strshift();
     test_logger_formatting();
 
+//    test_command_appending();
+    test_str_scanner();
     //test_network_client_idle();
 }

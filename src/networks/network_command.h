@@ -55,9 +55,9 @@
 typedef struct network_command {
     short type;
     short length;
-    char data[NETWORK_COMMAND_DATA_LENGTH + 1];
-
     int client_aid;
+    
+    char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
 } network_command;
 
@@ -77,7 +77,7 @@ void network_command_append_short(network_command *p, short val);
 
 void network_command_append_int(network_command *p, int val);
 
-void network_command_append_long(network_command *p, long val);
+//void network_command_append_long(network_command *p, long val);
 
 int network_command_has_room_for(network_command *p, int length);
 

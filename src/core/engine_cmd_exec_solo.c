@@ -27,11 +27,19 @@ int _exe_solo_lead_disconnect ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_lead_marco ENGINE_HANDLE_FUNC_HEADER{
+    glog(LOG_FINE, "Scanner content[%02d/%02d]: %s", sc->read, sc->length, sc->str);
+    if (sc->length < 18) { // 2=n + 16=stamp
+        glog(LOG_WARNING, "Received MARCO command with too short body");
+        return 1;
+    }
     int n = strsc_byte(sc);
     long their_stamp = strsc_long(sc);
 
-    p->p_cmd_out->type = NCT_LEAD_POLO;
-    network_command_append_long(p->p_cmd_out, their_stamp);
+    glog(LOG_FINE, "Marco timestamp = %l", their_stamp);
+    glog(LOG_FINE, "Scanner content[%02d/%02d]: %s", sc->read, sc->length, sc->str);
+
+    network_command_prepare(p->p_cmd_out, NCT_LEAD_POLO);
+//    network_command_append_long(p->p_cmd_out, their_stamp);
 
     netadapter_send_command(p->p_netadapter, p_cli->connection, p->p_cmd_out);
 
@@ -74,7 +82,7 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
     network_command_append_byte(p->p_cmd_out, 0);
 
     glog(LOG_FINE, "Game room count is %d (%X)", n, n);
-    
+
     for (i = 0; i < p->resources->game_rooms_length; i++) {
         if (!network_command_has_room_for(p->p_cmd_out, NETWORK_COMMAND_GAME_ROOM_LENGTH)) {
             write_hex_byte(p->p_cmd_out->data, n);
@@ -95,9 +103,9 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             network_command_append_byte(p->p_cmd_out, 0); // todo: difficulty
         }
     }
-    
+
     glog(LOG_FINE, "Game room count is %d (%X)", n, n);
-    
+
     write_hex_byte(p->p_cmd_out->data, n);
     netadapter_send_command(p->p_netadapter, p_cli->connection, p->p_cmd_out);
 
@@ -109,8 +117,8 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER) {
     command_handle_func[NCT_UNDEFINED] = &_exe_solo_undefined;
     command_handle_func[NCT_LEAD_DISCONNECT] = &_exe_solo_lead_disconnect;
-    command_handle_func[NCT_LEAD_MARCO] = &_exe_solo_lead_marco;
-    command_handle_func[NCT_LEAD_POLO] = &_exe_solo_lead_polo;
+//    command_handle_func[NCT_LEAD_MARCO] = &_exe_solo_lead_marco;
+//    command_handle_func[NCT_LEAD_POLO] = &_exe_solo_lead_polo;
     command_handle_func[NCT_CLIENT_SET_NAME] = &_exe_solo_client_set_name;
     command_handle_func[NCT_ROOMS_LIST] = &_exe_solo_rooms_list;
 }

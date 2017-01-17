@@ -9,18 +9,18 @@ typedef struct str_scanner {
     int read;
 } str_scanner;
 
+void str_scanner_print(str_scanner *sc);
+
 void str_scanner_set(str_scanner *scanner, const char *str, int length);
 
 const char *str_scanner_rest(str_scanner *scanner);
 
 int str_scanner_rest_length(str_scanner *scanner);
 
+void strsc_str(str_scanner *scanner, char *dst, int len);
 my_byte strsc_byte(str_scanner *scanner);
-
 short strsc_short(str_scanner *scanner);
-
 int strsc_int(str_scanner *scanner);
-
 long strsc_long(str_scanner *scanner);
 
 #endif /* STR_SCANNER_H */

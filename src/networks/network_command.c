@@ -36,6 +36,7 @@ void network_command_append_str(network_command *p, const char *str, int length)
                 "data buffer overflow");
         return;
     }
+//    glog(LOG_FINE, "Extending command: %s[%d] + %s[%d]", p->data, p->length, str, length);
 
     memcpy(p->data + p->length, str, length);
     p->length += length;
@@ -49,29 +50,33 @@ void network_command_append_byte(network_command *p, my_byte val) {
     char buf[2];
     write_hex_byte(buf, val);
 
-    network_command_append_str(p, buf, sizeof (buf));
+    network_command_append_str(p, buf, 2);
 }
 
 void network_command_append_short(network_command *p, short val) {
     char buf[4];
     write_hex_short(buf, val);
 
-    network_command_append_str(p, buf, sizeof (buf));
+    network_command_append_str(p, buf, 4);
 }
 
 void network_command_append_int(network_command *p, int val) {
     char buf[8];
     write_hex_int(buf, val);
 
-    network_command_append_str(p, buf, sizeof (buf));
+    network_command_append_str(p, buf, 8);
 }
 
-void network_command_append_long(network_command *p, long val) {
-    char buf[16];
-    write_hex_long(buf, val);
-
-    network_command_append_str(p, buf, sizeof (buf));
-}
+//void network_command_append_long(network_command *p, long val) {
+//    char buf[16];
+//    printf("Long %ld\n", val);
+//    write_hex_long(buf, val);
+//    printf("In buf = %s\n", buf);
+//
+//    network_command_append_str(p, buf, 16);
+//    
+//    printf("Long appended, new value is %ld\n", val);
+//}
 
 int network_command_has_room_for(network_command *p, int length) {
     return p->length + length < NETWORK_COMMAND_DATA_LENGTH;
@@ -121,7 +126,7 @@ int network_command_to_string(char *dest, network_command *src) {
     return a2write + src->length;
 }
 
-void network_command_print(const char *label, const network_command *command) {
+void network_command_print(const char *label, const network_command *p) {
     //printf("%8s: %03d:%05d:%05d - %s\n", label, command->id, command->type, command->length, command->data);
-    printf("%8s: %04d - %s\n", label, (int) command->type, command->data);
+    printf("%8s: %04d, %03d - \"%s\"\n", label, (int) p->type, p->length, p->data);
 }
