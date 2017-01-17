@@ -36,10 +36,6 @@ int _netadapter_find_client_by_secret(netadapter *p, char *secret) {
 void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con) {
     p->stats->commands_received_invalid++;
     p_con->invalid_counter++;
-
-    if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
-        netadapter_close_connection(p, p_con);
-    }
 }
 
 void netadapter_handle_invallid_command(netadapter *p, net_client *p_cli, network_command cmd) {
@@ -293,6 +289,7 @@ void *netadapter_thread_select(void *args) {
             } else {
                 ret_val = _netadapter_ts_process_remote_socket(adapter, fd);
                 if (ret_val < 0) {
+                    glog(LOG_FINE, "Netadapter: Closing connection on socket %02d, reason = %d", fd, ret_val);
                     netadapter_close_connection_by_socket(adapter, fd);
                 }
             }

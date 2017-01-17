@@ -114,6 +114,18 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
     return 0;
 }
 
+int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
+
+}
+
+int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
+
+}
+
+int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
+
+}
+
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER) {
     command_handle_func[NCT_UNDEFINED] = &_exe_solo_undefined;
     command_handle_func[NCT_LEAD_DISCONNECT] = &_exe_solo_lead_disconnect;
@@ -121,4 +133,7 @@ void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HE
 //    command_handle_func[NCT_LEAD_POLO] = &_exe_solo_lead_polo;
     command_handle_func[NCT_CLIENT_SET_NAME] = &_exe_solo_client_set_name;
     command_handle_func[NCT_ROOMS_LIST] = &_exe_solo_rooms_list;
+    command_handle_func[NCT_ROOMS_CREATE] = &_exe_solo_rooms_create;
+    command_handle_func[NCT_ROOMS_JOIN] = &_exe_solo_rooms_join;
+    command_handle_func[NCT_ROOMS_LEAVE] = &_exe_solo_rooms_leave;
 }

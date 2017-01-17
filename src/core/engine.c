@@ -104,7 +104,10 @@ void _engine_process_queue(engine *p) {
     while (!cmd_queue_is_empty(&p->cmd_in_queue)) {
         cmd = cmd_queue_get(&p->cmd_in_queue);
         net_client *p_cli = netadapter_get_client_by_aid(&p->netadapter, cmd.client_aid);
-        if (_engine_process_command(p, p_cli, cmd)) {
+        
+        int ret_val = _engine_process_command(p, p_cli, cmd);
+        if (ret_val) {
+            glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %d", p_cli->connection->socket, ret_val);
             netadapter_close_connection_by_client(p->p_netadapter, p_cli);
         }
     }
