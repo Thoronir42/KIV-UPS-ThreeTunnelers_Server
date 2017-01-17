@@ -69,7 +69,9 @@ int _exe_solo_client_set_name ENGINE_HANDLE_FUNC_HEADER{
     net_client_set_name(p_cli, sc->str, sc->length);
 
     p->p_cmd_out->type = NCT_CLIENT_SET_NAME;
-    network_command_append_str(p->p_cmd_out, sc->str, sc->length);
+    network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
+
+    engine_send_command(p, p_cli, p->p_cmd_out);
 
     return 0;
 }
@@ -107,7 +109,7 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
     glog(LOG_FINE, "Game room count is %d (%X)", n, n);
 
     write_hex_byte(p->p_cmd_out->data, n);
-    netadapter_send_command(p->p_netadapter, p_cli->connection, p->p_cmd_out);
+    engine_send_command(p, p_cli, p->p_cmd_out);
 
 
 

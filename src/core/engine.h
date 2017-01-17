@@ -58,4 +58,7 @@ int engine_client_rid_by_client(engine *p, net_client *p_cli);
 
 game_room *engine_room_by_client(engine *p, net_client *p_cli);
 
+void engine_send_command(engine *p, net_client *p_cli, network_command *cmd);
+void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd);
+
 #endif

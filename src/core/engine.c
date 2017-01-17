@@ -69,7 +69,7 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
         network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
         snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
                 g_loc.server_protection_illegal_cmd_type, cmd.type);
-        netadapter_send_command(p->p_netadapter, p_cli->connection, &p_cli->connection->_out_buffer);
+        engine_send_command(p, p_cli, &p_cli->connection->_out_buffer);
         return 1;
     }
 
@@ -80,7 +80,7 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
         network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
         snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
                 g_loc.server_protection_unimplemented_cmd_type, cmd.type);
-        netadapter_send_command(p->p_netadapter, p_cli->connection, &p_cli->connection->_out_buffer);
+        engine_send_command(p, p_cli, &p_cli->connection->_out_buffer);
 
         return 2;
     }
@@ -104,7 +104,7 @@ void _engine_process_queue(engine *p) {
     while (!cmd_queue_is_empty(&p->cmd_in_queue)) {
         cmd = cmd_queue_get(&p->cmd_in_queue);
         net_client *p_cli = netadapter_get_client_by_aid(&p->netadapter, cmd.client_aid);
-        
+
         int ret_val = _engine_process_command(p, p_cli, cmd);
         if (ret_val) {
             glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %d", p_cli->connection->socket, ret_val);
@@ -156,6 +156,16 @@ int engine_count_clients(engine *p, unsigned char status) {
     }
 
     return n;
+}
+
+// netowrk command action related stuff
+
+void engine_send_command(engine *p, net_client *p_cli, network_command *cmd) {
+    netadapter_send_command(&p->netadapter, p_cli->connection, cmd);
+}
+
+void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
+    netadapter_broadcast_command_p(&p->netadapter, p_gr->clients, p_gr->size, cmd);
 }
 
 int engine_client_rid_by_client(engine *p, net_client *p_cli) {
