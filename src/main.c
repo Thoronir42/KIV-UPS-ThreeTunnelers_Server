@@ -22,13 +22,20 @@
 void print_help(const char *file, int err) {
     switch (err) {
         case ARGERR_NOT_ENOUGH_ARGUMENTS:
-            printf("Not enough arguments \n");
+            printf("Not enough arguments\n");
             break;
+        case ARGERR_INVALID_PORT:
+            printf("Invallid port value\n");
+            break;
+        case ARGERR_INVALID_ROOM_AMOUNT:
+            printf("Invallid max rooms amount\n");
+            break;
+            
     }
 
     printf("Usage: %s port rooms\n", file);
-    printf("  port      port number for binding in range of 0 - 65535\n");
-    printf("  rooms     maximum concurent game rooms, recommended amount is 10\n");
+    printf("  port      port number for binding         1 - %d\n", ARG_PORT_MAX_VALUE);
+    printf("  rooms     maximum concurent game rooms    1 - %d\n", ARG_ROOMS_MAX_VALUE);
 }
 
 int main(int argc, char* argv[]) {

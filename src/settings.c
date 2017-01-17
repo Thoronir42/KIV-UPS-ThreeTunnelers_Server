@@ -6,6 +6,7 @@
 
 #include "settings.h"
 
+
 int settings_process_arguments(settings *p, int argc, char *argv[]) {
     //dump_args(argc, argv);
     if (argc > 1 && strcmp(argv[1], "test") == 0) {
@@ -16,9 +17,14 @@ int settings_process_arguments(settings *p, int argc, char *argv[]) {
     }
     p->show_statistics = 1;
     p->port = atoi(argv[ARG_REQ_PORT]);
-//    printf("ARG: port = %d\n", p->port);
+    if(p->port == 0 || p->port > ARG_PORT_MAX_VALUE){
+        return ARGERR_INVALID_PORT;
+    }
 
     *(int *) &p->MAX_ROOMS = atoi(argv[ARG_MAX_ROOMS]);
+    if(p->MAX_ROOMS == 0 || p->MAX_ROOMS > ARG_ROOMS_MAX_VALUE){
+        return ARGERR_INVALID_ROOM_AMOUNT;
+    }
 //    printf("ARG: rooms = %d\n", p->MAX_ROOMS);
     *(int *) (&p->CHUNK_SIZE) = _CHUNK_SIZE;
     *(unsigned int *) &p->MAX_TICKRATE = _MAX_TICKRATE;
