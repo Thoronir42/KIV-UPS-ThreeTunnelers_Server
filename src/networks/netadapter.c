@@ -106,7 +106,7 @@ void _netadapter_shutdown_connections(netadapter *p){
     glog(LOG_INFO, "Netadapter: shutting down all remaining connections");
     
     network_command_prepare(&cmd, NCT_LEAD_DISCONNECT);
-    network_command_set_data(&cmd, loc.server_shutting_down, strlen(loc.server_shutting_down));
+    network_command_set_data(&cmd, g_loc.server_shutting_down, strlen(g_loc.server_shutting_down));
     
     for(i = 0; i < p->connections_length; i++){
         if((p->connections + i)->socket != NETADAPTER_ITEM_EMPTY){
@@ -236,7 +236,7 @@ void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t n
         default:
         case NET_CLIENT_STATUS_CONNECTED:
             if (idle_time > p->ALLOWED_IDLE_TIME) {
-                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_MARCO, loc.netcli_dcreason_unresponsive);
+                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_MARCO, g_loc.netcli_dcreason_unresponsive);
                 netadapter_send_command(p, p_con, &p_con->_out_buffer);
                 p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
             }
