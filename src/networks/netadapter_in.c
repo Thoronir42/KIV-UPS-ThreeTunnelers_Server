@@ -33,16 +33,17 @@ int _netadapter_find_client_by_secret(netadapter *p, char *secret) {
 
 ////  THREAD_SELECT
 
-void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, char *msg, int msg_len) {
-    network_command cmd;
-    network_command_prepare(&cmd, NCT_LEAD_BAD_FORMAT);
-
-    network_command_set_data(&cmd, msg, msg_len);
-
-    netadapter_send_command(p, p_con, &cmd);
+void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con) {
     p->stats->commands_received_invalid++;
+    p_con->invalid_counter++;
 
-    ++(p_con->invalid_counter);
+    if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
+        netadapter_close_connection(p, p_con);
+    }
+}
+
+void netadapter_handle_invallid_command(netadapter *p, net_client *p_cli, network_command cmd) {
+    _netadapter_handle_invalid_message(p, p_cli->connection);
 }
 
 /**
@@ -55,7 +56,7 @@ void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con, ch
  * @param p_con connection in question
  * @return 0 if ok or negative error code identificator
  */
-int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) {
+int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection * p_con) {
     int read_size;
 
     if (p_con->a2read <= 0) {
@@ -76,8 +77,8 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection *p_con) 
     p_con->a2read -= read_size;
     p_con->_in_buffer_ptr += read_size;
     p_con->last_active = time(NULL);
-    
-    p->stats->bytes_received +=read_size;
+
+    p->stats->bytes_received += read_size;
 
     return 0;
 }
@@ -87,13 +88,13 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     net_client* p_cli;
     network_command cmd_out;
     my_byte reintroduce;
-    
+
     if (cmd.type != NCT_LEAD_INTRODUCE) {
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
                 "type was not correct. Expected %d, got %d", connection_offset, NCT_LEAD_INTRODUCE, cmd.type);
         return 1;
     }
-    if(cmd.length < 2){
+    if (cmd.length < 2) {
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
                 " was too short", connection_offset);
         return 1;
@@ -102,7 +103,7 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     reintroduce = read_hex_byte(cmd.data);
     if (reintroduce) {
         client_offset = _netadapter_find_client_by_secret(p, cmd.data + 2);
-        if(client_offset == NETADAPTER_ITEM_EMPTY){
+        if (client_offset == NETADAPTER_ITEM_EMPTY) {
             client_offset = _netadapter_first_free_client_offset(p);
             reintroduce = 0;
         }
@@ -122,7 +123,7 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     p_cli->connection = p->connections + connection_offset;
     p_cli->status = NET_CLIENT_STATUS_CONNECTED;
 
-    if(!reintroduce){
+    if (!reintroduce) {
         strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
         p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
     }
@@ -130,17 +131,12 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);
     write_hex_byte(cmd_out.data, reintroduce);
     memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
-    
+
 
     netadapter_send_command(p, p_cli->connection, &cmd_out);
 
     glog(LOG_INFO, "Connection %02d authorized as client %02d", connection_offset, client_offset);
     return 0;
-}
-
-int _netadapter_pass_command(netadapter *p, network_command cmd) {
-    glog(LOG_FINE, "Passing command to %d", cmd.client_aid);
-    return p->command_handle_func(p->command_handler, cmd);
 }
 
 /**
@@ -196,15 +192,11 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
             ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
             if (!ret_val) {
                 p->stats->commands_received++;
-                
+
                 p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_socket(p, socket);
                 if (p->_cmd_in_buffer.client_aid != NETADAPTER_ITEM_EMPTY) {
-                    if (_netadapter_pass_command(p, p->_cmd_in_buffer)) {
-                        _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos);
-                        p->stats->commands_received_invalid++;
-                    } else {
-                        
-                    }
+                    glog(LOG_FINE, "Passing command by client %d", p->_cmd_in_buffer.client_aid);
+                    p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
                 } else {
                     if (_netadapter_authorize_connection(p, socket, p->_cmd_in_buffer)) {
                         glog(LOG_INFO, "Connection authorization failed on "
@@ -214,7 +206,7 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
                     }
                 }
             } else {
-                _netadapter_handle_invalid_message(p, p_con, p_con->_in_buffer, lf_pos);
+                _netadapter_handle_invalid_message(p, p_con);
                 p->stats->commands_received_invalid++;
             }
             if (p_con->invalid_counter > p->ALLOWED_INVALLID_MSG_COUNT) {
@@ -229,7 +221,7 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
     return 0;
 }
 
-void _netadapter_ts_process_server_socket(netadapter *p) {
+void _netadapter_ts_process_server_socket(netadapter * p) {
     tcp_connection *p_con;
     tcp_connection tmp_con;
 
@@ -247,7 +239,7 @@ void _netadapter_ts_process_server_socket(netadapter *p) {
     tmp_con.socket = accept(p->socket, (struct sockaddr *) &tmp_con.addr, &tmp_con.addr_len);
 
     if (tmp_con.socket >= p->connections_length) {
-        netadapter_close_connection_msg(p, p_con, loc.socket_reject_invalid_number);
+        netadapter_close_connection_msg(p, p_con, g_loc.socket_reject_invalid_number);
         return;
     }
 

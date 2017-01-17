@@ -53,7 +53,6 @@ char net_client_status_letter(unsigned char status);
 int  tcp_connection_process(tcp_connection *p, int a2read);
 
 int  net_client_init(net_client *p, tcp_connection *connection);
-void net_client_disconnected(net_client *p, int bool_clean);
 int  net_client_set_name(net_client *p, const char *name, int length);
 
 #endif /* NET_CLIENT_H */

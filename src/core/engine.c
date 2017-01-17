@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "engine.h"
 #include "resources.h"
@@ -14,6 +15,8 @@
 #include "../settings.h"
 #include "../statistics.h"
 #include "../game/control_input.h"
+#include "../structures/cmd_queue.h"
+#include "../localisation.h"
 
 #define CLOCK CLOCK_MONOTONIC
 
@@ -38,32 +41,77 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     _engine_init_game_play_commands(p_engine->command_proccess_func);
 
     p_engine->p_netadapter = &p_engine->netadapter;
-    p_engine->p_cmd_out = &p_engine->cmd_out;
+    p_engine->p_cmd_out = &p_engine->_cmd_out;
+
+    cmd_queue_init(&p_engine->cmd_in_queue);
 
     return 0;
 }
 
-int _engine_handle_command(void *handler, const network_command cmd) {
+void _engine_handle_command(void *handler, const network_command cmd) {
     engine *p_engine = (engine *) handler;
-    net_client *p_client = netadapter_get_client_by_aid(&p_engine->netadapter, cmd.client_aid);
+
+    if (cmd_queue_is_full(&p_engine->cmd_in_queue)) {
+        glog(LOG_ERROR, "Command queue is full");
+        return;
+    }
+
+    cmd_queue_put(&p_engine->cmd_in_queue, cmd);
+}
+
+int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     int(* handle_action) ENGINE_HANDLE_FUNC_HEADER;
     str_scanner scanner;
 
-    memset(p_engine->p_cmd_out, 0, sizeof (network_command));
+    memset(p->p_cmd_out, 0, sizeof (network_command));
 
-    if (cmd.type == NCT_UNDEFINED) {
+    if (cmd.type < 0 || cmd.type > NETWORK_COMMAND_TYPES_COUNT) {
+        network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
+        snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
+                g_loc.server_protection_illegal_cmd_type, cmd.type);
+        netadapter_send_command(p->p_netadapter, p_cli->connection, &p_cli->connection->_out_buffer);
         return 1;
     }
 
-    handle_action = p_engine->command_proccess_func[cmd.type];
+    handle_action = p->command_proccess_func[cmd.type];
     if (handle_action == NULL) {
         glog(LOG_WARNING, "Engine: No handle action for %d", cmd.type);
+
+        network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
+        snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
+                g_loc.server_protection_unimplemented_cmd_type, cmd.type);
+        netadapter_send_command(p->p_netadapter, p_cli->connection, &p_cli->connection->_out_buffer);
+
         return 2;
     }
 
     str_scanner_set(&scanner, cmd.data, cmd.length);
 
-    return handle_action(p_engine, p_client, &scanner);
+    if (handle_action(p, p_cli, &scanner)) {
+        netadapter_handle_invallid_command(p->p_netadapter, p_cli, cmd);
+        p->p_netadapter->stats->commands_received_invalid++;
+        if (p_cli->connection->invalid_counter > p->p_netadapter->ALLOWED_INVALLID_MSG_COUNT) {
+            return 3;
+        }
+    }
+
+    return 0;
+}
+
+void _engine_process_queue(engine *p) {
+    network_command cmd;
+
+    while (!cmd_queue_is_empty(&p->cmd_in_queue)) {
+        cmd = cmd_queue_get(&p->cmd_in_queue);
+        net_client *p_cli = netadapter_get_client_by_aid(&p->netadapter, cmd.client_aid);
+        if (_engine_process_command(p, p_cli, cmd)) {
+            netadapter_close_connection_by_client(p->p_netadapter, p_cli);
+        }
+    }
+}
+
+void _engine_check_active_clients(engine *p) {
+    // todo: implement
 }
 
 void *engine_run(void *args) {
@@ -75,6 +123,9 @@ void *engine_run(void *args) {
     p_engine->stats.run_start = clock();
     glog(LOG_INFO, "Engine: Starting");
     while (p_engine->keep_running) {
+        _engine_process_queue(p_engine);
+        _engine_check_active_clients(p_engine);
+
         p_engine->total_ticks++;
         if (p_engine->total_ticks > p_engine->settings->MAX_TICKRATE * 30) {
 

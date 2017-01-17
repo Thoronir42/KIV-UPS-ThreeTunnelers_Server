@@ -63,9 +63,8 @@ int _netadapter_bind_and_listen(netadapter *adapter) {
     return adapter->status;
 }
 
-int _netadapter_cmd_unhandled(void *handler, network_command cmd) {
+void _netadapter_cmd_unhandled(void *handler, network_command cmd) {
     network_command_print("nohandle", &cmd);
-    return 1;
 }
 
 int netadapter_init(netadapter *p, int port, statistics *stats,
@@ -181,9 +180,9 @@ void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
     if(p->connection_to_client[p_con->socket] != NETADAPTER_ITEM_EMPTY){
-        net_client_disconnected(p->clients + p->connection_to_client[p_con->socket], 0);
+        (p->clients + p->connection_to_client[p_con->socket])->connection = NULL;
+        p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
     }
-    p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
     p_con->socket = NETADAPTER_ITEM_EMPTY;
 }

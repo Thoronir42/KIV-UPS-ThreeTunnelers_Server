@@ -58,7 +58,7 @@ typedef struct netadapter
     const short ALLOWED_INVALLID_MSG_COUNT;
 
     void *command_handler;
-    int (*command_handle_func)(void *handler, network_command cmd);
+    void (*command_handle_func)(void *handler, network_command cmd);
     
     statistics *stats;
 } netadapter;
@@ -74,6 +74,8 @@ void netadapter_shutdown(netadapter *p);
 void *netadapter_thread_select(void *args);
 
 //// netadapter controls
+void netadapter_handle_invallid_command(netadapter *p, net_client *p_cli, network_command cmd);
+
 int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd);
 int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd);
 int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd);

@@ -24,11 +24,6 @@ int net_client_init(net_client *p, tcp_connection *connection) {
     return 0;
 }
 
-void net_client_disconnected(net_client *p, int bool_clean) {
-    p->connection = NULL;
-    p->status = NET_CLIENT_STATUS_DISCONNECTED;
-}
-
 int net_client_set_name(net_client *p, const char *name, int length) {
     int diff = 0;
 

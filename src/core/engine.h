@@ -7,6 +7,7 @@
 #include "resources.h"
 #include "../networks/netadapter.h"
 #include "../networks/network_command.h"
+#include "../structures/cmd_queue.h"
 #include "../settings.h"
 #include "../statistics.h"
 #include "str_scanner.h"
@@ -26,9 +27,11 @@ typedef struct engine
     unsigned long total_ticks;
 
     int keep_running;
-
+    
+    cmd_queue cmd_in_queue;
     int (*command_proccess_func[NETWORK_COMMAND_TYPES_COUNT])ENGINE_HANDLE_FUNC_HEADER;
-    network_command cmd_out;
+    
+    network_command _cmd_out;
 
     netadapter *p_netadapter;
     network_command *p_cmd_out;
@@ -43,7 +46,7 @@ void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HE
 void _engine_init_game_prep_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 void _engine_init_game_play_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 
-int _engine_handle_command(void *handler, const network_command cmd);
+void _engine_handle_command(void *handler, const network_command cmd);
 
 void *engine_run(void *args);
 
