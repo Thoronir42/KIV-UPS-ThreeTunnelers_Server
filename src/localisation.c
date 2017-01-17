@@ -10,5 +10,5 @@ void init_locale() {
     g_loc.server_protection_illegal_cmd_type = "Illegal command type provided (%d), do not come back. Thanks";
     g_loc.server_protection_unimplemented_cmd_type = "Command type (%d) handling is not implemented.";
     
-    
+    g_loc.client_disconnected = "Client disconnected";
 }

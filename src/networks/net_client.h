@@ -40,6 +40,8 @@ typedef struct tcp_connection {
 typedef struct net_client {
     tcp_connection *connection;
     unsigned char status;
+    int latency;
+    
     char connection_secret[NET_CLIENT_SECRET_LENGTH + 1];
 
     char name[NET_CLIENT_NAME_MAX_LENGTH];

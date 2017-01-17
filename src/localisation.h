@@ -10,6 +10,8 @@ struct locale {
     
     char *server_protection_illegal_cmd_type;
     char *server_protection_unimplemented_cmd_type;
+    
+    char *client_disconnected;
 };
 
 struct locale g_loc;
