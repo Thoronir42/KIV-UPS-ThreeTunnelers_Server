@@ -42,35 +42,39 @@ void network_command_append_str(network_command *p, const char *str, int length)
 }
 
 void network_command_append_char(network_command *p, char val) {
-    network_command_append_str(p, &val, sizeof(char));
+    network_command_append_str(p, &val, sizeof (char));
 }
 
-void network_command_append_byte(network_command *p, my_byte val){
+void network_command_append_byte(network_command *p, my_byte val) {
     char buf[2];
     write_hex_byte(buf, val);
-    
-    network_command_append_str(p, buf, sizeof(buf));
+
+    network_command_append_str(p, buf, sizeof (buf));
 }
 
-void network_command_append_short(network_command *p, short val){
+void network_command_append_short(network_command *p, short val) {
     char buf[4];
     write_hex_short(buf, val);
-    
-    network_command_append_str(p, buf, sizeof(buf));
+
+    network_command_append_str(p, buf, sizeof (buf));
 }
 
-void network_command_append_int(network_command *p, int val){
+void network_command_append_int(network_command *p, int val) {
     char buf[8];
     write_hex_int(buf, val);
-    
-    network_command_append_str(p, buf, sizeof(buf));
+
+    network_command_append_str(p, buf, sizeof (buf));
 }
 
-void network_command_append_long(network_command *p, long val){
+void network_command_append_long(network_command *p, long val) {
     char buf[16];
     write_hex_long(buf, val);
-    
-    network_command_append_str(p, buf, sizeof(buf));
+
+    network_command_append_str(p, buf, sizeof (buf));
+}
+
+int network_command_has_room_for(network_command *p, int length) {
+    return p->length + length < NETWORK_COMMAND_DATA_LENGTH;
 }
 
 int network_command_from_string(network_command *dest, char *src, int length) {

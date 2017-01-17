@@ -6,6 +6,8 @@
 #define NETWORK_COMMAND_HEADER_SIZE 4
 #define NETWORK_COMMAND_DATA_LENGTH 512
 
+#define NETWORK_COMMAND_GAME_ROOM_LENGTH 12
+
 // NCT as Network Command Type
 #define NETWORK_COMMAND_TYPES_COUNT 256
 #define NCT_UNDEFINED 0
@@ -76,6 +78,8 @@ void network_command_append_short(network_command *p, short val);
 void network_command_append_int(network_command *p, int val);
 
 void network_command_append_long(network_command *p, long val);
+
+int network_command_has_room_for(network_command *p, int length);
 
 /**
  * 
