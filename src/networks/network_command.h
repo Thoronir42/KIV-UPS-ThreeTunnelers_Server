@@ -7,6 +7,7 @@
 #define NETWORK_COMMAND_DATA_LENGTH 512
 
 // NCT as Network Command Type
+#define NETWORK_COMMAND_TYPES_COUNT 256
 #define NCT_UNDEFINED 0
 
 #define NCT_LEAD_INTRODUCE 1
@@ -50,9 +51,8 @@
 #define NCT_GAME_PROJ_REM 141
 
 typedef struct network_command {
-    my_byte id;
     short type;
-    short _length;
+    short length;
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
     int client_aid;
@@ -64,6 +64,18 @@ void network_command_prepare(network_command *p, short type);
 void network_command_strprep(network_command *p, short type, char* message);
 
 int network_command_set_data(network_command *p, const char *str, int length);
+
+void network_command_append_str(network_command *p, const char *str, int length);
+
+void network_command_append_char(network_command *p, char val);
+
+void network_command_append_byte(network_command *p, my_byte val);
+
+void network_command_append_short(network_command *p, short val);
+
+void network_command_append_int(network_command *p, int val);
+
+void network_command_append_long(network_command *p, long val);
 
 /**
  * 

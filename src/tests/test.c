@@ -78,7 +78,6 @@ void test_command_parsing() {
     printf("CharSrc : %s\n", bfr);
     network_command_print("Parsed", &cmd);
 
-    cmd.id = 127;
     memcpy(&cmd.data, "Nevypust supy ven.\n", 20);
 
     network_command_to_string(bfr, &cmd);

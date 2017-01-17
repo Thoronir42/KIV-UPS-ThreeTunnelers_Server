@@ -92,7 +92,7 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
                 "type was not correct. Expected %d, got %d", connection_offset, NCT_LEAD_INTRODUCE, cmd.type);
         return 1;
     }
-    if(cmd._length < 2){
+    if(cmd.length < 2){
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
                 " was too short", connection_offset);
         return 1;
