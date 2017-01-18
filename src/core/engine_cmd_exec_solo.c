@@ -13,13 +13,19 @@ int _exe_solo_undefined ENGINE_HANDLE_FUNC_HEADER
 }
 
 int _exe_solo_lead_disconnect ENGINE_HANDLE_FUNC_HEADER{
+    game_room *p_gr;
+    int clientRID;
+    
     netadapter_close_connection_by_client(p->p_netadapter, p_cli);
-    p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
-    game_room *p_gr = engine_room_by_client(p, p_cli);
+    
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
 
     if (p_gr) {
-        p->p_cmd_out->type = NCT_ROOM_CLIENT_REMOVE;
-        network_command_set_data(p->p_cmd_out, g_loc.client_disconnected, strlen(g_loc.client_disconnected));
+        clientRID = game_room_find_client(p_gr, p_cli);
+        
+        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
+        network_command_append_byte(p->p_cmd_out, clientRID);
+        network_command_append_str(p->p_cmd_out, g_loc.client_disconnected, strlen(g_loc.client_disconnected));
         netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, p_gr->size, p->p_cmd_out);
     }
 
@@ -54,7 +60,7 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 
     glog(LOG_FINE, "Latency with client %s is %d", p_cli->name, p_cli->latency);
 
-    game_room *p_gr = engine_room_by_client(p, p_cli);
+    game_room *p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr) {
         p->p_cmd_out->type = NCT_ROOM_CLIENT_LATENCY;
         network_command_append_short(p->p_cmd_out, p_cli->latency);
@@ -120,7 +126,7 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     int clientRID, i;
     game_room *p_gr;
 
-    p_gr = engine_room_by_client(p, p_cli);
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr != NULL) {
         glog(LOG_FINE, "Client %d tried to create room whils already being in one (%d)",
                 p_cli - p->resources->clients, p_gr - p->resources->game_rooms);

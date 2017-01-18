@@ -44,6 +44,10 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     return 0;
 }
 
+int _engine_authorize_reconnect(engine *p, net_client *p_cli){
+    glog(LOG_FINE, "TODO: Reauthorization");
+}
+
 int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
     net_client* p_cli;
     network_command cmd_out;
@@ -67,7 +71,6 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
         if (p_cli == NULL) {
             reintroduce = 0;
         }
-
     }
     if (!reintroduce) {
         p_cli = engine_first_free_client_offset(p);
@@ -94,8 +97,11 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
     write_hex_byte(cmd_out.data, reintroduce);
     memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
 
-
     netadapter_send_command(p->p_netadapter, p_cli->connection, &cmd_out);
+
+    if (reintroduce) {
+        _engine_authorize_reconnect(p, p_cli);
+    }
 
     glog(LOG_INFO, "Connection %02d authorized as client %02d", socket, p->resources->con_to_cli[socket]);
     return 0;
@@ -117,7 +123,7 @@ void _engine_process_queue(engine *p) {
             }
             continue;
         }
-        
+
         ret_val = _engine_process_command(p, p_cli, cmd);
         if (ret_val) {
             glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %d", p_cli->connection->socket, ret_val);

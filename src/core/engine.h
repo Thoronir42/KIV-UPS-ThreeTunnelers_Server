@@ -16,6 +16,10 @@
 
 #define ENGINE_CLI_BUFFER_SIZE 24
 
+#define ENGINE_CMDEXE_OK 0
+#define ENGINE_CMDEXE_DATA_TOO_SHORT 1
+
+
 #define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc)
 
 typedef struct engine
@@ -60,12 +64,13 @@ net_client *engine_first_free_client_offset(engine *p);
 net_client *engine_client_by_socket(engine *p, int socket);
 net_client *engine_client_by_secret(engine *p, char *secret);
 
-game_room *engine_room_by_client(engine *p, net_client *p_cli);
+game_room *engine_game_room_by_id(engine *p, int room_id);
 game_room *engine_find_empty_game_room(engine *p);
 
 void engine_send_command(engine *p, net_client *p_cli, network_command *cmd);
 void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd);
 
+void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char *reason);
 
 void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr);
 

@@ -22,7 +22,7 @@
 
 int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) {
     memset(p_engine, 0, sizeof (engine));
-    
+
     p_engine->settings = p_settings;
     p_engine->resources = p_resources;
     p_engine->keep_running = 1;
@@ -34,7 +34,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
 
     p_engine->sleep.tv_sec = milliseconds / 1000000000;
     p_engine->sleep.tv_nsec = (milliseconds % 1000000000);
-    
+
     glog(LOG_FINE, "Engine: Sleep = %d s + %lu ns", p_engine->sleep.tv_sec, p_engine->sleep.tv_nsec);
 
     _engine_init_solo_commands(p_engine->command_proccess_func);
@@ -91,12 +91,13 @@ net_client *engine_client_by_socket(engine *p, int socket) {
     if (socket < 0 || socket > p->resources->connections_length) {
         return NULL;
     }
-    if(p->resources->con_to_cli[socket] == ITEM_EMPTY) {
+    if (p->resources->con_to_cli[socket] == ITEM_EMPTY) {
         return NULL;
     }
     return p->resources->clients + p->resources->con_to_cli[socket];
 }
-net_client *engine_client_by_secret(engine *p, char *secret){
+
+net_client *engine_client_by_secret(engine *p, char *secret) {
     int i;
     net_client *p_cli;
     for (i = 0; i < p->resources->clients_length; i++) {
@@ -119,30 +120,38 @@ void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
     netadapter_broadcast_command_p(&p->netadapter, p_gr->clients, p_gr->size, cmd);
 }
 
-game_room *engine_room_by_client(engine *p, net_client *p_cli) {
-    if (p_cli->room_id == ITEM_EMPTY) {
+game_room *engine_game_room_by_id(engine *p, int room_id) {
+    if (room_id < 0 || room_id > p->resources->game_rooms) {
         return NULL;
     }
 
-    return p->resources->game_rooms + p_cli->room_id;
+    return p->resources->game_rooms + room_id;
 }
 
-game_room *engine_find_empty_game_room(engine *p){
+game_room *engine_find_empty_game_room(engine *p) {
     int i;
     game_room *p_gr;
-    
+
     for (i = 0; i < p->resources->game_rooms_length; i++) {
         p_gr = p->resources->game_rooms + i;
         if (p_gr->game_state == GAME_ROOM_STATE_IDLE) {
             return p_gr;
         }
     }
-    
+
     return NULL;
 }
 
-void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr){
+void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr) {
     glog(LOG_WARNING, "Engine: Room dumping not implemented yet");
+}
+
+void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char *reason) {
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_str(p->p_cmd_out, reason, strlen(reason));
+    
+    engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
 void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) {
@@ -154,7 +163,7 @@ void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) 
         engine_send_command(p, p_cli, p->p_cmd_out);
         return;
     }
-    
+
     p_cli->room_id = p_gr - p->resources->game_rooms;
 
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
@@ -169,7 +178,7 @@ void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) 
     network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
 
     engine_bc_command(p, p_gr, p->p_cmd_out);
-    
+
     _engine_dump_room_to_client(p, p_cli, p_gr);
 
     return;

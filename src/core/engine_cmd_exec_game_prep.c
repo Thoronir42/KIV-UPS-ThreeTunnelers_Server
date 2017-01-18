@@ -13,7 +13,7 @@ int _exe_prep_msg_plain ENGINE_HANDLE_FUNC_HEADER
     
     p->p_cmd_out->type = NCT_MSG_PLAIN;
     
-    p_gr = engine_room_by_client(p, p_cli); // todo: null check
+    p_gr = engine_game_room_by_id(p, p_cli->room_id); // todo: null check
     clientRID = game_room_find_client(p_gr, p_cli);
     
     
