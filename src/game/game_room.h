@@ -18,21 +18,24 @@
 #include "../model/tank.h"
 #include "../model/projectile.h"
 
-typedef struct game_room {
-    char game_state;
+typedef struct game_room
+{
+    unsigned char state;
 
     int size;
 
     int leaderClient;
     net_client *clients[GAME_ROOM_MAX_PLAYERS];
-    
+
     colors player_colors;
     player players[GAME_ROOM_MAX_PLAYERS];
     tank tanks[GAME_ROOM_MAX_PLAYERS];
     projectile projectiles[GAME_ROOM_MAX_PROJECTILES];
-    
-    
+
+
 } game_room;
+
+char game_room_status_letter(unsigned char game_state);
 
 /**
  * Prepares game room and puts given client into it. Returns clients RID.

@@ -121,7 +121,7 @@ void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
 }
 
 game_room *engine_game_room_by_id(engine *p, int room_id) {
-    if (room_id < 0 || room_id > p->resources->game_rooms) {
+    if (room_id < 0 || room_id > p->resources->game_rooms_length) {
         return NULL;
     }
 
@@ -134,7 +134,7 @@ game_room *engine_find_empty_game_room(engine *p) {
 
     for (i = 0; i < p->resources->game_rooms_length; i++) {
         p_gr = p->resources->game_rooms + i;
-        if (p_gr->game_state == GAME_ROOM_STATE_IDLE) {
+        if (p_gr->state == GAME_ROOM_STATE_IDLE) {
             return p_gr;
         }
     }

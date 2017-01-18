@@ -91,7 +91,7 @@ void _cli_list_connections(netadapter *p) {
         }
         p_con = p->connections + i;
         idle = now - p_con->last_active;
-        if(p_con->socket != NETADAPTER_SOCKET_EMPTY){
+        if (p_con->socket != NETADAPTER_SOCKET_EMPTY) {
             n++;
         } else {
             idle = 0;
@@ -102,6 +102,52 @@ void _cli_list_connections(netadapter *p) {
     }
 
     printf("Total open connections: %02d\n", n);
+}
+
+void _cli_list_rooms(engine *p) {
+    int items_per_page = 6, pages;
+
+    int i, j, size, clients, players;
+    char status;
+    char *client_name;
+
+
+
+    game_room *p_gr;
+
+    pages = _list_page_count(p->resources->game_rooms_length, items_per_page);
+    for (i = 0; i < p->resources->game_rooms_length; i++) {
+        if (i % items_per_page == 0) {
+            printf(""
+                    "╒════╤═══╤═════╤═════╤═════╤═══════╕\n"
+                    "│ ID │STS│ SIZ │ CLI │ PLR │ %02d / %02d │\n"
+                    "╞════╪═══╪═════╪═════╪═════╪═══════╛\n",
+                    (i / items_per_page) + 1, pages);
+        }
+        p_gr = p->resources->game_rooms + i;
+
+        status = game_room_status_letter(p_gr->state);
+        clients = game_room_count_clients(p_gr);
+        players = game_room_count_players(p_gr);
+
+
+        printf("│ %02d │ %c │ %3d │ %3d │ %3d │\n",
+                i, status, p_gr->size, clients, players);
+        if (p_gr->state == GAME_ROOM_STATE_IDLE) {
+            continue;
+        }
+
+        printf(""
+                "└┬───┴───┴─────┴─────┴─┬───┤\n"
+                " │Clients              │Plr│\n"
+                " ├─────────────────────┼───┤\n");
+        for (j = 0; j < p_gr->size; j++) {
+            client_name = p_gr->clients[j] == NULL ? "---" : p_gr->clients[j]->name;
+            printf(" │%12s│ %02d│\n", client_name, p_gr->players[j].client_rid);
+        }
+        printf("┌┴───┬───┬─────┬─────┬─┴───┤\n");
+    }
+
 }
 
 void *engine_cli_run(void *args) {
@@ -120,6 +166,8 @@ void *engine_cli_run(void *args) {
             _cli_list_connections(&p_engine->netadapter);
         } else if (!strcmp(input, "status")) {
             _cli_status(p_engine);
+        } else if (!strcmp(input, "rooms")) {
+            _cli_list_rooms(p_engine);
         }
     }
 
