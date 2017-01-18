@@ -104,12 +104,35 @@ void _cli_list_connections(netadapter *p) {
     printf("Total open connections: %02d\n", n);
 }
 
+char _cli_list_rooms_client_status_letter(game_room *p_gr, net_client *p_cli){
+    int clientRID;
+    if(p_cli == NULL){
+        return ' ';
+    }
+    clientRID = game_room_find_client(p_gr, p_cli);
+    if(clientRID == ITEM_EMPTY){
+        return '?';
+    }
+    if(p_cli->connection == NULL){
+        return '~';
+    }
+    if(p_gr->leaderClientRID == clientRID){
+        return '*';
+    }
+    if(p_gr->ready_state[clientRID]){
+        return 'R';
+    }
+    return ' ';
+}
+
 void _cli_list_rooms(engine *p) {
     int items_per_page = 6, pages;
 
     int i, j, size, clients, players;
     char status;
     char *client_name;
+    char client_status;
+    net_client *p_cli;
 
 
 
@@ -138,12 +161,14 @@ void _cli_list_rooms(engine *p) {
         }
 
         printf(""
-                "└┬───┴───┴─────┴─────┴─┬───┤\n"
-                " │Clients              │Plr│\n"
-                " ├─────────────────────┼───┤\n");
+                "└┬───┴───┴─────┴─────┴───┬─┴─┐\n"
+                " │Clients                │Plr│\n"
+                " ├───────────────────────┼───┤\n");
         for (j = 0; j < p_gr->size; j++) {
-            client_name = p_gr->clients[j] == NULL ? "---" : p_gr->clients[j]->name;
-            printf(" │%21s│", client_name);
+            p_cli = p_gr->clients[j];
+            client_name = p_cli == NULL ? "---" : p_cli->name;
+            client_status = _cli_list_rooms_client_status_letter(p_gr, p_cli);
+            printf(" │%c %21s│", client_status, client_name);
             if (p_gr->players[j].client_rid == ITEM_EMPTY) {
                 printf("---│\n");
             } else {
@@ -151,7 +176,7 @@ void _cli_list_rooms(engine *p) {
             }
 
         }
-        printf("┌┴───┬───┬─────┬─────┬─┴───┤\n");
+        printf("┌┴───┬───┬─────┬─────┬───┴─┬─┘\n");
     }
 
 }

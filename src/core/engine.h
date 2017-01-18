@@ -10,15 +10,15 @@
 #include "../structures/cmd_queue.h"
 #include "../settings.h"
 #include "../statistics.h"
+#include "../generic.h"
 #include "str_scanner.h"
-
-#define ITEM_EMPTY -1
 
 #define ENGINE_CLI_BUFFER_SIZE 24
 
 #define ENGINE_CMDEXE_OK 0
 #define ENGINE_CMDEXE_DATA_TOO_SHORT 1
 #define ENGINE_CMDEXE_WRONG_CONTEXT 2
+#define ENGINE_CMDEXE_ILLEGAL_OP 3
 
 
 #define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc)
