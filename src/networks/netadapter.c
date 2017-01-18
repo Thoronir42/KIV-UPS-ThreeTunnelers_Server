@@ -159,7 +159,7 @@ int _netadapter_broadcast_command(netadapter *p, net_client **clients, int clien
     net_client *p_cli;
     for (i = 0; i < clients_size; i++) {
         p_cli = ref_pointer ? *(clients + i) : (net_client *) (clients + i);
-        if (p_cli->status == NET_CLIENT_STATUS_CONNECTED) {
+        if (p_cli != NULL && p_cli->connection != NULL) {
             netadapter_send_command(p, p_cli->connection, cmd);
             counter++;
         }
@@ -177,10 +177,12 @@ int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clie
 }
 
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
+    net_client *p_cli;
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
     if(p->connection_to_client[p_con->socket] != NETADAPTER_ITEM_EMPTY){
-        (p->clients + p->connection_to_client[p_con->socket])->connection = NULL;
+        p_cli = (p->clients + p->connection_to_client[p_con->socket]);
+        p_cli->connection = NULL;
         p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
     }
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);

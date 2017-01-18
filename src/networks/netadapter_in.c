@@ -96,14 +96,16 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
         return 1;
     }
 
+    // todo: implement reintroducing
     reintroduce = read_hex_byte(cmd.data);
     if (reintroduce) {
         client_offset = _netadapter_find_client_by_secret(p, cmd.data + 2);
         if (client_offset == NETADAPTER_ITEM_EMPTY) {
-            client_offset = _netadapter_first_free_client_offset(p);
             reintroduce = 0;
         }
-    } else {
+
+    }
+    if (!reintroduce) {
         client_offset = _netadapter_first_free_client_offset(p);
     }
 
@@ -122,6 +124,7 @@ int _netadapter_authorize_connection(netadapter *p, int connection_offset, netwo
     if (!reintroduce) {
         strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
         p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
+        p_cli->room_id = NETADAPTER_ITEM_EMPTY;
     }
 
     network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);

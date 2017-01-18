@@ -89,9 +89,6 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl);
 int netadapter_client_aid_by_socket(netadapter *p, int socket);
 net_client *netadapter_get_client_by_aid(netadapter *p, int aid);
 
-void netadapter_check_idle_clients(netadapter *p);
-
-int netadapter_set_sid(netadapter *p, int socket, int type, int offset);
 
 #endif /* NETADAPTER_H */
 
