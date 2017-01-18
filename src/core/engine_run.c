@@ -44,14 +44,81 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     return 0;
 }
 
+int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
+    net_client* p_cli;
+    network_command cmd_out;
+    my_byte reintroduce;
+
+    if (cmd.type != NCT_LEAD_INTRODUCE) {
+        glog(LOG_FINE, "Authorization of connection %02d failed because command"
+                "type was not correct. Expected %d, got %d", socket, NCT_LEAD_INTRODUCE, cmd.type);
+        return 1;
+    }
+    if (cmd.length < 2) {
+        glog(LOG_FINE, "Authorization of connection %02d failed because command"
+                " was too short", socket);
+        return 1;
+    }
+
+    // todo: implement reintroducing
+    reintroduce = read_hex_byte(cmd.data);
+    if (reintroduce) {
+        p_cli = engine_client_by_secret(p, cmd.data + 2);
+        if (p_cli == NULL) {
+            reintroduce = 0;
+        }
+
+    }
+    if (!reintroduce) {
+        p_cli = engine_first_free_client_offset(p);
+    }
+
+    if (p_cli == NULL) {
+        glog(LOG_FINE, "Authorization of socket %02d failed because there"
+                "was no more room for new client", socket);
+        return 1;
+    }
+
+    p->resources->con_to_cli[socket] = p_cli - p->resources->clients;
+
+    p_cli->connection = p->resources->connections + socket;
+    p_cli->status = NET_CLIENT_STATUS_CONNECTED;
+
+    if (!reintroduce) {
+        strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
+        p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
+        p_cli->room_id = ITEM_EMPTY;
+    }
+
+    network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);
+    write_hex_byte(cmd_out.data, reintroduce);
+    memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
+
+
+    netadapter_send_command(p->p_netadapter, p_cli->connection, &cmd_out);
+
+    glog(LOG_INFO, "Connection %02d authorized as client %02d", socket, p->resources->con_to_cli[socket]);
+    return 0;
+}
+
 void _engine_process_queue(engine *p) {
     network_command cmd;
+    net_client *p_cli;
+    int ret_val;
 
     while (!cmd_queue_is_empty(&p->cmd_in_queue)) {
         cmd = cmd_queue_get(&p->cmd_in_queue);
-        net_client *p_cli = netadapter_get_client_by_aid(&p->netadapter, cmd.client_aid);
-
-        int ret_val = _engine_process_command(p, p_cli, cmd);
+        p_cli = engine_client_by_socket(p, cmd.origin_socket);
+        if (p_cli == NULL) {
+            ret_val = _engine_authorize_connection(p, cmd.origin_socket, cmd);
+            if (ret_val) {
+                p->p_netadapter->stats->commands_received_invalid++;
+                netadapter_close_connection_by_socket(p->p_netadapter, cmd.origin_socket);
+            }
+            continue;
+        }
+        
+        ret_val = _engine_process_command(p, p_cli, cmd);
         if (ret_val) {
             glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %d", p_cli->connection->socket, ret_val);
             netadapter_close_connection_by_client(p->p_netadapter, p_cli);
@@ -110,11 +177,11 @@ void *engine_run(void *args) {
     while (p->keep_running) {
         _engine_check_active_clients(p);
         _engine_process_queue(p);
-        
+
 
         p->total_ticks++;
         if (p->total_ticks > p->settings->MAX_TICKRATE * 30) {
-            
+
         }
         nanosleep(&p->sleep, NULL);
     }

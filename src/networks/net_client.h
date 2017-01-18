@@ -31,7 +31,7 @@ typedef struct tcp_connection {
     
     int client_aid;
     
-    char _in_buffer[NETWORK_COMMAND_DATA_LENGTH + NETWORK_COMMAND_HEADER_SIZE];
+    char _in_buffer[TCP_CONNECTION_BUFFER_SIZE];
     int _in_buffer_ptr;
     network_command _out_buffer;
     

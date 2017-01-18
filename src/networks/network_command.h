@@ -55,7 +55,7 @@
 typedef struct network_command {
     short type;
     short length;
-    int client_aid;
+    int origin_socket;
     
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 

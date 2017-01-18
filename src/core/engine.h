@@ -12,6 +12,8 @@
 #include "../statistics.h"
 #include "str_scanner.h"
 
+#define ITEM_EMPTY -1
+
 #define ENGINE_CLI_BUFFER_SIZE 24
 
 #define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc)
@@ -53,6 +55,10 @@ void *engine_run(void *args);
 void *engine_cli_run(void *args);
 
 int engine_count_clients(engine *p, unsigned char status);
+
+net_client *engine_first_free_client_offset(engine *p);
+net_client *engine_client_by_socket(engine *p, int socket);
+net_client *engine_client_by_secret(engine *p, char *secret);
 
 game_room *engine_room_by_client(engine *p, net_client *p_cli);
 game_room *engine_find_empty_game_room(engine *p);

@@ -9,28 +9,6 @@
 
 ////  accessors
 
-int _netadapter_first_free_client_offset(netadapter *p) {
-    int i;
-    for (i = 0; i < p->clients_length; i++) {
-        if ((p->clients + i)->status == NET_CLIENT_STATUS_EMPTY) {
-            return i;
-        }
-    }
-
-    return NETADAPTER_ITEM_EMPTY;
-}
-
-int _netadapter_find_client_by_secret(netadapter *p, char *secret) {
-    int i;
-    for (i = 0; i < p->clients_length; i++) {
-        if (!strcmp((p->clients + i)->connection_secret, secret)) {
-            i;
-        }
-    }
-
-    return NETADAPTER_ITEM_EMPTY;
-}
-
 ////  THREAD_SELECT
 
 void _netadapter_handle_invalid_message(netadapter *p, tcp_connection *p_con) {
@@ -75,66 +53,10 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection * p_con)
     p_con->last_active = time(NULL);
 
     p->stats->bytes_received += read_size;
+    
+    glog(LOG_INFO, "Connection %d buffer status is [%03d/%03d] (%d new)",
+            p_con->socket, p_con->_in_buffer_ptr, TCP_CONNECTION_BUFFER_SIZE, read_size);
 
-    return 0;
-}
-
-int _netadapter_authorize_connection(netadapter *p, int connection_offset, network_command cmd) {
-    int client_offset;
-    net_client* p_cli;
-    network_command cmd_out;
-    my_byte reintroduce;
-
-    if (cmd.type != NCT_LEAD_INTRODUCE) {
-        glog(LOG_FINE, "Authorization of connection %02d failed because command"
-                "type was not correct. Expected %d, got %d", connection_offset, NCT_LEAD_INTRODUCE, cmd.type);
-        return 1;
-    }
-    if (cmd.length < 2) {
-        glog(LOG_FINE, "Authorization of connection %02d failed because command"
-                " was too short", connection_offset);
-        return 1;
-    }
-
-    // todo: implement reintroducing
-    reintroduce = read_hex_byte(cmd.data);
-    if (reintroduce) {
-        client_offset = _netadapter_find_client_by_secret(p, cmd.data + 2);
-        if (client_offset == NETADAPTER_ITEM_EMPTY) {
-            reintroduce = 0;
-        }
-
-    }
-    if (!reintroduce) {
-        client_offset = _netadapter_first_free_client_offset(p);
-    }
-
-    if (client_offset == NETADAPTER_ITEM_EMPTY) {
-        glog(LOG_FINE, "Authorization of connection %02d failed because there"
-                "was no more room for new client", connection_offset);
-        return 1;
-    }
-
-    p->connection_to_client[connection_offset] = client_offset;
-
-    p_cli = (p->clients + client_offset);
-    p_cli->connection = p->connections + connection_offset;
-    p_cli->status = NET_CLIENT_STATUS_CONNECTED;
-
-    if (!reintroduce) {
-        strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
-        p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
-        p_cli->room_id = NETADAPTER_ITEM_EMPTY;
-    }
-
-    network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);
-    write_hex_byte(cmd_out.data, reintroduce);
-    memcpy(cmd_out.data + 2, p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
-
-
-    netadapter_send_command(p, p_cli->connection, &cmd_out);
-
-    glog(LOG_INFO, "Connection %02d authorized as client %02d", connection_offset, client_offset);
     return 0;
 }
 
@@ -192,18 +114,9 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
             if (!ret_val) {
                 p->stats->commands_received++;
 
-                p->_cmd_in_buffer.client_aid = netadapter_client_aid_by_socket(p, socket);
-                if (p->_cmd_in_buffer.client_aid != NETADAPTER_ITEM_EMPTY) {
-                    glog(LOG_FINE, "Passing command by client %d", p->_cmd_in_buffer.client_aid);
-                    p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
-                } else {
-                    if (_netadapter_authorize_connection(p, socket, p->_cmd_in_buffer)) {
-                        glog(LOG_INFO, "Connection authorization failed on "
-                                "socket %d. Terminating connection", socket);
-                        p->stats->commands_received_invalid++;
-                        return NETADAPTER_SOCK_ERROR_AUTHORIZATION_FAIL;
-                    }
-                }
+                p->_cmd_in_buffer.origin_socket = socket;
+                glog(LOG_FINE, "Passing command from socket %d", p->_cmd_in_buffer.origin_socket);
+                p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
             } else {
                 _netadapter_handle_invalid_message(p, p_con);
                 p->stats->commands_received_invalid++;
@@ -227,11 +140,9 @@ void _netadapter_ts_process_server_socket(netadapter * p) {
     // todo: closing server socket does not alert the select, so a timeout
     // has been implemented as a quick-fix, look into it later pls
     if (p->status != NETADAPTER_STATUS_OK) {
-        glog(LOG_INFO, "Server socket is not being processed as netadapter is not ok.");
+        glog(LOG_WARNING, "Server socket is not being processed as netadapter is not ok.");
         return;
     }
-
-
 
     memset(&tmp_con, 0, sizeof (tcp_connection));
 

@@ -92,7 +92,7 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
     
     for(i = 0; i < connections_length; i++){
-        p->connection_to_client[i] = (p->connections + i)->socket = NETADAPTER_ITEM_EMPTY;
+        p->connection_to_client[i] = (p->connections + i)->socket = NETADAPTER_SOCKET_EMPTY;
     }
 
     return _netadapter_bind_and_listen(p);
@@ -108,7 +108,7 @@ void _netadapter_shutdown_connections(netadapter *p){
     network_command_set_data(&cmd, g_loc.server_shutting_down, strlen(g_loc.server_shutting_down));
     
     for(i = 0; i < p->connections_length; i++){
-        if((p->connections + i)->socket != NETADAPTER_ITEM_EMPTY){
+        if((p->connections + i)->socket != NETADAPTER_SOCKET_EMPTY){
             netadapter_send_command(p, p->connections + i, &cmd);
             netadapter_close_connection(p, p->connections + i);
             n++;
@@ -180,13 +180,13 @@ void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
     net_client *p_cli;
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
-    if(p->connection_to_client[p_con->socket] != NETADAPTER_ITEM_EMPTY){
+    if(p->connection_to_client[p_con->socket] != NETADAPTER_SOCKET_EMPTY){
         p_cli = (p->clients + p->connection_to_client[p_con->socket]);
         p_cli->connection = NULL;
-        p->connection_to_client[p_con->socket] = NETADAPTER_ITEM_EMPTY;
+        p->connection_to_client[p_con->socket] = NETADAPTER_SOCKET_EMPTY;
     }
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
-    p_con->socket = NETADAPTER_ITEM_EMPTY;
+    p_con->socket = NETADAPTER_SOCKET_EMPTY;
 }
 
 void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli) {
@@ -212,18 +212,10 @@ net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
     return (p->clients + aid);
 }
 
-int netadapter_client_aid_by_socket(netadapter *p, int socket) {
-    if (socket < 0 || socket > p->clients_length) {
-        return NETADAPTER_ITEM_EMPTY;
-    }
-
-    return p->connection_to_client[socket];
-}
-
 int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
     int offset = p_cl - adapter->clients;
     if (offset < 0 || offset >= adapter->clients_length) {
-        return NETADAPTER_ITEM_EMPTY;
+        return NETADAPTER_SOCKET_EMPTY;
     }
 
     return offset;

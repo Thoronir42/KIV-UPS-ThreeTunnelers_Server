@@ -123,7 +123,7 @@ void test_network_client_idle() {
     for (i = 1; i <= 3; i++) {
         printf("Sleeping for 1 sec %d/%d", i, 3);
         sleep(1);
-        netadapter_check_idle_clients(&adapter);
+//        netadapter_check_idle_clients(&adapter);
         _cli_list_clients(&adapter);
     }
 }

@@ -91,7 +91,7 @@ void _cli_list_connections(netadapter *p) {
         }
         p_con = p->connections + i;
         idle = now - p_con->last_active;
-        if(p_con->socket != NETADAPTER_ITEM_EMPTY){
+        if(p_con->socket != NETADAPTER_SOCKET_EMPTY){
             n++;
         } else {
             idle = 0;

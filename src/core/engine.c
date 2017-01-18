@@ -74,6 +74,41 @@ int engine_count_clients(engine *p, unsigned char status) {
     return n;
 }
 
+net_client *engine_first_free_client_offset(engine *p) {
+    int i;
+    net_client *p_cli;
+    for (i = 0; i < p->resources->clients_length; i++) {
+        p_cli = p->resources->clients + i;
+        if (p_cli->status == NET_CLIENT_STATUS_EMPTY) {
+            return p_cli;
+        }
+    }
+
+    return NULL;
+}
+
+net_client *engine_client_by_socket(engine *p, int socket) {
+    if (socket < 0 || socket > p->resources->connections_length) {
+        return NULL;
+    }
+    if(p->resources->con_to_cli[socket] == ITEM_EMPTY) {
+        return NULL;
+    }
+    return p->resources->clients + p->resources->con_to_cli[socket];
+}
+net_client *engine_client_by_secret(engine *p, char *secret){
+    int i;
+    net_client *p_cli;
+    for (i = 0; i < p->resources->clients_length; i++) {
+        p_cli = p->resources->clients + i;
+        if (!strcmp(p_cli->connection_secret, secret)) {
+            return p_cli;
+        }
+    }
+
+    return NULL;
+}
+
 // netowrk command action related stuff
 
 void engine_send_command(engine *p, net_client *p_cli, network_command *cmd) {
@@ -85,7 +120,7 @@ void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
 }
 
 game_room *engine_room_by_client(engine *p, net_client *p_cli) {
-    if (p_cli->room_id == NETADAPTER_ITEM_EMPTY) {
+    if (p_cli->room_id == ITEM_EMPTY) {
         return NULL;
     }
 
@@ -114,7 +149,7 @@ void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) 
     int i, clientRID;
 
     clientRID = game_room_put_client(p_gr, p_cli);
-    if (clientRID == NETADAPTER_ITEM_EMPTY) {
+    if (clientRID == ITEM_EMPTY) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         engine_send_command(p, p_cli, p->p_cmd_out);
         return;
