@@ -67,50 +67,44 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection * p_con)
  * @return 
  */
 int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
-    net_client *p_cli;
     tcp_connection *p_con;
     int ret_val;
 
     int lf_pos; // line feed - to recognise end of command
     int processed_commands = 0;
 
-    // fixme: add check if socket is valid
     p_con = p->connections + socket;
-    if (p_con->client_aid != NETADAPTER_ITEM_EMPTY) {
-        p_cli = p->clients + p_con->client_aid;
-    }
 
     ioctl(p_con->socket, FIONREAD, &p_con->a2read);
 
     // this read cycle might have more chars than buffer can contain
     do {
         ret_val = _netadapter_ts_process_raw_connection(p, p_con);
+        if (ret_val) {
+            return ret_val;
+        }
 
-        switch (ret_val) {
-            case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
-                glog(LOG_INFO, "Netadapter: Connection reset on socket %02d. "
-                        "Terminating connection.", p_con->socket);
-                return ret_val;
-            case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
-                glog(LOG_INFO, "Netadapter: Connection on socket %02d sent too "
-                        "many malformed messages. Terminating connection.", p_con->socket);
-                return ret_val;
-            default: break;
+//        glog(LOG_FINE, "Processing socket %03d message buffer: [%s]", socket, p_con->_in_buffer);
+        
+        // multiple commands might have arrived in this read cycle
+        lf_pos = lf_pos = strpos(p_con->_in_buffer, "\n");
+        if (lf_pos == STR_NOT_FOUND) {
+            glog(LOG_FINE, "Socket %d: No line feed found", socket);
+            break;
+        } else {
+            glog(LOG_FINE, "Socket %d: Line feed at %d", socket, lf_pos);
         }
 
 
-        glog(LOG_FINE, "Processing socket %03d message buffer: [%s]", socket, p_con->_in_buffer);
-        // multiple commands might have arrived in this read cycle
-        while ((lf_pos = strpos(p_con->_in_buffer, "\n")) != STR_NOT_FOUND) {
+        do {
             if (lf_pos < NETWORK_COMMAND_HEADER_SIZE) {
-                glog(LOG_FINE, "Connection on socket %03d sent too short "
-                        "message. Terminating connection.", p_con->socket);
                 return NETADAPTER_SOCK_ERROR_MSG_TOO_SHORT;
             }
             p_con->_in_buffer[lf_pos] = '\0';
             glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
                     ++processed_commands, lf_pos, p_con->_in_buffer);
             ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
+
             if (!ret_val) {
                 p->stats->commands_received++;
 
@@ -127,10 +121,35 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
 
             strshift(p_con->_in_buffer, TCP_CONNECTION_BUFFER_SIZE, lf_pos + 1);
             p_con->_in_buffer_ptr -= (lf_pos + 1);
-        }
+        } while ((lf_pos = strpos(p_con->_in_buffer, "\n")) != STR_NOT_FOUND);
     } while (p_con->a2read > 0);
 
     return 0;
+}
+
+void _netadapter_log_socket_error(int socket, int error_number) {
+    switch (error_number) {
+        case NETADAPTER_SOCK_ERROR_MSG_TOO_LONG:
+            glog(LOG_FINE, "Connection on socket %03d buffer overflow."
+                    " Terminating connection.", socket);
+            break;
+        case NETADAPTER_SOCK_ERROR_MSG_TOO_SHORT:
+            glog(LOG_FINE, "Connection on socket %03d sent too short "
+                    "message. Terminating connection.", socket);
+            break;
+        case NETADAPTER_SOCK_ERROR_NOTHING_TO_READ:
+            glog(LOG_INFO, "Netadapter: Connection reset on socket %02d. "
+                    "Terminating connection.", socket);
+            break;
+        case NETADAPTER_SOCK_ERROR_INVALID_MSG_COUNT_EXCEEDED:
+            glog(LOG_INFO, "Netadapter: Connection on socket %02d sent too "
+                    "many malformed messages. Terminating connection.", socket);
+            break;
+        default:
+            glog(LOG_WARNING, "Unknown error on socket %02d. "
+                    "Terminating connection.", socket);
+            break;
+    }
 }
 
 void _netadapter_ts_process_server_socket(netadapter * p) {
@@ -203,7 +222,7 @@ void *netadapter_thread_select(void *args) {
             } else {
                 ret_val = _netadapter_ts_process_remote_socket(adapter, fd);
                 if (ret_val < 0) {
-                    glog(LOG_FINE, "Netadapter: Closing connection on socket %02d, reason = %d", fd, ret_val);
+                    _netadapter_log_socket_error(fd, ret_val);
                     netadapter_close_connection_by_socket(adapter, fd);
                 }
             }
