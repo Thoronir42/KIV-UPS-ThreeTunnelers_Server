@@ -5,14 +5,17 @@
 #include "colors.h"
 #include "player.h"
 
-int game_room_init(game_room *p, int size) {
+int game_room_init(game_room *p, int size, net_client *p_cli) {
     game_room_clean_up(p);
 
     p->game_state = GAME_ROOM_STATE_LOBBY;
     p->size = size > GAME_ROOM_MAX_PLAYERS ? GAME_ROOM_MAX_PLAYERS : size;
     colors_init(&p->player_colors);
 
-    return 0;
+    int clientRID = game_room_put_client(p, p_cli);
+    p->leaderClient = clientRID;
+    
+    return clientRID;
 }
 
 void game_room_clean_up(game_room *p) {
@@ -53,6 +56,17 @@ int game_room_get_open_client_slots(game_room *p_game_room) {
     }
 
     return n;
+}
+
+int game_room_find_client(game_room *p, net_client *p_cli) {
+    int i;
+    for (i = 0; i < p->size; i++) {
+        if (p->clients[i] == p_cli) {
+            return i;
+        }
+    }
+    
+    return -1;
 }
 
 int game_room_put_client(game_room *p_game_room, net_client *p_cli) {

@@ -39,7 +39,7 @@ int _exe_solo_lead_marco ENGINE_HANDLE_FUNC_HEADER{
     glog(LOG_FINE, "Scanner content[%02d/%02d]: %s", sc->read, sc->length, sc->str);
 
     network_command_prepare(p->p_cmd_out, NCT_LEAD_POLO);
-//    network_command_append_long(p->p_cmd_out, their_stamp);
+    //    network_command_append_long(p->p_cmd_out, their_stamp);
 
     netadapter_send_command(p->p_netadapter, p_cli->connection, p->p_cmd_out);
 
@@ -117,6 +117,35 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
+    int clientRID, i;
+    game_room *p_gr;
+
+    p_gr = engine_room_by_client(p, p_cli);
+    if (p_gr != NULL) {
+        glog(LOG_FINE, "Client %d tried to create room whils already being in one (%d)",
+                p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
+
+        engine_put_client_into_room(p, p_cli, p_gr);
+        return 0;
+    }
+
+    p_gr = engine_find_empty_game_room(p);
+    if (p_gr != NULL) {
+        clientRID = game_room_init(p_gr, GAME_ROOM_MAX_PLAYERS, p_cli);
+        engine_put_client_into_room(p, p_cli, p_gr);
+
+        glog(LOG_FINE, "Client %d created room %d",
+                p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
+
+        return 0;
+    }
+
+    glog(LOG_FINE, "Client %d tried to create room but none was empty", p_cli - p->resources->clients);
+
+    network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+    engine_send_command(p, p_cli, p->p_cmd_out);
+
+    return 0;
 
 }
 
@@ -131,8 +160,8 @@ int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER) {
     command_handle_func[NCT_UNDEFINED] = &_exe_solo_undefined;
     command_handle_func[NCT_LEAD_DISCONNECT] = &_exe_solo_lead_disconnect;
-//    command_handle_func[NCT_LEAD_MARCO] = &_exe_solo_lead_marco;
-//    command_handle_func[NCT_LEAD_POLO] = &_exe_solo_lead_polo;
+    //    command_handle_func[NCT_LEAD_MARCO] = &_exe_solo_lead_marco;
+    //    command_handle_func[NCT_LEAD_POLO] = &_exe_solo_lead_polo;
     command_handle_func[NCT_CLIENT_SET_NAME] = &_exe_solo_client_set_name;
     command_handle_func[NCT_ROOMS_LIST] = &_exe_solo_rooms_list;
     command_handle_func[NCT_ROOMS_CREATE] = &_exe_solo_rooms_create;

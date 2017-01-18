@@ -113,8 +113,44 @@ void _engine_process_queue(engine *p) {
     }
 }
 
+void _engine_check_idle_client(engine *p, net_client *p_client, time_t now) {
+    tcp_connection *p_con = p_client->connection;
+    int idle_time = now - p_con->last_active;
+
+    switch (p_client->status) {
+        default:
+        case NET_CLIENT_STATUS_CONNECTED:
+            if (idle_time > p->netadapter.ALLOWED_IDLE_TIME) {
+                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_MARCO, g_loc.netcli_dcreason_unresponsive);
+                netadapter_send_command(p->p_netadapter, p_con, &p_con->_out_buffer);
+                p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
+            }
+            break;
+        case NET_CLIENT_STATUS_UNRESPONSIVE:
+            if (idle_time > p->netadapter.ALLOWED_UNRESPONSIVE_TIME) {
+                netadapter_close_connection_by_client(p->p_netadapter, p_client);
+            }
+            break;
+    }
+}
+
 void _engine_check_active_clients(engine *p) {
-    // todo: implement
+    int i;
+    net_client *p_cli;
+    for (i = 0; i < p->resources->clients_length; i++) {
+        p_cli = p->resources->clients + i;
+
+        if (p_cli->connection != NULL) { // connection is open
+
+        } else { // connection is not open
+            if (p_cli->status != NET_CLIENT_STATUS_DISCONNECTED &&
+                    p_cli->status != NET_CLIENT_STATUS_EMPTY) {
+                glog(LOG_FINE, "Engine: Client %d found to be disconnected", i);
+                p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
+            }
+        }
+
+    }
 }
 
 void *engine_run(void *args) {
@@ -168,23 +204,6 @@ void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
     netadapter_broadcast_command_p(&p->netadapter, p_gr->clients, p_gr->size, cmd);
 }
 
-int engine_client_rid_by_client(engine *p, net_client *p_cli) {
-    int i;
-    game_room *p_gr = engine_room_by_client(p, p_cli);
-    if (p_gr == NULL) {
-        return NETADAPTER_ITEM_EMPTY;
-    }
-
-    for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
-        if (p_gr->clients[i] == p_cli) {
-            return i + 1;
-        }
-    }
-
-    return NETADAPTER_ITEM_EMPTY;
-
-}
-
 game_room *engine_room_by_client(engine *p, net_client *p_cli) {
     if (p_cli->room_id == NETADAPTER_ITEM_EMPTY) {
         return NULL;
@@ -192,3 +211,53 @@ game_room *engine_room_by_client(engine *p, net_client *p_cli) {
 
     return p->resources->game_rooms + p_cli->room_id;
 }
+
+game_room *engine_find_empty_game_room(engine *p){
+    int i;
+    game_room *p_gr;
+    
+    for (i = 0; i < p->resources->game_rooms_length; i++) {
+        p_gr = p->resources->game_rooms + i;
+        if (p_gr->game_state == GAME_ROOM_STATE_IDLE) {
+            return p_gr;
+        }
+    }
+    
+    return NULL;
+}
+
+void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr){
+    glog(LOG_WARNING, "Engine: Room dumping not implemented yet");
+}
+
+void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) {
+    int i, clientRID;
+
+    clientRID = game_room_put_client(p_gr, p_cli);
+    if (clientRID == NETADAPTER_ITEM_EMPTY) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+        return;
+    }
+    
+    p_cli->room_id = p_gr - p->resources->game_rooms;
+
+    network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
+    network_command_append_byte(p->p_cmd_out, p_gr - p->resources->game_rooms);
+    network_command_append_byte(p->p_cmd_out, clientRID); // local clientRID
+    network_command_append_byte(p->p_cmd_out, p_gr->leaderClient); // leader clientRID
+
+    engine_send_command(p, p_cli, p->p_cmd_out);
+
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
+
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+    
+    _engine_dump_room_to_client(p, p_cli, p_gr);
+
+    return;
+}
+
+

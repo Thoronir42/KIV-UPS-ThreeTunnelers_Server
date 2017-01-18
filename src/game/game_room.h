@@ -34,13 +34,30 @@ typedef struct game_room {
     
 } game_room;
 
-int game_room_init(game_room *p, int size);
+/**
+ * Prepares game room and puts given client into it. Returns clients RID.
+ * @param p
+ * @param size
+ * @param p_cli
+ * @return 
+ */
+int game_room_init(game_room *p, int size, net_client *p_cli);
 
 void game_room_clean_up(game_room *p);
 
-
 int game_room_get_open_player_slots(game_room *p_game_room);
 int game_room_get_open_client_slots(game_room *p_game_room);
+
+
+int game_room_find_client(game_room *p, net_client *p_cli);
+/**
+ * Tries to place client into room - if client already is in room, returns his
+ * current RID. Otherwise looks for first empty client slot, if one exists,
+ * puts client there and returns its RID. Otherwise returns -1
+ * @param p_game_room
+ * @param p_cli
+ * @return 
+ */
 int game_room_put_client(game_room *p_gr, net_client *p_cli);
 
 #endif /* _GAME_ROOM_H */

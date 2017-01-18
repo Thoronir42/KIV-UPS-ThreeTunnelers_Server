@@ -27,10 +27,10 @@ typedef struct engine
     unsigned long total_ticks;
 
     int keep_running;
-    
+
     cmd_queue cmd_in_queue;
     int (*command_proccess_func[NETWORK_COMMAND_TYPES_COUNT])ENGINE_HANDLE_FUNC_HEADER;
-    
+
     network_command _cmd_out;
 
     netadapter *p_netadapter;
@@ -54,11 +54,13 @@ void *engine_cli_run(void *args);
 
 int engine_count_clients(engine *p, unsigned char status);
 
-int engine_client_rid_by_client(engine *p, net_client *p_cli);
-
 game_room *engine_room_by_client(engine *p, net_client *p_cli);
+game_room *engine_find_empty_game_room(engine *p);
 
 void engine_send_command(engine *p, net_client *p_cli, network_command *cmd);
 void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd);
+
+
+void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr);
 
 #endif

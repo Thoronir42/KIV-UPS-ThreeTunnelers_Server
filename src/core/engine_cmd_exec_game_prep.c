@@ -7,13 +7,19 @@
 
 int _exe_prep_msg_plain ENGINE_HANDLE_FUNC_HEADER
 {   
+    // todo: implement
     game_room *p_gr;
+    int clientRID;
+    
     p->p_cmd_out->type = NCT_MSG_PLAIN;
-    network_command_append_byte(p->p_cmd_out, engine_client_rid_by_client(p, p_cli));
+    
+    p_gr = engine_room_by_client(p, p_cli); // todo: null check
+    clientRID = game_room_find_client(p_gr, p_cli);
+    
+    
+    network_command_append_byte(p->p_cmd_out, clientRID);
     network_command_append_str(p->p_cmd_out, sc->str, sc->length);
     
-    
-    p_gr = engine_room_by_client(p, p_cli);
     netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, GAME_ROOM_MAX_PLAYERS, p->p_cmd_out);
 }
 
