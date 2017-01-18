@@ -18,6 +18,7 @@
 
 #define ENGINE_CMDEXE_OK 0
 #define ENGINE_CMDEXE_DATA_TOO_SHORT 1
+#define ENGINE_CMDEXE_WRONG_CONTEXT 2
 
 
 #define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc)

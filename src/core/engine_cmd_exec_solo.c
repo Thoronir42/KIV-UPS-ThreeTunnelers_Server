@@ -17,16 +17,13 @@ int _exe_solo_lead_disconnect ENGINE_HANDLE_FUNC_HEADER{
     int clientRID;
     
     netadapter_close_connection_by_client(p->p_netadapter, p_cli);
-    
-    p_gr = engine_game_room_by_id(p, p_cli->room_id);
+    p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
 
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr) {
         clientRID = game_room_find_client(p_gr, p_cli);
-        
-        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
-        network_command_append_byte(p->p_cmd_out, clientRID);
-        network_command_append_str(p->p_cmd_out, g_loc.client_disconnected, strlen(g_loc.client_disconnected));
-        netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, p_gr->size, p->p_cmd_out);
+        engine_announce_client_left(p, p_gr, clientRID, g_loc.client_disconnected);
+        p_gr->clients[clientRID] = NULL;
     }
 
     return 0;
@@ -62,7 +59,7 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 
     game_room *p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr) {
-        p->p_cmd_out->type = NCT_ROOM_CLIENT_LATENCY;
+        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_LATENCY);
         network_command_append_short(p->p_cmd_out, p_cli->latency);
 
         netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, p_gr->size, p->p_cmd_out);
@@ -74,7 +71,7 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 int _exe_solo_client_set_name ENGINE_HANDLE_FUNC_HEADER{
     net_client_set_name(p_cli, sc->str, sc->length);
 
-    p->p_cmd_out->type = NCT_CLIENT_SET_NAME;
+    network_command_prepare(p->p_cmd_out, NCT_CLIENT_SET_NAME);
     network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
 
     engine_send_command(p, p_cli, p->p_cmd_out);
@@ -86,10 +83,9 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
     int i;
     my_byte n = 0;
     game_room *p_gr;
-    p->p_cmd_out->type = NCT_ROOMS_LIST;
+    
+    network_command_prepare(p->p_cmd_out, NCT_ROOMS_LIST);
     network_command_append_byte(p->p_cmd_out, 0);
-
-    glog(LOG_FINE, "Game room count is %d (%X)", n, n);
 
     for (i = 0; i < p->resources->game_rooms_length; i++) {
         if (!network_command_has_room_for(p->p_cmd_out, NETWORK_COMMAND_GAME_ROOM_LENGTH)) {
@@ -100,7 +96,7 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             network_command_prepare(p->p_cmd_out, NCT_ROOMS_LIST);
             network_command_append_byte(p->p_cmd_out, 0);
         }
-
+        
         p_gr = p->resources->game_rooms + i;
         if (p_gr->game_state != GAME_ROOM_STATE_DONE && p_gr->game_state != GAME_ROOM_STATE_IDLE) {
             n++;
@@ -111,8 +107,6 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             network_command_append_byte(p->p_cmd_out, 0); // todo: difficulty
         }
     }
-
-    glog(LOG_FINE, "Game room count is %d (%X)", n, n);
 
     write_hex_byte(p->p_cmd_out->data, n);
     engine_send_command(p, p_cli, p->p_cmd_out);

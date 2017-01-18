@@ -9,8 +9,6 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     int(* handle_action) ENGINE_HANDLE_FUNC_HEADER;
     str_scanner scanner;
 
-    memset(p->p_cmd_out, 0, sizeof (network_command));
-
     if (cmd.type < 0 || cmd.type > NETWORK_COMMAND_TYPES_COUNT) {
         network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
         snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
