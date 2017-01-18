@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #define LOG_ERROR 1
 #define LOG_WARNING 2

@@ -228,39 +228,3 @@ int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
 
     return offset;
 }
-
-void _netadapter_check_idle_client(netadapter *p, net_client *p_client, time_t now) {
-    tcp_connection *p_con = p_client->connection;
-    int idle_time = now - p_con->last_active;
-
-    switch (p_client->status) {
-        default:
-        case NET_CLIENT_STATUS_CONNECTED:
-            if (idle_time > p->ALLOWED_IDLE_TIME) {
-                network_command_strprep(&p_con->_out_buffer, NCT_LEAD_MARCO, g_loc.netcli_dcreason_unresponsive);
-                netadapter_send_command(p, p_con, &p_con->_out_buffer);
-                p_client->status = NET_CLIENT_STATUS_UNRESPONSIVE;
-            }
-            break;
-        case NET_CLIENT_STATUS_UNRESPONSIVE:
-            if (idle_time > p->ALLOWED_UNRESPONSIVE_TIME) {
-                netadapter_close_connection_by_client(p, p_client);
-            }
-            break;
-    }
-}
-
-void netadapter_check_idle_clients(netadapter *p) {
-    int i;
-    net_client *p_client;
-    time_t now = time(NULL);
-
-    for (i = 0; i < p->clients_length; i++) {
-        p_client = p->clients + i;
-
-        if (p_client->connection == NULL) {
-            continue;
-        }
-        _netadapter_check_idle_client(p, p_client, now);
-    }
-}
