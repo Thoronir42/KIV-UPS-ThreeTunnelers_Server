@@ -54,8 +54,8 @@ int _netadapter_ts_process_raw_connection(netadapter *p, tcp_connection * p_con)
 
     p->stats->bytes_received += read_size;
     
-    glog(LOG_INFO, "Connection %d buffer status is [%03d/%03d] (%d new)",
-            p_con->socket, p_con->_in_buffer_ptr, TCP_CONNECTION_BUFFER_SIZE, read_size);
+//    glog(LOG_INFO, "Connection %d buffer status is [%03d/%03d] (%d new)",
+//            p_con->socket, p_con->_in_buffer_ptr, TCP_CONNECTION_BUFFER_SIZE, read_size);
 
     return 0;
 }
@@ -89,10 +89,10 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
         // multiple commands might have arrived in this read cycle
         lf_pos = lf_pos = strpos(p_con->_in_buffer, "\n");
         if (lf_pos == STR_NOT_FOUND) {
-            glog(LOG_FINE, "Socket %d: No line feed found", socket);
+//            glog(LOG_FINE, "Socket %d: No line feed found", socket);
             break;
         } else {
-            glog(LOG_FINE, "Socket %d: Line feed at %d", socket, lf_pos);
+//            glog(LOG_FINE, "Socket %d: Line feed at %d", socket, lf_pos);
         }
 
 
@@ -101,15 +101,15 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
                 return NETADAPTER_SOCK_ERROR_MSG_TOO_SHORT;
             }
             p_con->_in_buffer[lf_pos] = '\0';
-            glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
-                    ++processed_commands, lf_pos, p_con->_in_buffer);
+//            glog(LOG_FINE, "Parsing command #%d long %d characters \"%s\"",
+//                    ++processed_commands, lf_pos, p_con->_in_buffer);
             ret_val = network_command_from_string(&p->_cmd_in_buffer, p_con->_in_buffer, lf_pos);
 
             if (!ret_val) {
                 p->stats->commands_received++;
 
                 p->_cmd_in_buffer.origin_socket = socket;
-                glog(LOG_FINE, "Passing command from socket %d", p->_cmd_in_buffer.origin_socket);
+//                glog(LOG_FINE, "Passing command from socket %d", p->_cmd_in_buffer.origin_socket);
                 p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
             } else {
                 _netadapter_handle_invalid_message(p, p_con);

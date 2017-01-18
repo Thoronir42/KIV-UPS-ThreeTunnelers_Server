@@ -75,12 +75,10 @@ void network_command_append_str(network_command *p, const char *str);
 void network_command_append_char(network_command *p, char val);
 
 void network_command_append_byte(network_command *p, my_byte val);
-
 void network_command_append_short(network_command *p, short val);
-
 void network_command_append_int(network_command *p, int val);
-
 //void network_command_append_long(network_command *p, long val);
+void network_command_append_number(network_command *p, int n);
 
 int network_command_has_room_for(network_command *p, int length);
 

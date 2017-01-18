@@ -82,6 +82,14 @@ void network_command_append_int(network_command *p, int val) {
 //    printf("Long appended, new value is %ld\n", val);
 //}
 
+void network_command_append_number(network_command *p, int n){
+    char buf[16];
+    memset(buf, 0, 16);
+    snprintf(buf, 16, "%d", n);
+    
+    network_command_append_str(p, buf);
+}
+
 int network_command_has_room_for(network_command *p, int length) {
     return p->length + length < NETWORK_COMMAND_DATA_LENGTH;
 }
