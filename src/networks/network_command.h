@@ -52,11 +52,12 @@
 #define NCT_GAME_PROJ_ADD 140
 #define NCT_GAME_PROJ_REM 141
 
-typedef struct network_command {
+typedef struct network_command
+{
     short type;
     short length;
     int origin_socket;
-    
+
     char data[NETWORK_COMMAND_DATA_LENGTH + 1];
 
 } network_command;
@@ -67,7 +68,9 @@ void network_command_strprep(network_command *p, short type, char* message);
 
 int network_command_set_data(network_command *p, const char *str, int length);
 
-void network_command_append_str(network_command *p, const char *str, int length);
+
+void network_command_append_string(network_command *p, const char *str, int length);
+void network_command_append_str(network_command *p, const char *str);
 
 void network_command_append_char(network_command *p, char val);
 

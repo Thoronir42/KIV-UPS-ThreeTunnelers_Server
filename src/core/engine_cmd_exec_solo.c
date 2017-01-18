@@ -72,7 +72,7 @@ int _exe_solo_client_set_name ENGINE_HANDLE_FUNC_HEADER{
     net_client_set_name(p_cli, sc->str, sc->length);
 
     network_command_prepare(p->p_cmd_out, NCT_CLIENT_SET_NAME);
-    network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
+    network_command_append_str(p->p_cmd_out, p_cli->name);
 
     engine_send_command(p, p_cli, p->p_cmd_out);
 
@@ -122,9 +122,6 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
 
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr != NULL) {
-        glog(LOG_FINE, "Client %d tried to create room whils already being in one (%d)",
-                p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
-
         engine_put_client_into_room(p, p_cli, p_gr);
         return 0;
     }
@@ -140,9 +137,8 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
         return 0;
     }
 
-    glog(LOG_FINE, "Client %d tried to create room but none was empty", p_cli - p->resources->clients);
-
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+    network_command_append_str(p->p_cmd_out, "No game rooms available");
     engine_send_command(p, p_cli, p->p_cmd_out);
 
     return 0;

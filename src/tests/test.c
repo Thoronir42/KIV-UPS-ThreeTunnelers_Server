@@ -145,8 +145,8 @@ void test_command_appending() {
 
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
 
-    network_command_append_str(p_cmd, str, 4);
-    network_command_append_str(p_cmd, str, 4);
+    network_command_append_str(p_cmd, str);
+    network_command_append_string(p_cmd, str, 4);
 
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     network_command_append_byte(p_cmd, b);

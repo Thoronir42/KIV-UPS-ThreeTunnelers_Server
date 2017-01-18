@@ -18,7 +18,7 @@ int _exe_prep_msg_plain ENGINE_HANDLE_FUNC_HEADER
     
     network_command_prepare(p->p_cmd_out, NCT_MSG_PLAIN);
     network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, sc->str, sc->length);
+    network_command_append_str(p->p_cmd_out, sc->str);
     
     netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, GAME_ROOM_MAX_PLAYERS, p->p_cmd_out);
 }

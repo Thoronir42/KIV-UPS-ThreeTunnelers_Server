@@ -30,41 +30,45 @@ int network_command_set_data(network_command *p, const char *str, int length) {
     return 0;
 }
 
-void network_command_append_str(network_command *p, const char *str, int length) {
+void network_command_append_string(network_command *p, const char *str, int length) {
     if (p->length + length > NETWORK_COMMAND_DATA_LENGTH) {
         glog(LOG_WARNING, "Attempted to append to command which would cause "
                 "data buffer overflow");
         return;
     }
-//    glog(LOG_FINE, "Extending command: %s[%d] + %s[%d]", p->data, p->length, str, length);
+    //    glog(LOG_FINE, "Extending command: %s[%d] + %s[%d]", p->data, p->length, str, length);
 
     memcpy(p->data + p->length, str, length);
     p->length += length;
 }
 
+void network_command_append_str(network_command *p, const char *str) {
+    network_command_append_string(p, str, strlen(str));
+}
+
 void network_command_append_char(network_command *p, char val) {
-    network_command_append_str(p, &val, sizeof (char));
+    network_command_append_string(p, &val, 1);
 }
 
 void network_command_append_byte(network_command *p, my_byte val) {
     char buf[2];
     write_hex_byte(buf, val);
 
-    network_command_append_str(p, buf, 2);
+    network_command_append_string(p, buf, 2);
 }
 
 void network_command_append_short(network_command *p, short val) {
     char buf[4];
     write_hex_short(buf, val);
 
-    network_command_append_str(p, buf, 4);
+    network_command_append_string(p, buf, 4);
 }
 
 void network_command_append_int(network_command *p, int val) {
     char buf[8];
     write_hex_int(buf, val);
 
-    network_command_append_str(p, buf, 8);
+    network_command_append_string(p, buf, 8);
 }
 
 //void network_command_append_long(network_command *p, long val) {

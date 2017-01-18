@@ -149,33 +149,38 @@ void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr) 
 void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char *reason) {
     network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
     network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, reason, strlen(reason));
+    network_command_append_str(p->p_cmd_out, reason);
     
     engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
 void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) {
     int i, clientRID;
-
+    int room_id;
+    
+    room_id = p_gr - p->resources->game_rooms;
+    
     clientRID = game_room_put_client(p_gr, p_cli);
     if (clientRID == ITEM_EMPTY) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Game room is full");
         engine_send_command(p, p_cli, p->p_cmd_out);
+        
         return;
     }
-
-    p_cli->room_id = p_gr - p->resources->game_rooms;
+    
+    p_cli->room_id = room_id;
 
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
-    network_command_append_byte(p->p_cmd_out, p_gr - p->resources->game_rooms);
-    network_command_append_byte(p->p_cmd_out, clientRID); // local clientRID
-    network_command_append_byte(p->p_cmd_out, p_gr->leaderClient); // leader clientRID
+    network_command_append_byte(p->p_cmd_out, room_id);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_byte(p->p_cmd_out, p_gr->leaderClient);
 
     engine_send_command(p, p_cli, p->p_cmd_out);
-
+    
     network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
     network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, p_cli->name, strlen(p_cli->name));
+    network_command_append_str(p->p_cmd_out, p_cli->name);
 
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
