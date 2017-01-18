@@ -4,6 +4,7 @@
 #include "game_room.h"
 #include "colors.h"
 #include "player.h"
+#include "../generic.h"
 
 char game_room_status_letter(unsigned char game_state) {
     switch (game_state) {
@@ -39,10 +40,9 @@ void game_room_clean_up(game_room *p) {
 
     for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
         p->clients[i] = NULL;
+        player_init(p->players + i, ITEM_EMPTY);
     }
 
-
-    memset(p->players, 0, sizeof (player) * GAME_ROOM_MAX_PLAYERS);
     memset(p->tanks, 0, sizeof (tank) * GAME_ROOM_MAX_PLAYERS);
     memset(p->projectiles, 0, sizeof (projectile) * GAME_ROOM_MAX_PROJECTILES);
     p->size = 0;
@@ -54,7 +54,7 @@ int game_room_count_players(game_room *p) {
     int i, n = 0;
 
     for (i = 0; i < p->size; i++) {
-        if ((p->players + i)->client_rid == PLAYER_NONE) {
+        if ((p->players + i)->client_rid != ITEM_EMPTY) {
             n++;
         }
     }
@@ -70,7 +70,7 @@ int game_room_count_clients(game_room *p){
     int i, n = 0;
 
     for (i = 0; i < p->size; i++) {
-        if (p->clients[i] == NULL) {
+        if (p->clients[i] != NULL) {
             n++;
         }
     }

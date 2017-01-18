@@ -119,9 +119,9 @@ void _cli_list_rooms(engine *p) {
     for (i = 0; i < p->resources->game_rooms_length; i++) {
         if (i % items_per_page == 0) {
             printf(""
-                    "╒════╤═══╤═════╤═════╤═════╤═══════╕\n"
+                    "╒════╤═══╤═════╤═════╤═════╤═════════╕\n"
                     "│ ID │STS│ SIZ │ CLI │ PLR │ %02d / %02d │\n"
-                    "╞════╪═══╪═════╪═════╪═════╪═══════╛\n",
+                    "╞════╪═══╪═════╪═════╪═════╪═════════╛\n",
                     (i / items_per_page) + 1, pages);
         }
         p_gr = p->resources->game_rooms + i;
@@ -143,7 +143,13 @@ void _cli_list_rooms(engine *p) {
                 " ├─────────────────────┼───┤\n");
         for (j = 0; j < p_gr->size; j++) {
             client_name = p_gr->clients[j] == NULL ? "---" : p_gr->clients[j]->name;
-            printf(" │%12s│ %02d│\n", client_name, p_gr->players[j].client_rid);
+            printf(" │%21s│", client_name);
+            if (p_gr->players[j].client_rid == ITEM_EMPTY) {
+                printf("---│\n");
+            } else {
+                printf("%3d│\n", p_gr->players[j].client_rid);
+            }
+
         }
         printf("┌┴───┬───┬─────┬─────┬─┴───┤\n");
     }

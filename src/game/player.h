@@ -9,13 +9,13 @@
 #define PLAYER_FIRST_USABLE 12
 
 typedef struct player {
-    unsigned short client_rid;
+    int client_rid;
 
     control_input input;
     int color;
 } player;
 
-int player_init(player *p, unsigned short client_rid);
+int player_init(player *p, int client_rid);
 
 #endif /* PLAYER_H */
 

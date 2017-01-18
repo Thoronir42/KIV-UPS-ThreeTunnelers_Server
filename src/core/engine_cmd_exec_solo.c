@@ -15,7 +15,7 @@ int _exe_solo_undefined ENGINE_HANDLE_FUNC_HEADER
 int _exe_solo_lead_disconnect ENGINE_HANDLE_FUNC_HEADER{
     game_room *p_gr;
     int clientRID;
-    
+
     netadapter_close_connection_by_client(p->p_netadapter, p_cli);
     p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
 
@@ -83,7 +83,7 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
     int i;
     my_byte n = 0;
     game_room *p_gr;
-    
+
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_LIST);
     network_command_append_byte(p->p_cmd_out, 0);
 
@@ -96,14 +96,14 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             network_command_prepare(p->p_cmd_out, NCT_ROOMS_LIST);
             network_command_append_byte(p->p_cmd_out, 0);
         }
-        
+
         p_gr = p->resources->game_rooms + i;
-        if (p_gr->game_state != GAME_ROOM_STATE_DONE && p_gr->game_state != GAME_ROOM_STATE_IDLE) {
+        if (p_gr->state != GAME_ROOM_STATE_DONE && p_gr->state != GAME_ROOM_STATE_IDLE) {
             n++;
             network_command_append_short(p->p_cmd_out, i);
             network_command_append_byte(p->p_cmd_out, p_gr->size);
             network_command_append_byte(p->p_cmd_out, game_room_get_open_player_slots(p_gr));
-            network_command_append_byte(p->p_cmd_out, p_gr->game_state);
+            network_command_append_byte(p->p_cmd_out, p_gr->state);
             network_command_append_byte(p->p_cmd_out, 0); // todo: difficulty
         }
     }
