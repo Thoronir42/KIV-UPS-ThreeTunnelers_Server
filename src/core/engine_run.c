@@ -42,7 +42,7 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     return 0;
 }
 
-int _engine_authorize_reconnect(engine *p, net_client *p_cli){
+int _engine_authorize_reconnect(engine *p, net_client *p_cli) {
     glog(LOG_FINE, "TODO: Reauthorization");
 }
 
@@ -68,7 +68,14 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
         p_cli = engine_client_by_secret(p, cmd.data + 2);
         if (p_cli == NULL) {
             reintroduce = 0;
+        } else {
+            if(p_cli->status != NET_CLIENT_STATUS_DISCONNECTED){
+                glog(LOG_FINE, "Reauthorization of connection %02d failed "
+                        "because command client is not disconnected", socket);
+        return 1;
+            }
         }
+        
     }
     if (!reintroduce) {
         p_cli = engine_first_free_client_offset(p);
