@@ -146,7 +146,48 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
+    int room_id, clientRID;
+    game_room *p_gr;
+    char room_number_buffer[4];
 
+    if (sc->length < 2) {
+        return ENGINE_CMDEXE_DATA_TOO_SHORT;
+    }
+
+    room_id = strsc_byte(sc);
+
+    if (p_cli->room_id != ITEM_EMPTY && p_cli->room_id != room_id) {
+        memset(room_number_buffer, 0, 4);
+        sprintf(room_number_buffer, "%d", p_cli->room_id);
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Client is already in room ");
+        network_command_append_str(p->p_cmd_out, room_number_buffer);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+
+        return 0;
+    }
+
+    p_gr = engine_game_room_by_id(p, room_id);
+
+    if (p_gr == NULL) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Game room does not exist");
+        engine_send_command(p, p_cli, p->p_cmd_out);
+
+        return 0;
+    }
+
+    if (!game_room_get_open_player_slots(p_gr)) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Game room is already full");
+        engine_send_command(p, p_cli, p->p_cmd_out);
+
+        return 0;
+    }
+
+    engine_put_client_into_room(p, p_cli, p_gr);
+
+    return 0;
 }
 
 int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
