@@ -1,8 +1,17 @@
 #ifndef _GAME_ROOM_H
 #define _GAME_ROOM_H
 
-#define GAME_ROOM_MAX_PLAYERS 4
-#define GAME_ROOM_MAX_PROJECTILES GAME_ROOM_MAX_PLAYERS * 20
+#include "player.h"
+#include "colors.h"
+#include "warzone.h"
+
+#include "../map/tunneler_map.h"
+
+#include "../networks/net_client.h"
+#include "../model/tank.h"
+#include "../model/projectile.h"
+
+#define GAME_ROOM_MAX_PLAYERS WARZONE_MAX_PLAYERS
 
 #define GAME_ROOM_STATE_IDLE 0
 #define GAME_ROOM_STATE_LOBBY 1
@@ -10,14 +19,6 @@
 #define GAME_ROOM_STATE_RUNNING 3
 #define GAME_ROOM_STATE_SUMMARIZATION 4
 #define GAME_ROOM_STATE_DONE 5
-
-#include "player.h"
-#include "colors.h"
-#include "../map/tunneler_map.h"
-
-#include "../networks/net_client.h"
-#include "../model/tank.h"
-#include "../model/projectile.h"
 
 typedef struct game_room
 {
@@ -31,8 +32,8 @@ typedef struct game_room
 
     colors player_colors;
     player players[GAME_ROOM_MAX_PLAYERS];
-    tank tanks[GAME_ROOM_MAX_PLAYERS];
-    projectile projectiles[GAME_ROOM_MAX_PROJECTILES];
+    
+    warzone zone;
 
 
 } game_room;

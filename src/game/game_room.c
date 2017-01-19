@@ -44,9 +44,8 @@ void game_room_clean_up(game_room *p) {
         p->clients[i] = NULL;
         player_init(p->players + i, ITEM_EMPTY);
     }
-
-    memset(p->tanks, 0, sizeof (tank) * GAME_ROOM_MAX_PLAYERS);
-    memset(p->projectiles, 0, sizeof (projectile) * GAME_ROOM_MAX_PROJECTILES);
+    
+    warzone_init(&p->zone);
     p->size = 0;
     p->state = GAME_ROOM_STATE_IDLE;
 
