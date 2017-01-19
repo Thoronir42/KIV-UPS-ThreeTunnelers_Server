@@ -12,7 +12,7 @@
 typedef struct warzone {
     const int TANK_MAX_HP,
     TANK_MAX_EP;
-    tunneler_map *map;
+    tunneler_map map;
 
     tank tanks[WARZONE_MAX_PLAYERS];
     int tanks_size;

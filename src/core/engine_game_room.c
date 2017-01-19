@@ -1,6 +1,7 @@
 #include "engine.h"
 
 #include "../logger.h"
+#include "../map_generator/map_generator.h"
 
 void _engine_update_game_room(game_room *p_gr) {
 
@@ -67,7 +68,14 @@ void _engine_clean_game_room(engine *p, game_room *p_gr) {
 
 }
 
+void _game_room_init_map(game_room *p_gr) {
+    map_generator_generate(&p_gr->zone.map);
+}
+
 void engine_game_room_begin(engine *p, game_room *p_gr) {
     p_gr->state = GAME_ROOM_STATE_RUNNING;
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_PHASE);
     
+    _game_room_init_map(p_gr);
+
 }
