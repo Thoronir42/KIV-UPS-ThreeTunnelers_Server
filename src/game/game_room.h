@@ -6,9 +6,10 @@
 
 #define GAME_ROOM_STATE_IDLE 0
 #define GAME_ROOM_STATE_LOBBY 1
-#define GAME_ROOM_STATE_RUNNING 2
-#define GAME_ROOM_STATE_SUMMARIZATION 3
-#define GAME_ROOM_STATE_DONE 4
+#define GAME_ROOM_STATE_STARTNG 2
+#define GAME_ROOM_STATE_RUNNING 3
+#define GAME_ROOM_STATE_SUMMARIZATION 4
+#define GAME_ROOM_STATE_DONE 5
 
 #include "player.h"
 #include "colors.h"
@@ -65,6 +66,8 @@ int game_room_find_client(game_room *p, net_client *p_cli);
 int game_room_put_client(game_room *p_gr, net_client *p_cli);
 
 void game_room_remove_client(game_room *p, net_client *p_cli);
+
+int game_room_is_everyone_ready(game_room *p);
 
 void game_room_attach_player(game_room *p, int clientRID);
 

@@ -14,12 +14,14 @@ char game_room_status_letter(unsigned char game_state) {
             return 'I';
         case GAME_ROOM_STATE_LOBBY:
             return 'L';
+        case GAME_ROOM_STATE_STARTNG:
+            return 'S';
         case GAME_ROOM_STATE_RUNNING:
             return 'W';
         case GAME_ROOM_STATE_SUMMARIZATION:
             return 'S';
-
     }
+    return '?';
 }
 
 int game_room_init(game_room *p, int size, net_client *p_cli) {
@@ -61,6 +63,7 @@ int game_room_count_players(game_room *p) {
 
     return n;
 }
+
 int game_room_get_open_player_slots(game_room *p) {
     return p->size - game_room_count_players(p);
 }
@@ -76,10 +79,10 @@ int game_room_count_clients(game_room *p) {
 
     return n;
 }
+
 int game_room_get_open_client_slots(game_room *p) {
     return p->size - game_room_count_clients(p);
 }
-
 
 int game_room_find_client(game_room *p, net_client *p_cli) {
     int i;
@@ -111,27 +114,38 @@ int game_room_put_client(game_room *p_game_room, net_client *p_cli) {
 
 void game_room_remove_client(game_room *p, net_client *p_cli) {
     int clientRID = game_room_find_client(p, p_cli);
-    if(clientRID == ITEM_EMPTY){
+    if (clientRID == ITEM_EMPTY) {
         return;
     }
-    
+
     p->clients[clientRID] = NULL;
 }
 
-int game_room_choose_leader_other_than(game_room *p, net_client *p_cli){
+int game_room_is_everyone_ready(game_room *p) {
     int i;
-    for(i = 0; i < p->size; i++){
-        if(p->clients[i] == p_cli || p->clients[i] == NULL){
+    for (i = 0; i < p->size; i++) {
+        if (p->clients[i] != NULL && !p->ready_state[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int game_room_choose_leader_other_than(game_room *p, net_client *p_cli) {
+    int i;
+    for (i = 0; i < p->size; i++) {
+        if (p->clients[i] == p_cli || p->clients[i] == NULL) {
             continue;
         }
-        
+
         return p->leaderClientRID = i;
     }
-    
+
     return ITEM_EMPTY;
 }
 
 void game_room_detach_player(game_room *p, int playerRID) {
     colors_set_in_use(&p->player_colors, p->players[playerRID].color, 0);
-    player_init(p->players +playerRID, ITEM_EMPTY);
+    player_init(p->players + playerRID, ITEM_EMPTY);
 }
