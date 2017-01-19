@@ -5,10 +5,23 @@
 #include "../localisation.h"
 #include "../logger.h"
 
+char *_engine_cmd_exe_retval_label(int ret_val) {
+    switch (ret_val) {
+        case ENGINE_CMDEXE_DATA_TOO_SHORT:
+            return "Data too short";
+        case ENGINE_CMDEXE_ILLEGAL_OP:
+            return "Illegal operation";
+        case ENGINE_CMDEXE_WRONG_CONTEXT:
+            return "Wrong context";
+    }
+    return "???";
+}
+
 int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     int(* handle_action) ENGINE_HANDLE_FUNC_HEADER;
     str_scanner scanner;
     game_room *p_gr;
+    int ret_val;
 
     if (cmd.type < 0 || cmd.type > NETWORK_COMMAND_TYPES_COUNT) {
         network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
@@ -32,8 +45,14 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
 
     str_scanner_set(&scanner, cmd.data, cmd.length);
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    
-    if (handle_action(p, p_cli, &scanner, p_gr)) {
+
+
+    ret_val = handle_action(p, p_cli, &scanner, p_gr);
+    if (ret_val) {
+        glog(LOG_FINE, "Processed command of type %d from client %d which "
+                "resulted in %s", p_cli - p->resources->clients,
+                cmd.type, _engine_cmd_exe_retval_label(ret_val));
+
         netadapter_handle_invallid_command(p->p_netadapter, p_cli, cmd);
         p->p_netadapter->stats->commands_received_invalid++;
         if (p_cli->connection->invalid_counter > p->p_netadapter->ALLOWED_INVALLID_MSG_COUNT) {
@@ -45,7 +64,12 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
 }
 
 int _engine_authorize_reconnect(engine *p, net_client *p_cli) {
-    glog(LOG_FINE, "TODO: Reauthorization");
+    game_room *p_gr;
+
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
+    if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+        engine_put_client_into_room(p, p_cli, p_gr);
+    }
 }
 
 int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
@@ -71,13 +95,13 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
         if (p_cli == NULL) {
             reintroduce = 0;
         } else {
-            if(p_cli->status != NET_CLIENT_STATUS_DISCONNECTED){
+            if (p_cli->status != NET_CLIENT_STATUS_DISCONNECTED) {
                 glog(LOG_FINE, "Reauthorization of connection %02d failed "
                         "because command client is not disconnected", socket);
-        return 1;
+                return 1;
             }
         }
-        
+
     }
     if (!reintroduce) {
         p_cli = engine_first_free_client_offset(p);
@@ -108,9 +132,11 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
 
     if (reintroduce) {
         _engine_authorize_reconnect(p, p_cli);
+    } else {
+        glog(LOG_INFO, "Connection %02d authorized as client %02d", socket, p->resources->con_to_cli[socket]);
     }
 
-    glog(LOG_INFO, "Connection %02d authorized as client %02d", socket, p->resources->con_to_cli[socket]);
+
     return 0;
 }
 

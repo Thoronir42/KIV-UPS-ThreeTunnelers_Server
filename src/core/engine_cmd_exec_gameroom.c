@@ -56,6 +56,9 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
     if (new_ready_state == p_cgr->ready_state[clientRID]) {
         return 0;
     }
+    
+    glog(LOG_FINE, "Game room %d client %d changed ready state to %s",
+            p_cgr - p->resources->game_rooms, clientRID, new_ready_state ? "YES" : "NO");
 
     network_command_prepare(p->p_cmd_out, NCT_ROOM_READY_STATE);
     network_command_append_byte(p->p_cmd_out, new_ready_state);
