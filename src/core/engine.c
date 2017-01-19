@@ -193,10 +193,11 @@ void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     game_room *p_gr;
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
 
-    if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+    if (p_gr != NULL && p_gr->state == GAME_ROOM_STATE_LOBBY) {
         engine_game_room_client_disconnected(p, p_cli, p_gr, reason);
     } else {
-        net_client_cleanup(p_cli);
+        
+        net_client_wipe(p_cli);
     }
 
     p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;

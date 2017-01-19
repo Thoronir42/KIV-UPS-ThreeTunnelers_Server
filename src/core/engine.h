@@ -59,6 +59,7 @@ void *engine_run(void *args);
 
 void *engine_cli_run(void *args);
 
+void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
 void engine_client_disconnected(engine *p, net_client *p_cli, char *reason);
 void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_room *p_gr, char *reason);
 

@@ -70,7 +70,7 @@ tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
 
 }
 
-void engine_game_room_set_state(engine *p, game_room *p_gr, int game_state){
+void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state){
     p_gr->state = game_state;
     network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_STATE);
     network_command_append_byte(p->p_cmd_out, game_state);

@@ -13,16 +13,16 @@
 
 #define GAME_ROOM_MAX_PLAYERS WARZONE_MAX_PLAYERS
 
-#define GAME_ROOM_STATE_IDLE 0
-#define GAME_ROOM_STATE_LOBBY 1
-#define GAME_ROOM_STATE_STARTNG 2
-#define GAME_ROOM_STATE_RUNNING 3
-#define GAME_ROOM_STATE_SUMMARIZATION 4
-#define GAME_ROOM_STATE_DONE 5
+typedef enum game_room_state
+{
+    GAME_ROOM_STATE_IDLE = 0, GAME_ROOM_STATE_LOBBY = 1,
+    GAME_ROOM_STATE_STARTNG = 2, GAME_ROOM_STATE_RUNNING = 3,
+    GAME_ROOM_STATE_SUMMARIZATION = 4, GAME_ROOM_STATE_DONE = 5
+} game_room_state;
 
 typedef struct game_room
 {
-    unsigned char state;
+    game_room_state state;
 
     int size;
 
@@ -32,7 +32,7 @@ typedef struct game_room
 
     colors player_colors;
     player players[GAME_ROOM_MAX_PLAYERS];
-    
+
     warzone zone;
 
 
