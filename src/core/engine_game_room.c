@@ -64,24 +64,84 @@ void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_roo
     }
 }
 
-void _game_room_init_map(game_room *p_gr) {
+tunneler_map *_game_room_init_map(game_room *p_gr) {
     int i, n, player_count = game_room_count_players(p_gr);
-    map_generator_generate(&p_gr->zone.map, player_count);
+    tunneler_map *p_map = &p_gr->zone.map;
+
+    map_generator_generate(p_map, player_count);
 
     for (i = 0; i < p_gr->size; i++) {
         if (p_gr->players[i].client_rid == ITEM_EMPTY) {
             continue;
         }
-        tunneler_map_assign_base(&p_gr->zone.map, n++, i);
-
+        tunneler_map_assign_base(p_map, n++, i);
     }
+
+    return p_map;
 
 }
 
-void engine_game_room_begin(engine *p, game_room *p_gr) {
-    p_gr->state = GAME_ROOM_STATE_RUNNING;
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_PHASE);
+void engine_game_room_set_state(engine *p, game_room *p_gr, int game_state){
+    p_gr->state = game_state;
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_STATE);
+    network_command_append_byte(p->p_cmd_out, game_state);
+    
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+    
+}
 
-    _game_room_init_map(p_gr);
+void engine_game_room_begin(engine *p, game_room *p_gr) {
+    tunneler_map *p_map;
+    int x, y;
+
+    p_map = _game_room_init_map(p_gr);
+
+    network_command_prepare(p->p_cmd_out, NCT_MAP_SPECIFICATION);
+    network_command_append_byte(p->p_cmd_out, p_map->CHUNK_SIZE);
+    network_command_append_byte(p->p_cmd_out, p_map->chunk_dimensions.width);
+    network_command_append_byte(p->p_cmd_out, p_map->chunk_dimensions.height);
+
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+    
+    engine_pack_map_bases(p->p_cmd_out, p_map);
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+
+    for (y = 0; y < p_map->chunk_dimensions.height; y++) {
+        for (x = 0; x < p_map->chunk_dimensions.width; x++) {
+            engine_pack_chunk(p->p_cmd_out, tunneler_map_get_chunk(p_map, x, y));
+            engine_bc_command(p, p_gr, p->p_cmd_out);
+        }
+    }
+}
+
+void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map){
+    int i, x, y;
+    tunneler_map_chunk *p_chunk;
+    
+    network_command_prepare(p_dst, NCT_MAP_BASES);
+    network_command_append_byte(p_dst, p_map->bases_size);
+    
+    for(i = 0; i < p_map->bases_size; i++){
+        network_command_append_byte(p_dst, x = p_map->bases[i].x);
+        network_command_append_byte(p_dst, y = p_map->bases[i].y);
+        
+        p_chunk = tunneler_map_get_chunk(p_map, x, y);
+        
+        network_command_append_byte(p_dst, p_chunk->assigned_player_rid);
+    }
+}
+
+void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk) {
+    int x, y;
+    block b;
+
+    network_command_prepare(p_dst, NCT_MAP_CHUNK_DATA);
+
+    for (y = 0; y < p_chunk->size; y++) {
+        for (x = 0; x < p_chunk->size; x++) {
+            b = tunneler_map_chunk_get_block(p_chunk, x, y);
+            network_command_append_char(p_dst, b);
+        }
+    }
 
 }

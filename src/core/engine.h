@@ -78,4 +78,7 @@ void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char
 
 void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr);
 
+void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);
+void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk);
+
 #endif

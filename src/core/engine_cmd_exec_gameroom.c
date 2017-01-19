@@ -30,7 +30,7 @@ int _exe_gr_sync_phase ENGINE_HANDLE_FUNC_HEADER{
         return ENGINE_CMDEXE_WRONG_CONTEXT;
     }
 
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_PHASE);
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_STATE);
     network_command_append_byte(p->p_cmd_out, p_cgr->state);
     engine_send_command(p, p_cli, p->p_cmd_out);
 
@@ -63,8 +63,22 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
     engine_bc_command(p, p_cgr, p->p_cmd_out);
 
     if (game_room_is_everyone_ready(p_cgr)) {
-        glog(LOG_FINE, "Everyone in room %d is ready. Beginning...", p_cgr - p->resources->game_rooms);
-        engine_game_room_begin(p, p_cgr);
+        switch(p_cgr->state){
+            case GAME_ROOM_STATE_LOBBY:
+                glog(LOG_FINE, "Everyone in room %d is ready. Initializing game...", p_cgr - p->resources->game_rooms);
+                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_STARTNG);
+                engine_game_room_begin(p, p_cgr);
+                break;
+            case GAME_ROOM_STATE_STARTNG:
+                glog(LOG_FINE, "Everyone in room %d is ready. Let the game begin...", p_cgr - p->resources->game_rooms);
+                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_RUNNING);
+                break;
+            case GAME_ROOM_STATE_SUMMARIZATION:
+                glog(LOG_FINE, "Everyone in room %d is ready. Returning to lobby...", p_cgr - p->resources->game_rooms);
+                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_LOBBY);
+                break;
+        }
+        
     }
 
     return 0;
@@ -73,7 +87,7 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
 void _engine_init_gameroom_commands(int (**actions)ENGINE_HANDLE_FUNC_HEADER) {
     actions[NCT_MSG_PLAIN] = &_exe_gr_msg_plain;
     //    actions[NCT_MSG_RCON] = &_exe_gr_msg_rcon;
-    actions[NCT_ROOM_SYNC_PHASE] = &_exe_gr_sync_phase;
+    actions[NCT_ROOM_SYNC_STATE] = &_exe_gr_sync_phase;
     actions[NCT_ROOM_READY_STATE] = &_exe_gr_ready_state;
 
 
