@@ -99,11 +99,9 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             network_command_append_byte(p->p_cmd_out, 0); // todo: difficulty
         }
     }
-
+    
     write_hex_byte(p->p_cmd_out->data, n);
     engine_send_command(p, p_cli, p->p_cmd_out);
-
-
 
     return 0;
 }

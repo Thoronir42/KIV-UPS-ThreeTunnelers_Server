@@ -76,17 +76,25 @@ my_byte read_hex_byte(const char *src) {
 }
 
 void write_hex_long(char *dest, long val) {
-    sprintf(dest, "%016LX", val);
+    char buf[17];
+    snprintf(buf, 17, "%016LX", val);
+    memcpy(dest, buf, 16);
 }
 
 void write_hex_int(char *dest, int val) {
-    sprintf(dest, "%08X", val);
+    char buf[9];
+    snprintf(buf, 9, "%08X", val);
+    memcpy(dest, buf, 8);
 }
 
 void write_hex_short(char *dest, short val) {
-    sprintf(dest, "%04X", val);
+    char buf[5];
+    snprintf(buf, 5, "%04X", val);
+    memcpy(dest, buf, 4);
 }
 
 void write_hex_byte(char *dest, my_byte val) {
-    sprintf(dest, "%02X", val);
+    char buf[3];
+    snprintf(buf, 3, "%02X", val);
+    memcpy(dest, buf, 2);
 }
