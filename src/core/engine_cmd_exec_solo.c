@@ -184,7 +184,28 @@ int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
+    game_room *p_gr;
+    int i, clientRID;
 
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
+    if (p_gr == NULL) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Not in room");
+        engine_send_command(p, p_cli, p->p_cmd_out);
+
+        return;
+    }
+
+    network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+    network_command_append_str(p->p_cmd_out, "Client absconded");
+    engine_send_command(p, p_cli, p->p_cmd_out);
+
+    engine_game_room_client_disconnected(p, p_cli, p_gr, "Client absconded");
+    
+    game_room_remove_client(p_gr, p_cli);
+    p_cli->room_id = ITEM_EMPTY;
+
+    return 0;
 }
 
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER) {
