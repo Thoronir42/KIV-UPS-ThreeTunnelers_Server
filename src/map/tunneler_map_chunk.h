@@ -1,11 +1,19 @@
 #ifndef TUNNELER_MAP_CHUNK_H
 #define TUNNELER_MAP_CHUNK_H
 
-#include "tunneler_map.h"
+#include "map_block.h"
 
-int tunnel_map_chunk_init(tunneler_map_chunk *p, tunneler_map *map);
 
-void tunnel_map_chunk_delete(tunneler_map_chunk *p);
+// 22 * 22 = 529
+#define CHUNK_SIZE_MAX 22
+
+typedef struct tunneler_map_chunk {
+    int assigned_player_rid;
+    int size;
+    block blocks[CHUNK_SIZE_MAX];
+} tunneler_map_chunk;
+
+int tunnel_map_chunk_init(tunneler_map_chunk *p, int size);
 
 #endif /* TUNNELER_MAP_CHUNK_H */
 

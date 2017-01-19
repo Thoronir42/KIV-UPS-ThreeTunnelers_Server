@@ -4,44 +4,33 @@
 #include <stdlib.h>
 #include <stddef.h>
 
+#include "tunneler_map_chunk.h"
+#include "map_block.h"
+
+#include "../model/intpoint.h"
+#include "../model/intdimension.h"
+
 #define _CHUNK_SIZE 20
 
-#define MAP_BLOCK_EMPTY 0
-#define MAP_BLOCK_EARTH 1
-#define MAP_BLOCK_ROCK 2
-#define MAP_BLOCK_WALL 3
+#define MAP_MAX_PLAYERS 4
 
-typedef struct {
-    int x;
-    int y;
-} base_point;
+#define MAP_MAX_WIDTH 16
+#define MAP_MAX_HEIGHT 16
 
-typedef struct tunneler_map tunneler_map;
-typedef struct tunneler_map_chunk tunneler_map_chunk;
-
-struct tunneler_map {
+typedef struct tunneler_map
+{
     const int CHUNK_SIZE;
-    const int CHUNK_BLOCKS;
-    const int CHUNKS_VERTICAL;
-    const int CHUNKS_HORITZONTAL;
+    
+    intdimension chunk_dimensions;
+    intdimension block_dimensions;
 
-    struct tunneler_map_chunk *chunks;
+    tunneler_map_chunk chunks[MAP_MAX_WIDTH * MAP_MAX_HEIGHT];
 
-    base_point *bases;
+    intpoint bases[MAP_MAX_PLAYERS];
     int bases_size;
-};
+} tunneler_map;
 
-struct tunneler_map_chunk {
-    tunneler_map *map;
-    unsigned char assigned_player_rid;
-
-    char *blocks;
-
-};
-
-tunneler_map *tunneler_map_create(int width, int height, int chunk_size);
-
-void tunneler_map_delete(tunneler_map *p);
+void tunneler_map_init(tunneler_map *map, int width, int height, int chunk_size);
 
 tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y);
 
