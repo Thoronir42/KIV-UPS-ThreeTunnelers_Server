@@ -69,7 +69,8 @@ void _engine_clean_game_room(engine *p, game_room *p_gr) {
 }
 
 void _game_room_init_map(game_room *p_gr) {
-    map_generator_generate(&p_gr->zone.map);
+    map_generator_generate(&p_gr->zone.map, game_room_count_players(p_gr));
+    
 }
 
 void engine_game_room_begin(engine *p, game_room *p_gr) {

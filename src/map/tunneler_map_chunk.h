@@ -7,11 +7,19 @@
 // 22 * 22 = 529
 #define CHUNK_SIZE_MAX 22
 
+enum tunneler_map_chunk_type
+{
+    TUNNELER_MAP_CHUNK_TYPE_REGULAR, TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE
+};
+
 typedef struct tunneler_map_chunk
 {
-    int assigned_player_rid;
     int size;
     block blocks[CHUNK_SIZE_MAX];
+    
+    enum tunneler_map_chunk_type type;
+    int assigned_player_rid;
+    
 } tunneler_map_chunk;
 
 int tunnel_map_chunk_init(tunneler_map_chunk *p, int size);
