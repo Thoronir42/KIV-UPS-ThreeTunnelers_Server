@@ -93,12 +93,12 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
             n++;
             network_command_append_short(p->p_cmd_out, i);
             network_command_append_byte(p->p_cmd_out, p_gr->size);
-            network_command_append_byte(p->p_cmd_out, game_room_get_open_player_slots(p_gr));
+            network_command_append_byte(p->p_cmd_out, game_room_count_players(p_gr));
             network_command_append_byte(p->p_cmd_out, p_gr->state);
             network_command_append_byte(p->p_cmd_out, 0); // todo: difficulty
         }
     }
-    
+
     write_hex_byte(p->p_cmd_out->data, n);
     engine_send_command(p, p_cli, p->p_cmd_out);
 
@@ -109,13 +109,13 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     int clientRID, i;
     game_room *p_gr;
 
-    
+
     if (p_cgr != NULL && game_room_find_client(p_cgr, p_cli) != ITEM_EMPTY) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Client is already in room ");
         network_command_append_number(p->p_cmd_out, p_cli->room_id);
         engine_send_command(p, p_cli, p->p_cmd_out);
-        
+
         return 0;
     }
 
@@ -196,7 +196,7 @@ int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
     engine_send_command(p, p_cli, p->p_cmd_out);
 
     engine_game_room_client_disconnected(p, p_cli, p_cgr, "Client absconded");
-    
+
     game_room_remove_client(p_cgr, p_cli);
     p_cli->room_id = ITEM_EMPTY;
 

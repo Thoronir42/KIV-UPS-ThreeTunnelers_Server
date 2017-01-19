@@ -98,7 +98,7 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
     for (y = 0; y < p_map->chunk_dimensions.height; y++) {
         for (x = 0; x < p_map->chunk_dimensions.width; x++) {
             engine_pack_chunk(p->p_cmd_out, tunneler_map_get_chunk(p_map, x, y));
-            engine_bc_command(p, p_gr, p->p_cmd_out);
+            engine_bc_command(p, p_gr, p->p_cmd_out);   
         }
     }
 }
