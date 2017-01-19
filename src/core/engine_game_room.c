@@ -64,19 +64,24 @@ void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_roo
     }
 }
 
-void _engine_clean_game_room(engine *p, game_room *p_gr) {
-
-}
-
 void _game_room_init_map(game_room *p_gr) {
-    map_generator_generate(&p_gr->zone.map, game_room_count_players(p_gr));
-    
+    int i, n, player_count = game_room_count_players(p_gr);
+    map_generator_generate(&p_gr->zone.map, player_count);
+
+    for (i = 0; i < p_gr->size; i++) {
+        if (p_gr->players[i].client_rid == ITEM_EMPTY) {
+            continue;
+        }
+        tunneler_map_assign_base(&p_gr->zone.map, n++, i);
+
+    }
+
 }
 
 void engine_game_room_begin(engine *p, game_room *p_gr) {
     p_gr->state = GAME_ROOM_STATE_RUNNING;
     network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_PHASE);
-    
+
     _game_room_init_map(p_gr);
 
 }

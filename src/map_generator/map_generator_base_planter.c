@@ -57,4 +57,5 @@ void _map_generator_plant_bases(tunneler_map* map, int count) {
         map->bases[i].x = x;
         map->bases[i].y = y;
     }
+    map->bases_size = count;
 }

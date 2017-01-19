@@ -30,3 +30,11 @@ tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y) {
 
     return map->chunks + (y * map->chunk_dimensions.width + x);
 }
+
+void tunneler_map_assign_base(tunneler_map *p, int base, int playerRID){
+    tunneler_map_chunk *p_chunk;
+    
+    p_chunk = tunneler_map_get_chunk(p, p->bases[base].x, p->bases[base].y);
+    tunneler_map_chunk_assing_player(p_chunk, playerRID);
+    
+}
