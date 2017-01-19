@@ -137,7 +137,7 @@ void _engine_process_queue(engine *p) {
     }
 }
 
-void _engine_check_idle_client(engine *p, net_client *p_client, time_t now) {
+void _engine_check_client_for_idling(engine *p, net_client *p_client, time_t now) {
     tcp_connection *p_con = p_client->connection;
     int idle_time = now - p_con->last_active;
 
@@ -161,16 +161,18 @@ void _engine_check_idle_client(engine *p, net_client *p_client, time_t now) {
 void _engine_check_active_clients(engine *p) {
     int i;
     net_client *p_cli;
+    time_t now = time(NULL);
+    
     for (i = 0; i < p->resources->clients_length; i++) {
         p_cli = p->resources->clients + i;
 
         if (p_cli->connection != NULL) { // connection is open
-
+//            _engine_check_client_for_idling(p, p_cli, now);
         } else { // connection is not open
             if (p_cli->status != NET_CLIENT_STATUS_DISCONNECTED &&
                     p_cli->status != NET_CLIENT_STATUS_EMPTY) {
                 glog(LOG_FINE, "Engine: Client %d found to be disconnected", i);
-                p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
+                engine_client_disconnected(p, p_cli, "Client timed out");
             }
         }
 

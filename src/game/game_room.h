@@ -24,8 +24,9 @@ typedef struct game_room
 
     int size;
 
-    int leaderClient;
+    int leaderClientRID;
     net_client *clients[GAME_ROOM_MAX_PLAYERS];
+    char ready_state[GAME_ROOM_MAX_PLAYERS];
 
     colors player_colors;
     player players[GAME_ROOM_MAX_PLAYERS];
@@ -62,6 +63,12 @@ int game_room_find_client(game_room *p, net_client *p_cli);
  * @return 
  */
 int game_room_put_client(game_room *p_gr, net_client *p_cli);
+
+void game_room_remove_client(game_room *p, net_client *p_cli);
+
+void game_room_attach_player(game_room *p, int clientRID);
+
+void game_room_detach_player(game_room *p, int playerRID);
 
 #endif /* _GAME_ROOM_H */
 

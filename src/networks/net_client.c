@@ -18,10 +18,13 @@ char net_client_status_letter(unsigned char status) {
 }
 
 int net_client_init(net_client *p, tcp_connection *connection) {
-    memset(p, 0, sizeof (net_client));
+    net_client_cleanup(p);
     p->connection = connection;
 
     return 0;
+}
+void net_client_cleanup(net_client *p){
+    memset(p, 0, sizeof (net_client));
 }
 
 int net_client_set_name(net_client *p, const char *name, int length) {

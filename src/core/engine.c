@@ -142,6 +142,16 @@ game_room *engine_find_empty_game_room(engine *p) {
     return NULL;
 }
 
+void engine_cleanup_game_room(engine *p, game_room *p_gr) {
+    int i;
+    network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+    network_command_append_str(p->p_cmd_out, "Game room is being cleaned up");
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+
+    game_room_clean_up(p_gr);
+    glog(LOG_INFO, "Room %d has bean cleaned up", p_gr - p->resources->game_rooms);
+}
+
 void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr) {
     glog(LOG_WARNING, "Engine: Room dumping not implemented yet");
 }
@@ -150,34 +160,34 @@ void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char
     network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
     network_command_append_byte(p->p_cmd_out, clientRID);
     network_command_append_str(p->p_cmd_out, reason);
-    
+
     engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
 void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) {
     int i, clientRID;
     int room_id;
-    
+
     room_id = p_gr - p->resources->game_rooms;
-    
+
     clientRID = game_room_put_client(p_gr, p_cli);
     if (clientRID == ITEM_EMPTY) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Game room is full");
         engine_send_command(p, p_cli, p->p_cmd_out);
-        
+
         return;
     }
-    
+
     p_cli->room_id = room_id;
 
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
     network_command_append_byte(p->p_cmd_out, room_id);
     network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_byte(p->p_cmd_out, p_gr->leaderClient);
+    network_command_append_byte(p->p_cmd_out, p_gr->leaderClientRID);
 
     engine_send_command(p, p_cli, p->p_cmd_out);
-    
+
     network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
     network_command_append_byte(p->p_cmd_out, clientRID);
     network_command_append_str(p->p_cmd_out, p_cli->name);
@@ -189,4 +199,56 @@ void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) 
     return;
 }
 
+void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
+    game_room *p_gr;
+    p_gr = engine_game_room_by_id(p, p_cli->room_id);
+    
+    if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+        engine_game_room_client_disconnected(p, p_cli, p_gr, reason);
+    } else {
+        net_client_cleanup(p_cli);
+    }
+
+    p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
+}
+
+void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_room *p_gr, char *reason) {
+    int clientRID, i, new_leader_clientRID;
+
+    clientRID = game_room_find_client(p_gr, p_cli);
+    if (clientRID == ITEM_EMPTY) {
+        return;
+    }
+
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_str(p->p_cmd_out, reason);
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+
+    if (p_gr->state == GAME_ROOM_STATE_LOBBY) {
+        for (i = 0; i < p_gr->size; i++) {
+            if (p_gr->players[i].client_rid != clientRID) {
+                continue;
+            }
+            game_room_detach_player(p_gr, i);
+            network_command_prepare(p->p_cmd_out, NCT_ROOM_PLAYER_DETACH);
+            network_command_append_byte(p->p_cmd_out, i);
+            engine_bc_command(p, p_gr, p->p_cmd_out);
+        }
+        game_room_remove_client(p_gr, p_cli);
+    }
+
+    if (p_gr->leaderClientRID == clientRID) {
+        new_leader_clientRID = game_room_choose_leader_other_than(p_gr, p_cli);
+        glog(LOG_INFO, "Leader of room %d left. New leader is %d",
+                p_gr - p->resources->game_rooms, new_leader_clientRID);
+        if (new_leader_clientRID == ITEM_EMPTY) {
+            engine_cleanup_game_room(p, p_gr);
+            return;
+        }
+        network_command_prepare(p->p_cmd_out, NCT_ROOM_SET_LEADER);
+        network_command_append_byte(p->p_cmd_out, new_leader_clientRID);
+        engine_bc_command(p, p_gr, p->p_cmd_out);
+    }
+}
 

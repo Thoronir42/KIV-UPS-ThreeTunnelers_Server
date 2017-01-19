@@ -59,6 +59,9 @@ void *engine_run(void *args);
 
 void *engine_cli_run(void *args);
 
+void engine_client_disconnected(engine *p, net_client *p_cli, char *reason);
+void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_room *p_gr, char *reason);
+
 int engine_count_clients(engine *p, unsigned char status);
 
 net_client *engine_first_free_client_offset(engine *p);
