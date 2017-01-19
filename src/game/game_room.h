@@ -65,14 +65,15 @@ int game_room_find_client(game_room *p, net_client *p_cli);
  * @return 
  */
 int game_room_put_client(game_room *p_gr, net_client *p_cli);
+net_client *game_room_get_client(game_room *p, int clientRID);
 
 void game_room_remove_client(game_room *p, net_client *p_cli);
 
 int game_room_is_everyone_ready(game_room *p);
 
-void game_room_attach_player(game_room *p, int clientRID);
-
+int game_room_attach_player(game_room* p, int clientRID);
 void game_room_detach_player(game_room *p, int playerRID);
+player *game_room_get_player(game_room *p, int playerRID);
 
 #endif /* _GAME_ROOM_H */
 

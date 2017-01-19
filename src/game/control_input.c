@@ -1,11 +1,14 @@
 #include "control_input.h"
 
-void input_set(control_input *p_input, unsigned int input_type) {
-    p_input->heldKeys = input_type;
+int input_set_state(control_input *p_input, int state) {
+    int current_state = p_input->_state;
+    p_input->_state = state;
+
+    return current_state != p_input->_state;
 }
 
 int input_is_held(control_input *p_input, unsigned int input_mask) {
-    return p_input->heldKeys & input_mask;
+    return p_input->_state & input_mask;
 }
 
 int input_direction_x(control_input *p) {

@@ -25,7 +25,9 @@ typedef struct warzone {
 
 } warzone;
 
-void warzone_init(warzone *p);
+void warzone_init(warzone *p, int tanks_size);
+
+tank *warzone_get_tank(warzone *p, int playerRID);
 
 #endif /* WARZONE_H */
 

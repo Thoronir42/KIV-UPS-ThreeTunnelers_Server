@@ -45,7 +45,6 @@ void game_room_clean_up(game_room *p) {
         player_init(p->players + i, ITEM_EMPTY);
     }
     
-    warzone_init(&p->zone);
     p->size = 0;
     p->state = GAME_ROOM_STATE_IDLE;
 
@@ -83,6 +82,13 @@ int game_room_get_open_client_slots(game_room *p) {
     return p->size - game_room_count_clients(p);
 }
 
+net_client *game_room_get_client(game_room *p, int clientRID) {
+    if(clientRID < 0 || clientRID > p->size){
+        return NULL;
+    }
+    
+    return p->clients[clientRID];
+}
 int game_room_find_client(game_room *p, net_client *p_cli) {
     int i;
     for (i = 0; i < p->size; i++) {
@@ -142,6 +148,27 @@ int game_room_choose_leader_other_than(game_room *p, net_client *p_cli) {
     }
 
     return ITEM_EMPTY;
+}
+
+player *game_room_get_player(game_room *p, int playerRID){
+    if(playerRID < 0 || playerRID >= p->size){
+        return NULL;
+    }
+    
+    return p->players + playerRID;
+}
+
+int game_room_attach_player(game_room* p, int clientRID){
+    int i;
+    for(i =0; i < p->size; i++){
+        if(p->players[i].client_rid == ITEM_EMPTY){
+            player_init(p->players + i, clientRID);
+            return i;
+        }
+    }
+    
+    return ITEM_EMPTY;
+    
 }
 
 void game_room_detach_player(game_room *p, int playerRID) {

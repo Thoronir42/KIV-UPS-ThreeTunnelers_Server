@@ -3,17 +3,6 @@
 #include "../logger.h"
 #include "../map_generator/map_generator.h"
 
-void _engine_update_game_room(game_room *p_gr) {
-
-}
-
-void _engine_update_game_rooms(engine *p) {
-    int i;
-    for (i = 0; i < p->resources->game_rooms_length; i++) {
-        _engine_update_game_room(p->resources->game_rooms + 1);
-    }
-}
-
 void engine_game_room_cleanup(engine *p, game_room *p_gr) {
     int i;
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
@@ -64,8 +53,8 @@ void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_roo
     }
 }
 
-tunneler_map *_game_room_init_map(game_room *p_gr) {
-    int i, n, player_count = game_room_count_players(p_gr);
+tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
+    int i, n;
     tunneler_map *p_map = &p_gr->zone.map;
 
     map_generator_generate(p_map, player_count);
@@ -92,9 +81,9 @@ void engine_game_room_set_state(engine *p, game_room *p_gr, int game_state){
 
 void engine_game_room_begin(engine *p, game_room *p_gr) {
     tunneler_map *p_map;
-    int x, y;
-
-    p_map = _game_room_init_map(p_gr);
+    int x, y, player_count = game_room_count_players(p_gr);
+    warzone_init(&p_gr->zone, player_count);
+    p_map = _game_room_init_map(p_gr, player_count);
 
     network_command_prepare(p->p_cmd_out, NCT_MAP_SPECIFICATION);
     network_command_append_byte(p->p_cmd_out, p_map->CHUNK_SIZE);
