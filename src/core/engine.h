@@ -50,7 +50,7 @@ typedef struct engine
 int engine_init(engine *p_engine, settings *p_settings, resources *p_resources);
 
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
-void _engine_init_game_prep_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
+void _engine_init_gameroom_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 void _engine_init_game_play_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 
 void _engine_handle_command(void *handler, const network_command cmd);
