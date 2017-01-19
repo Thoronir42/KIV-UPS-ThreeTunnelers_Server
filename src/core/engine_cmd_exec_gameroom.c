@@ -63,7 +63,7 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
     engine_bc_command(p, p_cgr, p->p_cmd_out);
 
     if (game_room_is_everyone_ready(p_cgr)) {
-        switch(p_cgr->state){
+        switch (p_cgr->state) {
             case GAME_ROOM_STATE_LOBBY:
                 glog(LOG_FINE, "Everyone in room %d is ready. Initializing game...", p_cgr - p->resources->game_rooms);
                 engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_STARTNG);
@@ -78,9 +78,33 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
                 engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_LOBBY);
                 break;
         }
-        
+
     }
 
+    return 0;
+}
+
+int _exe_gr_client_info ENGINE_HANDLE_FUNC_HEADER{
+    int clientRID;
+    net_client *p_o_cli;
+    if(sc->length < 2){
+        return ENGINE_CMDEXE_DATA_TOO_SHORT;
+    }
+    if(p_cgr == NULL){
+        return ENGINE_CMDEXE_WRONG_CONTEXT;
+    }
+    
+    clientRID = strsc_byte(sc);
+    p_o_cli = game_room_get_client(p_cgr, clientRID);
+    if(p_o_cli){
+        return ENGINE_CMDEXE_ILLEGAL_OP;
+    }
+    
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_str(p->p_cmd_out, p_o_cli->name);
+    engine_send_command(p, p_cli, p->p_cmd_out);
+    
     return 0;
 }
 
@@ -89,9 +113,13 @@ void _engine_init_gameroom_commands(int (**actions)ENGINE_HANDLE_FUNC_HEADER) {
     //    actions[NCT_MSG_RCON] = &_exe_gr_msg_rcon;
     actions[NCT_ROOM_SYNC_STATE] = &_exe_gr_sync_phase;
     actions[NCT_ROOM_READY_STATE] = &_exe_gr_ready_state;
-
-
-
-
-    glog(LOG_WARNING, "NOT IMPLEMENTED YET");
+    actions[NCT_ROOM_CLIENT_INFO] = &_exe_gr_client_info;
+    actions[NCT_ROOM_CLIENT_LATENCY] = NULL; // todo: implement
+    actions[NCT_ROOM_CLIENT_REMOVE] = NULL; // todo: implement
+    actions[NCT_ROOM_SET_LEADER] = NULL; // todo: implement
+    
+    actions[NCT_ROOM_PLAYER_ATTACH] = NULL; // todo: implement
+    actions[NCT_ROOM_PLAYER_DETACH] = NULL; // todo: implement
+    actions[NCT_ROOM_PLAYER_MOVE] = NULL; // todo: implement
+    actions[NCT_ROOM_PLAYER_SET_COLOR] = NULL; // todo: implement
 }
