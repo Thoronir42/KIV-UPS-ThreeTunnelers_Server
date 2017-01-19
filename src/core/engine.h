@@ -21,7 +21,7 @@
 #define ENGINE_CMDEXE_ILLEGAL_OP 3
 
 
-#define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc)
+#define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc, game_room *p_cgr)
 
 typedef struct engine
 {

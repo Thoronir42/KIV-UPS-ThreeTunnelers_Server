@@ -49,12 +49,11 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 
     glog(LOG_FINE, "Latency with client %s is %d", p_cli->name, p_cli->latency);
 
-    game_room *p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    if (p_gr) {
+    if (p_cgr != NULL) {
         network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_LATENCY);
         network_command_append_short(p->p_cmd_out, p_cli->latency);
 
-        netadapter_broadcast_command_p(p->p_netadapter, p_gr->clients, p_gr->size, p->p_cmd_out);
+        netadapter_broadcast_command_p(p->p_netadapter, p_cgr->clients, p_cgr->size, p->p_cmd_out);
     }
 
     return 0;
@@ -110,8 +109,8 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     int clientRID, i;
     game_room *p_gr;
 
-    p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+    
+    if (p_cgr != NULL && game_room_find_client(p_cgr, p_cli) != ITEM_EMPTY) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Client is already in room ");
         network_command_append_number(p->p_cmd_out, p_cli->room_id);
@@ -182,11 +181,9 @@ int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
-    game_room *p_gr;
     int i, clientRID;
 
-    p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    if (p_gr == NULL) {
+    if (p_cgr == NULL) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Not in room");
         engine_send_command(p, p_cli, p->p_cmd_out);
@@ -198,9 +195,9 @@ int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
     network_command_append_str(p->p_cmd_out, "Client absconded");
     engine_send_command(p, p_cli, p->p_cmd_out);
 
-    engine_game_room_client_disconnected(p, p_cli, p_gr, "Client absconded");
+    engine_game_room_client_disconnected(p, p_cli, p_cgr, "Client absconded");
     
-    game_room_remove_client(p_gr, p_cli);
+    game_room_remove_client(p_cgr, p_cli);
     p_cli->room_id = ITEM_EMPTY;
 
     return 0;
