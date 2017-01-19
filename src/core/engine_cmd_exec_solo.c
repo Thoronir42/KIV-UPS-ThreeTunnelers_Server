@@ -13,18 +13,10 @@ int _exe_solo_undefined ENGINE_HANDLE_FUNC_HEADER
 }
 
 int _exe_solo_lead_disconnect ENGINE_HANDLE_FUNC_HEADER{
-    game_room *p_gr;
-    int clientRID;
-
     netadapter_close_connection_by_client(p->p_netadapter, p_cli);
     p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
 
-    p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    if (p_gr) {
-        clientRID = game_room_find_client(p_gr, p_cli);
-        engine_announce_client_left(p, p_gr, clientRID, g_loc.client_disconnected);
-        p_gr->clients[clientRID] = NULL;
-    }
+    engine_client_disconnected(p, p_cli, "Client exitted");
 
     return 0;
 }
@@ -121,8 +113,12 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     game_room *p_gr;
 
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
-    if (p_gr != NULL) {
-        engine_put_client_into_room(p, p_cli, p_gr);
+    if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "Client is already in room ");
+        network_command_append_number(p->p_cmd_out, p_cli->room_id);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+        
         return 0;
     }
 
@@ -146,9 +142,8 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
-    int room_id, clientRID;
+    int room_id;
     game_room *p_gr;
-    char room_number_buffer[4];
 
     if (sc->length < 2) {
         return ENGINE_CMDEXE_DATA_TOO_SHORT;
@@ -157,11 +152,9 @@ int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
     room_id = strsc_byte(sc);
 
     if (p_cli->room_id != ITEM_EMPTY && p_cli->room_id != room_id) {
-        memset(room_number_buffer, 0, 4);
-        sprintf(room_number_buffer, "%d", p_cli->room_id);
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Client is already in room ");
-        network_command_append_str(p->p_cmd_out, room_number_buffer);
+        network_command_append_number(p->p_cmd_out, p_cli->room_id);
         engine_send_command(p, p_cli, p->p_cmd_out);
 
         return 0;
@@ -169,7 +162,7 @@ int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
 
     p_gr = engine_game_room_by_id(p, room_id);
 
-    if (p_gr == NULL) {
+    if (p_gr == NULL || p_gr->state == GAME_ROOM_STATE_IDLE) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Game room does not exist");
         engine_send_command(p, p_cli, p->p_cmd_out);
