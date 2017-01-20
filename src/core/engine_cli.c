@@ -117,10 +117,10 @@ char _cli_list_rooms_client_status_letter(game_room *p_gr, net_client *p_cli){
         return '~';
     }
     if(p_gr->leaderClientRID == clientRID){
-        return '*';
+        return p_gr->ready_state[clientRID] ? 'R' : '*';
     }
     if(p_gr->ready_state[clientRID]){
-        return 'R';
+        return 'r';
     }
     return ' ';
 }

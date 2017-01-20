@@ -56,6 +56,7 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
     if (new_ready_state == p_cgr->ready_state[clientRID]) {
         return 0;
     }
+    p_cgr->ready_state[clientRID] = new_ready_state;
     
     glog(LOG_FINE, "Game room %d client %d changed ready state to %s",
             p_cgr - p->resources->game_rooms, clientRID, new_ready_state ? "YES" : "NO");
