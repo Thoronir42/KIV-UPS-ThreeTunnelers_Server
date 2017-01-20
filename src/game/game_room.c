@@ -117,15 +117,6 @@ int game_room_put_client(game_room *p_game_room, net_client *p_cli) {
     return n;
 }
 
-void game_room_remove_client(game_room *p, net_client *p_cli) {
-    int clientRID = game_room_find_client(p, p_cli);
-    if (clientRID == ITEM_EMPTY) {
-        return;
-    }
-
-    p->clients[clientRID] = NULL;
-}
-
 int game_room_is_everyone_ready(game_room *p) {
     int i;
     for (i = 0; i < p->size; i++) {

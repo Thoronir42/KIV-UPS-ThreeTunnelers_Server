@@ -154,47 +154,12 @@ void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char
     engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
-void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr) {
-    int i, clientRID;
-    int room_id;
-
-    room_id = p_gr - p->resources->game_rooms;
-
-    clientRID = game_room_put_client(p_gr, p_cli);
-    if (clientRID == ITEM_EMPTY) {
-        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
-        network_command_append_str(p->p_cmd_out, "Game room is full");
-        engine_send_command(p, p_cli, p->p_cmd_out);
-
-        return;
-    }
-
-    p_cli->room_id = room_id;
-
-    network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
-    network_command_append_byte(p->p_cmd_out, room_id);
-    network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_byte(p->p_cmd_out, p_gr->leaderClientRID);
-
-    engine_send_command(p, p_cli, p->p_cmd_out);
-
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
-    network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, p_cli->name);
-
-    engine_bc_command(p, p_gr, p->p_cmd_out);
-
-    _engine_dump_room_to_client(p, p_cli, p_gr);
-
-    return;
-}
-
 void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     game_room *p_gr;
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
 
     if (p_gr != NULL && p_gr->state == GAME_ROOM_STATE_LOBBY) {
-        engine_game_room_client_disconnected(p, p_cli, p_gr, reason);
+        engine_game_room_client_disconnected(p, p_gr, p_cli, reason);
     } else {
         
         net_client_wipe(p_cli);

@@ -122,7 +122,7 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     p_gr = engine_find_empty_game_room(p);
     if (p_gr != NULL) {
         clientRID = game_room_init(p_gr, GAME_ROOM_MAX_PLAYERS, p_cli);
-        engine_put_client_into_room(p, p_cli, p_gr);
+        engine_game_room_put_client(p, p_gr, p_cli);
 
         glog(LOG_FINE, "Client %d created room %d",
                 p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
@@ -175,7 +175,7 @@ int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{
         return 0;
     }
 
-    engine_put_client_into_room(p, p_cli, p_gr);
+    engine_game_room_put_client(p, p_gr, p_cli);
 
     return 0;
 }
@@ -195,9 +195,8 @@ int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
     network_command_append_str(p->p_cmd_out, "Client absconded");
     engine_send_command(p, p_cli, p->p_cmd_out);
 
-    engine_game_room_client_disconnected(p, p_cli, p_cgr, "Client absconded");
-
-    game_room_remove_client(p_cgr, p_cli);
+    engine_game_room_client_disconnected(p, p_cgr, p_cli, "Client absconded");
+    engine_game_room_remove_client(p, p_cgr, p_cli);
     p_cli->room_id = ITEM_EMPTY;
 
     return 0;

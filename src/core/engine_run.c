@@ -68,7 +68,7 @@ int _engine_authorize_reconnect(engine *p, net_client *p_cli) {
 
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
-        engine_put_client_into_room(p, p_cli, p_gr);
+        engine_game_room_put_client(p, p_gr, p_cli);
     }
 }
 

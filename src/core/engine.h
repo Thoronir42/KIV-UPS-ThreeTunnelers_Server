@@ -59,9 +59,7 @@ void *engine_run(void *args);
 
 void *engine_cli_run(void *args);
 
-void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
 void engine_client_disconnected(engine *p, net_client *p_cli, char *reason);
-void engine_game_room_client_disconnected(engine *p, net_client *p_cli, game_room *p_gr, char *reason);
 
 int engine_count_clients(engine *p, unsigned char status);
 
@@ -76,9 +74,9 @@ void engine_send_command(engine *p, net_client *p_cli, network_command *cmd);
 void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd);
 
 void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char *reason);
-
-void engine_put_client_into_room(engine *p, net_client *p_cli, game_room *p_gr);
-
+void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli);
+void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client *p_cli, char *reason);
+void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
 void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);
 void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk);
 
