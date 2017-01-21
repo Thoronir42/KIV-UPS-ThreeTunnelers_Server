@@ -10,12 +10,6 @@
 
 #define NET_CLIENT_ID_EMPTY -1
 
-#define NET_CLIENT_STATUS_ANY -1
-#define NET_CLIENT_STATUS_EMPTY 0
-#define NET_CLIENT_STATUS_CONNECTED 1
-#define NET_CLIENT_STATUS_UNRESPONSIVE 2
-#define NET_CLIENT_STATUS_DISCONNECTED 3
-
 #define NET_CLIENT_NAME_MAX_LENGTH 24
 #define NET_CLIENT_MAX_PLAYERS 2
 #define NET_CLIENT_SECRET_LENGTH 6
@@ -37,9 +31,15 @@ typedef struct tcp_connection {
     
 } tcp_connection;
 
+typedef enum net_client_status {
+    NET_CLIENT_STATUS_ANY = -1, 
+    NET_CLIENT_STATUS_EMPTY = 0, NET_CLIENT_STATUS_CONNECTED = 1,
+    NET_CLIENT_STATUS_UNRESPONSIVE = 2, NET_CLIENT_STATUS_DISCONNECTED = 3
+} net_client_status;
+
 typedef struct net_client {
     tcp_connection *connection;
-    unsigned char status;
+    net_client_status status;
     int latency;
     
     char connection_secret[NET_CLIENT_SECRET_LENGTH + 1];
@@ -51,7 +51,7 @@ typedef struct net_client {
 
 } net_client;
 
-char net_client_status_letter(unsigned char status);
+char net_client_status_letter(net_client_status status);
 int  tcp_connection_process(tcp_connection *p, int a2read);
 
 int  net_client_init(net_client *p, tcp_connection *connection);

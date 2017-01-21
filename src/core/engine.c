@@ -58,7 +58,7 @@ void _engine_handle_command(void *handler, const network_command cmd) {
     cmd_queue_put(&p_engine->cmd_in_queue, cmd);
 }
 
-int engine_count_clients(engine *p, unsigned char status) {
+int engine_count_clients(engine *p, net_client_status status) {
     int i, n = 0;
     net_client *p_client;
     for (i = 0; i < p->resources->clients_length; i++) {

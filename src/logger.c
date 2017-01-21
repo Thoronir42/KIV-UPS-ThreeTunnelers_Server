@@ -57,14 +57,14 @@ char *_logger_label(int level) {
 }
 
 void glog(int level, const char *msg_format, ...) {
-    char message[512];
+    char message[GLOG_BUFFER];
     time_t raw_time = time(NULL);
     struct tm *now = localtime(&raw_time);
     va_list args;
     char *lvl_label;
     
     va_start(args, msg_format);
-    vsnprintf(message, 511, msg_format, args);
+    vsnprintf(message, GLOG_BUFFER - 1, msg_format, args);
     va_end(args);
     lvl_label = _logger_label(level);
     

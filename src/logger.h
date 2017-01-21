@@ -10,6 +10,7 @@
 #define LOG_INFO 4
 #define LOG_FINE 8
 
+#define GLOG_BUFFER 1024
 
 
 
