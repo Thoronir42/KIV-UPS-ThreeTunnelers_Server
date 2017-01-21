@@ -109,6 +109,7 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
 tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
     int i, n;
     tunneler_map *p_map = &p_gr->zone.map;
+    tunneler_map_init(p_map, 8, 6, 21);
 
     map_generator_generate(p_map, player_count);
 
@@ -137,6 +138,10 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
     int x, y, player_count = game_room_count_players(p_gr);
     warzone_init(&p_gr->zone, player_count);
     p_map = _game_room_init_map(p_gr, player_count);
+    
+    glog(LOG_INFO, "Created map %d chunks wide, %d chunks high, each chunk "
+            "having %d^2 blocks", p_map->chunk_dimensions.width,
+            p_map->chunk_dimensions.width, p_map->CHUNK_SIZE);
 
     network_command_prepare(p->p_cmd_out, NCT_MAP_SPECIFICATION);
     network_command_append_byte(p->p_cmd_out, p_map->CHUNK_SIZE);
@@ -147,7 +152,7 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
 
     engine_pack_map_bases(p->p_cmd_out, p_map);
     engine_bc_command(p, p_gr, p->p_cmd_out);
-
+    
     for (y = 0; y < p_map->chunk_dimensions.height; y++) {
         for (x = 0; x < p_map->chunk_dimensions.width; x++) {
             engine_pack_chunk(p->p_cmd_out, tunneler_map_get_chunk(p_map, x, y));
@@ -178,7 +183,6 @@ void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk) {
     block b;
 
     network_command_prepare(p_dst, NCT_MAP_CHUNK_DATA);
-
     for (y = 0; y < p_chunk->size; y++) {
         for (x = 0; x < p_chunk->size; x++) {
             b = tunneler_map_chunk_get_block(p_chunk, x, y);

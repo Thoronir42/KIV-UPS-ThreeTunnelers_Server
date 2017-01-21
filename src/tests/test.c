@@ -147,18 +147,31 @@ void test_command_appending() {
 
     network_command_append_str(p_cmd, str);
     network_command_append_string(p_cmd, str, 4);
+    network_command_print("cmd_str", p_cmd);
 
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     network_command_append_byte(p_cmd, b);
     network_command_append_byte(p_cmd, b);
+    network_command_print("cmd_byte", p_cmd);
 
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     network_command_append_short(p_cmd, s);
     network_command_append_short(p_cmd, s);
+    network_command_print("cmd_shrt", p_cmd);
 
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     network_command_append_int(p_cmd, i);
     network_command_append_int(p_cmd, i);
+    network_command_print("cmd_int", p_cmd);
+    
+    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
+    network_command_append_char(p_cmd, 'A');
+    network_command_append_char(p_cmd, 'h');
+    network_command_append_char(p_cmd, 'o');
+    network_command_append_char(p_cmd, 'j');
+    network_command_print("cmd_char", p_cmd);
+    
+    
 
     //    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     //    printf("Command to be extended by %ld\n", l);
@@ -214,7 +227,7 @@ void run_tests() {
     test_strshift();
     test_logger_formatting();
 
-//    test_command_appending();
+    test_command_appending();
     test_str_scanner();
     //test_network_client_idle();
 }

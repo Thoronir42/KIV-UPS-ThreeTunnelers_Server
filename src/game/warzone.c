@@ -8,8 +8,6 @@ void warzone_init(warzone *p, int tanks_size) {
     
     p->tanks_size = tanks_size;
     p->projectiles_size = WARZONE_PROJECTILES_PER_TANK;
-    
-    tunneler_map_init(&p->map, 8, 6, 21);
 }
 
 tank *warzone_get_tank(warzone *p, int playerRID){

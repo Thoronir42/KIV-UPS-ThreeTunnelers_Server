@@ -77,6 +77,7 @@ void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char
 void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli);
 void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client *p_cli, char *reason);
 void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
+
 void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);
 void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk);
 
