@@ -1,11 +1,17 @@
+#include <stdio.h>
+
 #include "map_generator.h"
 #include "../map/tunneler_map.h"
 #include "../model/intdimension.h"
 
-void _map_generator_plant_base_on_chunk(tunneler_map_chunk *chunk, int chunkSize) {
-    int padding = 3, row, col, i;
-    int top = padding, left = top, bottom = chunkSize - padding, right = bottom;
+void _map_generator_plant_base_on_chunk(tunneler_map_chunk *chunk, int chunk_size) {
+    int padding, row, col, i;
+    int top, left, bottom, right;
     int width, start, end, orientation;
+    
+    padding = 3;
+    top = left = padding;
+    bottom = right = chunk_size - padding;
 
     for (row = top; row <= bottom; row++) {
         tunneler_map_chunk_set_block(chunk, left, row, BLOCK_BASE_WALL);
@@ -22,10 +28,10 @@ void _map_generator_plant_base_on_chunk(tunneler_map_chunk *chunk, int chunkSize
         }
     }
 
-    width = (chunkSize % 2) == 1 ? 7 : 6;
+    width = (chunk_size % 2) == 1 ? 7 : 6;
 
-    start = (chunkSize - width) / 2;
-    end = (chunkSize + width) / 2;
+    start = (chunk_size - width) / 2;
+    end = (chunk_size + width) / 2;
     orientation = rand() & (2);
     for (i = start; i <= end; i++) {
         if (orientation == 0) {
@@ -44,18 +50,19 @@ void _map_generator_plant_bases(tunneler_map* map, int count) {
     intdimension dimensions = map->chunk_dimensions;
 
     // TODO: base distance
-    // TODO: terrain editing
+    map->bases_size = count;
+    
     for (i = 0; i < count; i++) {
         do {
             x = rand() % (dimensions.width - 2) + 1;
             y = rand() % (dimensions.height - 2) + 1;
             p_chunk = tunneler_map_get_chunk(map, x, y);
         } while (tunneler_map_chunk_is_base(p_chunk));
-
-        _map_generator_plant_base_on_chunk(p_chunk, p_chunk->size);
         
+        _map_generator_plant_base_on_chunk(p_chunk, p_chunk->size);
+        p_chunk->type = TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE;
+
         map->bases[i].x = x;
         map->bases[i].y = y;
     }
-    map->bases_size = count;
 }

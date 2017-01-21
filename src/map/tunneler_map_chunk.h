@@ -4,18 +4,19 @@
 #include "map_block.h"
 
 
-// 22 * 22 = 529
+// 22 * 22 = 484
 #define CHUNK_SIZE_MAX 22
 
 enum tunneler_map_chunk_type
 {
-    TUNNELER_MAP_CHUNK_TYPE_REGULAR, TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE
+    TUNNELER_MAP_CHUNK_TYPE_REGULAR = 0, 
+    TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE = 1,
 };
 
 typedef struct tunneler_map_chunk
 {
     int size;
-    block blocks[CHUNK_SIZE_MAX];
+    block blocks[CHUNK_SIZE_MAX * CHUNK_SIZE_MAX];
     
     enum tunneler_map_chunk_type type;
     int assigned_player_rid;

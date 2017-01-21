@@ -8,6 +8,8 @@
 #include "../networks/net_client.h"
 #include "../networks/netadapter.h"
 #include "../core/str_scanner.h"
+#include "../map/tunneler_map.h"
+#include "../map_generator/map_generator.h"
 
 void test_strpos() {
     printf("Strpos test\n");
@@ -123,7 +125,7 @@ void test_network_client_idle() {
     for (i = 1; i <= 3; i++) {
         printf("Sleeping for 1 sec %d/%d", i, 3);
         sleep(1);
-//        netadapter_check_idle_clients(&adapter);
+        //        netadapter_check_idle_clients(&adapter);
         _cli_list_clients(&adapter);
     }
 }
@@ -163,15 +165,15 @@ void test_command_appending() {
     network_command_append_int(p_cmd, i);
     network_command_append_int(p_cmd, i);
     network_command_print("cmd_int", p_cmd);
-    
+
     network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     network_command_append_char(p_cmd, 'A');
     network_command_append_char(p_cmd, 'h');
     network_command_append_char(p_cmd, 'o');
     network_command_append_char(p_cmd, 'j');
     network_command_print("cmd_char", p_cmd);
-    
-    
+
+
 
     //    network_command_prepare(p_cmd, NCT_LEAD_INTRODUCE);
     //    printf("Command to be extended by %ld\n", l);
@@ -186,48 +188,88 @@ void test_str_scanner() {
     char *src = "AHOJ1111222233334444";
     char dst[10];
     str_scanner scanner;
-    
+
     memset(dst, 0, 10);
     str_scanner_set(&scanner, src, strlen(src));
-    
+
     my_byte b;
     short s;
     int i;
     long l;
-    
+
     str_scanner_print(&scanner);
-    
+
     strsc_str(&scanner, dst, 4);
     printf("%s, ", dst);
     str_scanner_print(&scanner);
-    
+
     b = strsc_byte(&scanner);
-    printf("%u, ", b);    
+    printf("%u, ", b);
     str_scanner_print(&scanner);
-    
+
     s = strsc_short(&scanner);
     printf("%d, ", s);
     str_scanner_print(&scanner);
-    
+
     printf("Setting scanner for long.. \n");
     str_scanner_print(&scanner);
     scanner.read = 4;
     l = strsc_long(&scanner);
-    printf("%ld, ", l);    
+    printf("%ld, ", l);
     str_scanner_print(&scanner);
+
+
+}
+
+void _test_dump_map(tunneler_map *map){
+    int cx, cy, bx, by;
+    tunneler_map_chunk *p_chunk;
+    printf("Printing chunks\n");
+    for(cy = 0; cy < map->chunk_dimensions.height; cy++){
+        for(cx = 0; cx < map->chunk_dimensions.width; cx++){
+            p_chunk = tunneler_map_get_chunk(map, cx, cy);
+            printf("Chunk y=%d.x=%d, size = %d (%s)\n", cy, cx, p_chunk->size,
+                    p_chunk->type == TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE ? "base" : "regular");
+            for(by = 0; by < p_chunk->size; by++){
+                printf("%d: ", by);
+                for(bx = 0; bx < p_chunk->size; bx++){
+                    printf("%3d", tunneler_map_chunk_get_block(p_chunk, bx, by));
+                }
+                printf("\n");
+            }
+            printf("\n");
+        }
+    }
+}
+
+void test_map_generation() {
+    int width = 4, height = 5, chunkSize = 10, playerCount = 2;
+    tunneler_map map;
+    
+    printf("Initializing map to be %d chunks wide and %d chunks high\n", width, height);
+    tunneler_map_init(&map, width, height, chunkSize);
+    printf("Generating map content for %d players\n", playerCount);
+    map_generator_generate(&map, playerCount);
+    
+    _test_dump_map(&map);
+    
+    
     
     
 }
 
 void run_tests() {
-    test_hex_formatting();
-    test_command_parsing();
+    printf("Three Tunnelers Server - auto-testing\n");
+//    test_hex_formatting();
+//    test_command_parsing();
 
-    test_strpos();
-    test_strshift();
-    test_logger_formatting();
+//    test_strpos();
+//    test_strshift();
+//    test_logger_formatting();
 
-    test_command_appending();
-    test_str_scanner();
-    //test_network_client_idle();
+//    test_command_appending();
+//    test_str_scanner();
+//    test_network_client_idle();
+    
+//    test_map_generation();
 }
