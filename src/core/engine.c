@@ -161,8 +161,8 @@ void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     if (p_gr != NULL && p_gr->state == GAME_ROOM_STATE_LOBBY) {
         engine_game_room_client_disconnected(p, p_gr, p_cli, reason);
         p_cli->status = NET_CLIENT_STATUS_DISCONNECTED;
-        
-        if(p_gr->state == GAME_ROOM_STATE_IDLE){
+
+        if (p_gr->state == GAME_ROOM_STATE_IDLE) {
             net_client_wipe(p_cli);
         }
     } else {
@@ -170,3 +170,42 @@ void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     }
 }
 
+void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map) {
+    int i, x, y;
+    tunneler_map_chunk *p_chunk;
+
+    network_command_prepare(p_dst, NCT_MAP_BASES);
+    network_command_append_byte(p_dst, p_map->bases_size);
+
+    for (i = 0; i < p_map->bases_size; i++) {
+        network_command_append_byte(p_dst, x = p_map->bases[i].x);
+        network_command_append_byte(p_dst, y = p_map->bases[i].y);
+
+        p_chunk = tunneler_map_get_chunk(p_map, x, y);
+
+        network_command_append_byte(p_dst, p_chunk->assigned_player_rid);
+    }
+}
+
+void engine_pack_chunk(network_command *p_dst, int x, int y, tunneler_map_chunk *p_chunk) {
+    int block_x, block_y;
+    my_byte check_sum = 0;
+    block b;
+    
+
+    network_command_prepare(p_dst, NCT_MAP_CHUNK_DATA);
+    network_command_append_byte(p_dst, x);
+    network_command_append_byte(p_dst, y);
+    network_command_append_byte(p_dst, 0);
+    
+    for (block_y = 0; block_y < p_chunk->size; block_y++) {
+        for (block_x = 0; block_x < p_chunk->size; block_x++) {
+            b = tunneler_map_chunk_get_block(p_chunk, block_x, block_y);
+            network_command_append_char(p_dst, char_from_num(b));
+            check_sum = (check_sum + b) % 256;
+        }
+    }
+    
+    write_hex_byte(p_dst->data + 4, check_sum);
+
+}

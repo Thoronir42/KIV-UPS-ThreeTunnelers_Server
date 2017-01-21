@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "my_strings.h"
+#include "logger.h"
 
 #define MY_STR_RADIX 16
 
@@ -97,4 +98,14 @@ void write_hex_byte(char *dest, my_byte val) {
     char buf[3];
     snprintf(buf, 3, "%02X", val);
     memcpy(dest, buf, 2);
+}
+
+char char_from_num(my_byte val){
+    char buf[2];
+    if(val < 0 || val > 16){
+        glog(LOG_WARNING, "Invalid char value %d", val);
+        return 'X';
+    }
+    snprintf(buf, 2, "%01X", val);
+    return buf[0];
 }

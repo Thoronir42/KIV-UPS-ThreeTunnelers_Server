@@ -109,7 +109,9 @@ int _netadapter_ts_process_remote_socket(netadapter *p, int socket) {
                 p->stats->commands_received++;
 
                 p->_cmd_in_buffer.origin_socket = socket;
-//                glog(LOG_FINE, "Passing command from socket %d", p->_cmd_in_buffer.origin_socket);
+//                glog(LOG_FINE, "Passing command from socket %d \"%04X:%s\"",
+//                        p->_cmd_in_buffer.origin_socket, p->_cmd_in_buffer.type,
+//                        p->_cmd_in_buffer.data);
                 p->command_handle_func(p->command_handler, p->_cmd_in_buffer);
             } else {
                 _netadapter_handle_invalid_message(p, p_con);

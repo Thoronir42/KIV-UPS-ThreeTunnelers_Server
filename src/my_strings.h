@@ -20,6 +20,7 @@ void write_hex_long(char *dest, long val);
 void write_hex_int(char *dest, int val);
 void write_hex_short(char *dest, short val);
 void write_hex_byte(char *dest, my_byte val);
+char char_from_num(my_byte val);
 
 
 #endif /* MYSTRINGS_H */

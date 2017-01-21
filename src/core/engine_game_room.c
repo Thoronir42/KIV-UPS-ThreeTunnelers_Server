@@ -1,6 +1,8 @@
 #include "engine.h"
 
 #include "../logger.h"
+
+#include "../my_strings.h"
 #include "../map_generator/map_generator.h"
 
 void engine_game_room_cleanup(engine *p, game_room *p_gr) {
@@ -147,7 +149,6 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
     network_command_append_byte(p->p_cmd_out, p_map->CHUNK_SIZE);
     network_command_append_byte(p->p_cmd_out, p_map->chunk_dimensions.width);
     network_command_append_byte(p->p_cmd_out, p_map->chunk_dimensions.height);
-
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
     engine_pack_map_bases(p->p_cmd_out, p_map);
@@ -155,39 +156,8 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
     
     for (y = 0; y < p_map->chunk_dimensions.height; y++) {
         for (x = 0; x < p_map->chunk_dimensions.width; x++) {
-            engine_pack_chunk(p->p_cmd_out, tunneler_map_get_chunk(p_map, x, y));
+            engine_pack_chunk(p->p_cmd_out, x, y, tunneler_map_get_chunk(p_map, x, y));
             engine_bc_command(p, p_gr, p->p_cmd_out);
         }
     }
-}
-
-void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map) {
-    int i, x, y;
-    tunneler_map_chunk *p_chunk;
-
-    network_command_prepare(p_dst, NCT_MAP_BASES);
-    network_command_append_byte(p_dst, p_map->bases_size);
-
-    for (i = 0; i < p_map->bases_size; i++) {
-        network_command_append_byte(p_dst, x = p_map->bases[i].x);
-        network_command_append_byte(p_dst, y = p_map->bases[i].y);
-
-        p_chunk = tunneler_map_get_chunk(p_map, x, y);
-
-        network_command_append_byte(p_dst, p_chunk->assigned_player_rid);
-    }
-}
-
-void engine_pack_chunk(network_command *p_dst, tunneler_map_chunk *p_chunk) {
-    int x, y;
-    block b;
-
-    network_command_prepare(p_dst, NCT_MAP_CHUNK_DATA);
-    for (y = 0; y < p_chunk->size; y++) {
-        for (x = 0; x < p_chunk->size; x++) {
-            b = tunneler_map_chunk_get_block(p_chunk, x, y);
-            network_command_append_char(p_dst, b);
-        }
-    }
-
 }
