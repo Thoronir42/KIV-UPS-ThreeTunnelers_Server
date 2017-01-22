@@ -9,7 +9,7 @@
 int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
 {
     my_byte control_state;
-    int playerRID, clientRID, changed;
+    int player_rid, current_client_rid, changed;
     player *p_plr;
 
     if (sc->length < 4) {
@@ -19,23 +19,25 @@ int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
         return ENGINE_CMDEXE_WRONG_CONTEXT;
     }
 
-    clientRID = game_room_find_client(p_cgr, p_cli);
-    if (clientRID == ITEM_EMPTY) {
+    current_client_rid = game_room_find_client(p_cgr, p_cli);
+    if (current_client_rid == ITEM_EMPTY) {
         return ENGINE_CMDEXE_ILLEGAL_OP;
     }
 
-    playerRID = strsc_byte(sc);
+    player_rid = strsc_byte(sc);
     control_state = strsc_byte(sc);
-
-    p_plr = game_room_get_player(p_cgr, playerRID);
-    if (p_plr == NULL || p_plr->client_rid != clientRID) {
+    
+    p_plr = game_room_get_player(p_cgr, player_rid);
+    if (p_plr == NULL || p_plr->client_rid != current_client_rid) {
+        glog(LOG_INFO, "Room %d: Client %d tried to change controls of player %d",
+                p_cgr - p->resources->game_rooms, current_client_rid, player_rid);
         return ENGINE_CMDEXE_ILLEGAL_OP;
     }
 
     changed = controls_set_state(&p_plr->input, control_state);
 
     network_command_prepare(p->p_cmd_out, NCT_GAME_CONTROLS_SET);
-    network_command_append_byte(p->p_cmd_out, playerRID);
+    network_command_append_byte(p->p_cmd_out, player_rid);
     network_command_append_byte(p->p_cmd_out, control_state);
     
     if (changed) {
