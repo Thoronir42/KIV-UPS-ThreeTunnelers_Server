@@ -33,11 +33,15 @@ int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
     }
 
     changed = controls_set_state(&p_plr->input, control_state);
+
+    network_command_prepare(p->p_cmd_out, NCT_GAME_CONTROLS_SET);
+    network_command_append_byte(p->p_cmd_out, playerRID);
+    network_command_append_byte(p->p_cmd_out, control_state);
+    
     if (changed) {
-        network_command_prepare(p->p_cmd_out, NCT_GAME_CONTROLS_SET);
-        network_command_append_byte(p->p_cmd_out, playerRID);
-        network_command_append_byte(p->p_cmd_out, control_state);
         engine_bc_command(p, p_cgr, p->p_cmd_out);
+    } else {
+        engine_send_command(p, p_cli, p->p_cmd_out);
     }
 
     return 0;
