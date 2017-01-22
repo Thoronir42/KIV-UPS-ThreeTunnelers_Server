@@ -32,7 +32,7 @@ int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
         return ENGINE_CMDEXE_ILLEGAL_OP;
     }
 
-    changed = input_set_state(&p_plr->input, control_state);
+    changed = controls_set_state(&p_plr->input, control_state);
     if (changed) {
         network_command_prepare(p->p_cmd_out, NCT_GAME_CONTROLS_SET);
         network_command_append_byte(p->p_cmd_out, playerRID);

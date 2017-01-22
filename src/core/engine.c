@@ -14,7 +14,7 @@
 #include "../logger.h"
 #include "../settings.h"
 #include "../statistics.h"
-#include "../game/control_input.h"
+#include "../game/controls.h"
 #include "../structures/cmd_queue.h"
 #include "../localisation.h"
 

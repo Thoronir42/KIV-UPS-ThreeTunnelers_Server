@@ -13,7 +13,6 @@
 
 #include "game/game_room.h"
 #include "game/player.h"
-#include "game/control_input.h"
 #include "model/tank.h"
 #include "model/direction.h"
 #include "tests/test.h"

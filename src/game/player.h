@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "control_input.h"
+#include "controls.h"
 
 // unsigned short
 #define PLAYER_NONE 0
@@ -11,7 +11,7 @@
 typedef struct player {
     int client_rid;
 
-    control_input input;
+    controls input;
     int color;
 } player;
 

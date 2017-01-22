@@ -4,7 +4,7 @@
 int player_init(player *p, int client_rid, int color) {
     p->client_rid = client_rid;
     p->color = color;
-    input_set_state(&p->input, 0);
+    controls_set_state(&p->input, 0);
 }
 
 void player_cleanup(player *p){
