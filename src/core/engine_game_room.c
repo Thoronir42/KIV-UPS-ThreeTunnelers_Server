@@ -67,7 +67,7 @@ void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli) 
 
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
-    engine_game_room_put_player(p, p_gr, clientRID);
+    engine_game_room_put_player(p, p_gr, p_cli);
 
     return;
 }
@@ -111,10 +111,17 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
     }
 }
 
-int engine_game_room_put_player(engine *p, game_room *p_gr, int clientRID) {
-    int playerRID;
+int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli) {
+    int playerRID, clientRID, playerCID;
+    clientRID = game_room_find_client(p_gr, p_cli);
     playerRID = game_room_attach_player(p_gr, clientRID);
     if (playerRID == ITEM_EMPTY) {
+        return 1;
+    }
+    playerCID = net_client_put_player(p_cli, playerRID);
+    if(playerCID == ITEM_EMPTY){
+        game_room_detach_player(p_gr, playerRID);
+        glog(LOG_WARNING, "Failed to put player to client");
         return 1;
     }
 
@@ -122,6 +129,7 @@ int engine_game_room_put_player(engine *p, game_room *p_gr, int clientRID) {
     network_command_append_byte(p->p_cmd_out, playerRID);
     network_command_append_byte(p->p_cmd_out, p_gr->players[playerRID].color);
     network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_byte(p->p_cmd_out, playerCID);
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
 

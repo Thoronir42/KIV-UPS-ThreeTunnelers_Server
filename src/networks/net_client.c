@@ -1,6 +1,8 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "net_client.h"
+#include "../generic.h"
 
 char net_client_status_letter(net_client_status status) {
     switch (status) {
@@ -25,7 +27,12 @@ int net_client_init(net_client *p, tcp_connection *connection) {
 }
 
 void net_client_wipe(net_client *p) {
+    int i;
     memset(p, 0, sizeof(net_client));
+    for(i = 0; i < NET_CLIENT_MAX_PLAYERS; i++){
+        p->player_rids[i] = ITEM_EMPTY;
+    }
+    p->room_id = ITEM_EMPTY;
 }
 
 int net_client_set_name(net_client *p, const char *name, int length) {
@@ -39,4 +46,16 @@ int net_client_set_name(net_client *p, const char *name, int length) {
     memcpy(p->name, name, length);
 
     return diff;
+}
+
+int net_client_put_player(net_client *p, int playerRID){
+    int i = 0;
+    for(i = 0; i < NET_CLIENT_MAX_PLAYERS; i++){
+        if(p->player_rids[i] == ITEM_EMPTY){
+            p->player_rids[i] = playerRID;
+            return i;
+        }
+    }
+    
+    return ITEM_EMPTY;
 }

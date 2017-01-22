@@ -88,7 +88,6 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
         return 1;
     }
 
-    // todo: implement reintroducing
     reintroduce = read_hex_byte(cmd.data);
     if (reintroduce) {
         p_cli = engine_client_by_secret(p, cmd.data + 2);
@@ -114,15 +113,15 @@ int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
     }
 
     p->resources->con_to_cli[socket] = p_cli - p->resources->clients;
-
-    p_cli->connection = p->resources->connections + socket;
-    p_cli->status = NET_CLIENT_STATUS_CONNECTED;
-
     if (!reintroduce) {
+        net_client_init(p_cli, p->resources->connections + socket);
         strrand(p_cli->connection_secret, NET_CLIENT_SECRET_LENGTH);
         p_cli->connection_secret[NET_CLIENT_SECRET_LENGTH] = '\0';
         p_cli->room_id = ITEM_EMPTY;
+    } else {
+        p_cli->connection = p->resources->connections + socket;
     }
+    p_cli->status = NET_CLIENT_STATUS_CONNECTED;
 
     network_command_prepare(&cmd_out, NCT_LEAD_INTRODUCE);
     write_hex_byte(cmd_out.data, reintroduce);

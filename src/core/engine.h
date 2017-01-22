@@ -20,6 +20,9 @@
 #define ENGINE_CMDEXE_WRONG_CONTEXT 2
 #define ENGINE_CMDEXE_ILLEGAL_OP 3
 
+#define ENGINE_CLOSE_REASON_ACTION_NOT_IMPLEMENTED 1
+#define ENGINE_CLOSE_REASON_TOO_MANY_INVALIDES 2
+
 
 #define ENGINE_HANDLE_FUNC_HEADER (struct engine* p, net_client *p_cli, str_scanner* sc, game_room *p_cgr)
 
@@ -77,7 +80,7 @@ void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli);
 void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client *p_cli, char *reason);
 void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
 void engine_game_room_dump_to_client(engine *p, net_client *p_cli, game_room *p_gr);
-int engine_game_room_put_player(engine *p, game_room *p_gr, int clientRID);
+int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli);
 void engine_game_room_remove_player(engine *p, game_room *p_gr, int playerRID);
 
 void engine_pack_map_specification(network_command *p_dst, tunneler_map *p_map);
