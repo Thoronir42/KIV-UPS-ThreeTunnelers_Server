@@ -96,12 +96,15 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
 
     if (p_gr->leaderClientRID == clientRID) {
         new_leader_clientRID = game_room_choose_leader_other_than(p_gr, p_cli);
-        glog(LOG_INFO, "Leader of room %d left. New leader is %d",
-                p_gr - p->resources->game_rooms, new_leader_clientRID);
         if (new_leader_clientRID == ITEM_EMPTY) {
+            glog(LOG_INFO, "Leader of room %d left. No other client is equilibe"
+                    " to be leader, cleaning room up.",
+                p_gr - p->resources->game_rooms, new_leader_clientRID);
             engine_game_room_cleanup(p, p_gr);
             return;
         }
+        glog(LOG_INFO, "Leader of room %d left. New leader is %d",
+                p_gr - p->resources->game_rooms, new_leader_clientRID);
         network_command_prepare(p->p_cmd_out, NCT_ROOM_SET_LEADER);
         network_command_append_byte(p->p_cmd_out, new_leader_clientRID);
         engine_bc_command(p, p_gr, p->p_cmd_out);
@@ -133,17 +136,18 @@ void engine_game_room_remove_player(engine *p, game_room *p_gr, int playerRID) {
 }
 
 tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
-    int i, n;
+    int i, base_index;
     tunneler_map *p_map = &p_gr->zone.map;
     tunneler_map_init(p_map, 8, 6, 21);
 
     map_generator_generate(p_map, player_count);
 
+    base_index = 0;
     for (i = 0; i < p_gr->size; i++) {
         if (p_gr->players[i].client_rid == ITEM_EMPTY) {
             continue;
         }
-        tunneler_map_assign_base(p_map, n++, i);
+        tunneler_map_assign_base(p_map, base_index++, i);
     }
 
     return p_map;

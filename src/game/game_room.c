@@ -124,6 +124,13 @@ int game_room_put_client(game_room *p_game_room, net_client *p_cli) {
     return n;
 }
 
+void game_room_remove_client(game_room* p, net_client* p_cli) {
+    int clientRID = game_room_find_client(p, p_cli);
+    if (clientRID != ITEM_EMPTY) {
+        p->clients[clientRID] = NULL;
+    }
+}
+
 int game_room_is_everyone_ready(game_room *p) {
     int i;
     for (i = 0; i < p->size; i++) {
@@ -138,7 +145,8 @@ int game_room_is_everyone_ready(game_room *p) {
 int game_room_choose_leader_other_than(game_room *p, net_client *p_cli) {
     int i;
     for (i = 0; i < p->size; i++) {
-        if (p->clients[i] == p_cli || p->clients[i] == NULL) {
+        if (p->clients[i] == p_cli || p->clients[i] == NULL ||
+                p->clients[i]->connection == NULL) {
             continue;
         }
 

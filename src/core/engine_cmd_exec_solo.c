@@ -49,12 +49,12 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 
     glog(LOG_FINE, "Latency with client %s is %d", p_cli->name, p_cli->latency);
 
-    if (p_cgr != NULL) {
-        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_LATENCY);
-        network_command_append_short(p->p_cmd_out, p_cli->latency);
-
-        netadapter_broadcast_command_p(p->p_netadapter, p_cgr->clients, p_cgr->size, p->p_cmd_out);
-    }
+//    if (p_cgr != NULL) {
+//        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_STATUS);
+//        network_command_append_short(p->p_cmd_out, p_cli->latency);
+//
+//        netadapter_broadcast_command_p(p->p_netadapter, p_cgr->clients, p_cgr->size, p->p_cmd_out);
+//    }
 
     return 0;
 }
