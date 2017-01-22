@@ -16,6 +16,15 @@ char *_engine_cmd_exe_retval_label(int ret_val) {
     }
     return "???";
 }
+char *_engine_close_connection_label(int close_reason) {
+    switch(close_reason){
+        case ENGINE_CLOSE_REASON_ACTION_NOT_IMPLEMENTED:
+            return "Action not implemented";
+        case ENGINE_CLOSE_REASON_TOO_MANY_INVALIDES:
+            return "Too many invallid messages";
+    }
+    return "???";
+}
 
 int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     int(* handle_action) ENGINE_HANDLE_FUNC_HEADER;
@@ -28,19 +37,17 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
         snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
                 g_loc.server_protection_illegal_cmd_type, cmd.type);
         engine_send_command(p, p_cli, &p_cli->connection->_out_buffer);
-        return 1;
+        return ENGINE_CLOSE_REASON_ACTION_NOT_IMPLEMENTED;
     }
 
     handle_action = p->command_proccess_func[cmd.type];
     if (handle_action == NULL) {
-        glog(LOG_WARNING, "Engine: No handle action for %d", cmd.type);
-
         network_command_prepare(&p_cli->connection->_out_buffer, NCT_LEAD_DISCONNECT);
         snprintf(p_cli->connection->_out_buffer.data, NETWORK_COMMAND_DATA_LENGTH,
                 g_loc.server_protection_unimplemented_cmd_type, cmd.type);
         engine_send_command(p, p_cli, &p_cli->connection->_out_buffer);
 
-        return 2;
+        return ENGINE_CLOSE_REASON_ACTION_NOT_IMPLEMENTED;
     }
 
     str_scanner_set(&scanner, cmd.data, cmd.length);
@@ -50,13 +57,12 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
     ret_val = handle_action(p, p_cli, &scanner, p_gr);
     if (ret_val) {
         glog(LOG_FINE, "Processed command of type %d from client %d which "
-                "resulted in %s", p_cli - p->resources->clients,
-                cmd.type, _engine_cmd_exe_retval_label(ret_val));
+                "resulted in %s", cmd.type, p_cli - p->resources->clients , _engine_cmd_exe_retval_label(ret_val));
 
         netadapter_handle_invallid_command(p->p_netadapter, p_cli, cmd);
         p->p_netadapter->stats->commands_received_invalid++;
         if (p_cli->connection->invalid_counter > p->p_netadapter->ALLOWED_INVALLID_MSG_COUNT) {
-            return 3;
+            return ENGINE_CLOSE_REASON_TOO_MANY_INVALIDES;
         }
     }
 
@@ -143,6 +149,7 @@ void _engine_process_queue(engine *p) {
     network_command cmd;
     net_client *p_cli;
     int ret_val;
+    char *reason;
 
     while (!cmd_queue_is_empty(&p->cmd_in_queue)) {
         cmd = cmd_queue_get(&p->cmd_in_queue);
@@ -158,7 +165,9 @@ void _engine_process_queue(engine *p) {
 
         ret_val = _engine_process_command(p, p_cli, cmd);
         if (ret_val) {
-            glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %d", p_cli->connection->socket, ret_val);
+            reason = _engine_close_connection_label(ret_val);
+            glog(LOG_FINE, "Engine: Closing connection on socket %02d, reason = %s",
+                    p_cli->connection->socket, reason);
             netadapter_close_connection_by_client(p->p_netadapter, p_cli);
         }
     }
