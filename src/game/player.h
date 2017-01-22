@@ -15,7 +15,9 @@ typedef struct player {
     int color;
 } player;
 
-int player_init(player *p, int client_rid);
+int player_init(player *p, int client_rid, int color);
+
+void player_cleanup(player *p);
 
 #endif /* PLAYER_H */
 

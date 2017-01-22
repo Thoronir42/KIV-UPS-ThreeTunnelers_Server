@@ -142,18 +142,6 @@ game_room *engine_find_empty_game_room(engine *p) {
     return NULL;
 }
 
-void _engine_dump_room_to_client(engine *p, net_client *p_cli, game_room *p_gr) {
-    glog(LOG_WARNING, "Engine: Room dumping not implemented yet");
-}
-
-void engine_announce_client_left(engine *p, game_room *p_gr, int clientRID, char *reason) {
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_REMOVE);
-    network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, reason);
-
-    engine_bc_command(p, p_gr, p->p_cmd_out);
-}
-
 void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     game_room *p_gr;
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
@@ -168,6 +156,13 @@ void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
     } else {
         net_client_wipe(p_cli);
     }
+}
+
+void engine_pack_map_specification(network_command *p_dst, tunneler_map *p_map){
+    network_command_prepare(p_dst, NCT_MAP_SPECIFICATION);
+    network_command_append_byte(p_dst, p_map->CHUNK_SIZE);
+    network_command_append_byte(p_dst, p_map->chunk_dimensions.width);
+    network_command_append_byte(p_dst, p_map->chunk_dimensions.height);
 }
 
 void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map) {
@@ -187,7 +182,7 @@ void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map) {
     }
 }
 
-void engine_pack_chunk(network_command *p_dst, int x, int y, tunneler_map_chunk *p_chunk) {
+void engine_pack_map_chunk(network_command *p_dst, int x, int y, tunneler_map_chunk *p_chunk) {
     int block_x, block_y;
     my_byte check_sum = 0;
     block b;

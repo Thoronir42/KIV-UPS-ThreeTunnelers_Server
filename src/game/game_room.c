@@ -37,14 +37,20 @@ int game_room_init(game_room *p, int size, net_client *p_cli) {
     return clientRID;
 }
 
+int game_room_is_joinable(game_room *p) {
+    return (game_room_get_open_client_slots(p) > 0) &&
+            (game_room_get_open_player_slots(p) > 0);
+}
+
 void game_room_clean_up(game_room *p) {
     int i;
 
     for (i = 0; i < GAME_ROOM_MAX_PLAYERS; i++) {
         p->clients[i] = NULL;
-        player_init(p->players + i, ITEM_EMPTY);
+        
+        player_cleanup(p->players + i);
     }
-    
+
     p->size = 0;
     p->state = GAME_ROOM_STATE_IDLE;
 
@@ -83,12 +89,13 @@ int game_room_get_open_client_slots(game_room *p) {
 }
 
 net_client *game_room_get_client(game_room *p, int clientRID) {
-    if(clientRID < 0 || clientRID > p->size){
+    if (clientRID < 0 || clientRID > p->size) {
         return NULL;
     }
-    
+
     return p->clients[clientRID];
 }
+
 int game_room_find_client(game_room *p, net_client *p_cli) {
     int i;
     for (i = 0; i < p->size; i++) {
@@ -97,7 +104,7 @@ int game_room_find_client(game_room *p, net_client *p_cli) {
         }
     }
 
-    return -1;
+    return ITEM_EMPTY;
 }
 
 int game_room_put_client(game_room *p_game_room, net_client *p_cli) {
@@ -141,28 +148,30 @@ int game_room_choose_leader_other_than(game_room *p, net_client *p_cli) {
     return ITEM_EMPTY;
 }
 
-player *game_room_get_player(game_room *p, int playerRID){
-    if(playerRID < 0 || playerRID >= p->size){
+player *game_room_get_player(game_room *p, int playerRID) {
+    if (playerRID < 0 || playerRID >= p->size) {
         return NULL;
     }
-    
+
     return p->players + playerRID;
 }
 
-int game_room_attach_player(game_room* p, int clientRID){
-    int i;
-    for(i =0; i < p->size; i++){
-        if(p->players[i].client_rid == ITEM_EMPTY){
-            player_init(p->players + i, clientRID);
+int game_room_attach_player(game_room* p, int clientRID) {
+    int i, color;
+    for (i = 0; i < p->size; i++) {
+        if (p->players[i].client_rid == ITEM_EMPTY) {
+            color = colors_use_random(&p->player_colors);
+            player_init(p->players + i, clientRID, color);
+
             return i;
         }
     }
-    
+
     return ITEM_EMPTY;
-    
+
 }
 
 void game_room_detach_player(game_room *p, int playerRID) {
     colors_set_in_use(&p->player_colors, p->players[playerRID].color, 0);
-    player_init(p->players + playerRID, ITEM_EMPTY);
+    player_cleanup(p->players + playerRID);
 }

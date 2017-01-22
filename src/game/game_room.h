@@ -51,6 +51,8 @@ int game_room_init(game_room *p, int size, net_client *p_cli);
 
 void game_room_clean_up(game_room *p);
 
+int game_room_is_joinable(game_room *p);
+
 int game_room_get_open_player_slots(game_room *p_game_room);
 int game_room_get_open_client_slots(game_room *p_game_room);
 
@@ -66,7 +68,6 @@ int game_room_find_client(game_room *p, net_client *p_cli);
  */
 int game_room_put_client(game_room *p_gr, net_client *p_cli);
 net_client *game_room_get_client(game_room *p, int clientRID);
-
 void game_room_remove_client(game_room *p, net_client *p_cli);
 
 int game_room_is_everyone_ready(game_room *p);
