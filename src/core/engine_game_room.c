@@ -99,7 +99,7 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
         if (new_leader_clientRID == ITEM_EMPTY) {
             glog(LOG_INFO, "Leader of room %d left. No other client is equilibe"
                     " to be leader, cleaning room up.",
-                p_gr - p->resources->game_rooms, new_leader_clientRID);
+                    p_gr - p->resources->game_rooms);
             engine_game_room_cleanup(p, p_gr);
             return;
         }
@@ -155,12 +155,17 @@ tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
 }
 
 void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state) {
+    int i;
     p_gr->state = game_state;
+
     network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_STATE);
     network_command_append_byte(p->p_cmd_out, game_state);
 
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
+    for (i = 0; i < p_gr->size; i++) {
+        p_gr->ready_state[i] = 0;
+    }
 }
 
 void engine_game_room_begin(engine *p, game_room *p_gr) {
