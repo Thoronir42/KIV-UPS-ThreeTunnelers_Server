@@ -53,17 +53,20 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
     }
 
     new_ready_state = strsc_byte(sc);
+    
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_READY_STATE);
+    network_command_append_byte(p->p_cmd_out, new_ready_state);
+    network_command_append_byte(p->p_cmd_out, clientRID);
+    
     if (new_ready_state == p_cgr->ready_state[clientRID]) {
+        engine_send_command(p, p_cli, p->p_cmd_out);
         return 0;
     }
     p_cgr->ready_state[clientRID] = new_ready_state;
     
     glog(LOG_FINE, "Game room %d client %d changed ready state to %s",
             p_cgr - p->resources->game_rooms, clientRID, new_ready_state ? "YES" : "NO");
-
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_READY_STATE);
-    network_command_append_byte(p->p_cmd_out, new_ready_state);
-    network_command_append_byte(p->p_cmd_out, clientRID);
+    
     engine_bc_command(p, p_cgr, p->p_cmd_out);
 
     if (game_room_is_everyone_ready(p_cgr)) {
@@ -118,7 +121,7 @@ void _engine_init_gameroom_commands(int (**actions)ENGINE_HANDLE_FUNC_HEADER) {
     actions[NCT_ROOM_SYNC_STATE] = &_exe_gr_sync_phase;
     actions[NCT_ROOM_READY_STATE] = &_exe_gr_ready_state;
     actions[NCT_ROOM_CLIENT_INFO] = &_exe_gr_client_info;
-    actions[NCT_ROOM_CLIENT_LATENCY] = NULL; // todo: implement
+    actions[NCT_ROOM_CLIENT_STATUS] = NULL; // do not implement
     actions[NCT_ROOM_CLIENT_REMOVE] = NULL; // todo: implement
     actions[NCT_ROOM_SET_LEADER] = NULL; // todo: implement
     
