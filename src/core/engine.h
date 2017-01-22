@@ -81,7 +81,10 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
 void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state);
 void engine_game_room_dump_to_client(engine *p, net_client *p_cli, game_room *p_gr);
 int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli);
-void engine_game_room_remove_player(engine *p, game_room *p_gr, int playerRID);
+void engine_game_room_remove_player(engine *p, game_room *p_gr, int player_rid);
+
+void engine_pack_room_client(network_command *p_dst, game_room *p_gr, int client_rid);
+void engine_pack_room_player(network_command *p_dst, game_room *p_gr, int player_rid);
 
 void engine_pack_map_specification(network_command *p_dst, tunneler_map *p_map);
 void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);

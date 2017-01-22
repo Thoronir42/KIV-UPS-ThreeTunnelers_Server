@@ -48,14 +48,21 @@ int net_client_set_name(net_client *p, const char *name, int length) {
     return diff;
 }
 
-int net_client_put_player(net_client *p, int playerRID){
-    int i = 0;
+int net_client_put_player(net_client *p, int player_rid){
+    int empty_cid = net_client_player_cid(p, ITEM_EMPTY);
+    if(empty_cid != ITEM_EMPTY){
+        p->player_rids[empty_cid] = player_rid;
+        return empty_cid;
+    }
+    
+    return ITEM_EMPTY;
+}
+int net_client_player_cid(net_client *p, int player_rid){
+    int i;
     for(i = 0; i < NET_CLIENT_MAX_PLAYERS; i++){
-        if(p->player_rids[i] == ITEM_EMPTY){
-            p->player_rids[i] = playerRID;
+        if(p->player_rids[i] == player_rid){
             return i;
         }
     }
-    
     return ITEM_EMPTY;
 }

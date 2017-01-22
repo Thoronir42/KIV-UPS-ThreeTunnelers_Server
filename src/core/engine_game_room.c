@@ -56,15 +56,12 @@ void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli) 
     network_command_append_byte(p->p_cmd_out, room_id);
     network_command_append_byte(p->p_cmd_out, clientRID);
     network_command_append_byte(p->p_cmd_out, p_gr->leaderClientRID);
-
-    p_cli->room_id = room_id;
     engine_send_command(p, p_cli, p->p_cmd_out);
+    p_cli->room_id = room_id;
+
     engine_game_room_dump_to_client(p, p_cli, p_gr);
 
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
-    network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_str(p->p_cmd_out, p_cli->name);
-
+    engine_pack_room_client(p->p_cmd_out, p_gr, clientRID);
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
     engine_game_room_put_player(p, p_gr, p_cli);
@@ -119,17 +116,13 @@ int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli) {
         return 1;
     }
     playerCID = net_client_put_player(p_cli, playerRID);
-    if(playerCID == ITEM_EMPTY){
+    if (playerCID == ITEM_EMPTY) {
         game_room_detach_player(p_gr, playerRID);
         glog(LOG_WARNING, "Failed to put player to client");
         return 1;
     }
 
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_PLAYER_ATTACH);
-    network_command_append_byte(p->p_cmd_out, playerRID);
-    network_command_append_byte(p->p_cmd_out, p_gr->players[playerRID].color);
-    network_command_append_byte(p->p_cmd_out, clientRID);
-    network_command_append_byte(p->p_cmd_out, playerCID);
+    engine_pack_room_player(p->p_cmd_out, p_gr, playerRID);
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
 
@@ -137,6 +130,7 @@ int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli) {
 }
 
 void engine_game_room_remove_player(engine *p, game_room *p_gr, int playerRID) {
+    // todo: client cleanup
     game_room_detach_player(p_gr, playerRID);
     network_command_prepare(p->p_cmd_out, NCT_ROOM_PLAYER_DETACH);
     network_command_append_byte(p->p_cmd_out, playerRID);
@@ -201,5 +195,24 @@ void engine_game_room_begin(engine *p, game_room *p_gr) {
 }
 
 void engine_game_room_dump_to_client(engine *p, net_client *p_cli, game_room *p_gr) {
-    glog(LOG_WARNING, "Engine: Room dumping not implemented yet");
+    int i;
+    for (i = 0; i < p_gr->size; i++) {
+        if (p_gr->clients[i] == NULL) {
+            continue;
+        }
+        engine_pack_room_client(p->p_cmd_out, p_gr, i);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+
+        network_command_prepare(p->p_cmd_out, NCT_ROOM_READY_STATE);
+        network_command_append_byte(p->p_cmd_out, p_gr->ready_state[i]);
+        network_command_append_byte(p->p_cmd_out, i);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+    }
+    for (i = 0; i < p_gr->size; i++) {
+        if (p_gr->players[i].client_rid == ITEM_EMPTY) {
+            continue;
+        }
+        engine_pack_room_player(p->p_cmd_out, p_gr, i);
+        engine_send_command(p, p_cli, p->p_cmd_out);
+    }
 }

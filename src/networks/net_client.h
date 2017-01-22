@@ -59,7 +59,8 @@ void net_client_wipe(net_client *p);
 
 int  net_client_set_name(net_client *p, const char *name, int length);
 
-int net_client_put_player(net_client *p, int playerRID);
+int net_client_put_player(net_client *p, int player_rid);
+int net_client_player_cid(net_client *p, int player_rid);
 
 #endif /* NET_CLIENT_H */
 
