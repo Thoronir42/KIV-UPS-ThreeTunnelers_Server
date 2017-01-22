@@ -73,12 +73,12 @@ int _exe_gr_ready_state ENGINE_HANDLE_FUNC_HEADER{
         switch (p_cgr->state) {
             case GAME_ROOM_STATE_LOBBY:
                 glog(LOG_FINE, "Everyone in room %d is ready. Initializing game...", p_cgr - p->resources->game_rooms);
-                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_STARTNG);
+                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_BATTLE_STARTING);
                 engine_game_room_begin(p, p_cgr);
                 break;
-            case GAME_ROOM_STATE_STARTNG:
+            case GAME_ROOM_STATE_BATTLE_STARTING:
                 glog(LOG_FINE, "Everyone in room %d is ready. Let the game begin...", p_cgr - p->resources->game_rooms);
-                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_RUNNING);
+                engine_game_room_set_state(p, p_cgr, GAME_ROOM_STATE_BATTLE);
                 break;
             case GAME_ROOM_STATE_SUMMARIZATION:
                 glog(LOG_FINE, "Everyone in room %d is ready. Returning to lobby...", p_cgr - p->resources->game_rooms);

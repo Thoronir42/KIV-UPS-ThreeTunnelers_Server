@@ -14,9 +14,9 @@ char game_room_status_letter(unsigned char game_state) {
             return 'I';
         case GAME_ROOM_STATE_LOBBY:
             return 'L';
-        case GAME_ROOM_STATE_STARTNG:
+        case GAME_ROOM_STATE_BATTLE_STARTING:
             return 'S';
-        case GAME_ROOM_STATE_RUNNING:
+        case GAME_ROOM_STATE_BATTLE:
             return 'W';
         case GAME_ROOM_STATE_SUMMARIZATION:
             return 'S';

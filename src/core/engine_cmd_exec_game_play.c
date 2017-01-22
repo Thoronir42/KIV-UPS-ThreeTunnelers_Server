@@ -50,7 +50,7 @@ int _exe_gpl_tank_info ENGINE_HANDLE_FUNC_HEADER{
     if (sc->length < 2) {
         return ENGINE_CMDEXE_DATA_TOO_SHORT;
     }
-    if (p_cgr == NULL || p_cgr->state == GAME_ROOM_STATE_RUNNING) {
+    if (p_cgr == NULL || p_cgr->state == GAME_ROOM_STATE_BATTLE) {
         return ENGINE_CMDEXE_WRONG_CONTEXT;
     }
     playerRID = strsc_byte(sc);

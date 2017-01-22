@@ -205,18 +205,3 @@ void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const
     netadapter_send_command(p, p_con, &p_con->_out_buffer);
     netadapter_close_connection(p, p_con);
 }
-
-//// NETADAPTER - client controls
-
-net_client *netadapter_get_client_by_aid(netadapter *p, int aid) {
-    return (p->clients + aid);
-}
-
-int netadapter_client_aid_by_client(netadapter *adapter, net_client *p_cl) {
-    int offset = p_cl - adapter->clients;
-    if (offset < 0 || offset >= adapter->clients_length) {
-        return NETADAPTER_SOCKET_EMPTY;
-    }
-
-    return offset;
-}
