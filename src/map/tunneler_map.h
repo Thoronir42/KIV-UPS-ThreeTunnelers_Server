@@ -36,5 +36,8 @@ tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y);
 
 void tunneler_map_assign_base(tunneler_map *map, int base, int playerRID);
 
+block tunneler_map_get_block(tunneler_map *p, int x, int y);
+void tunneler_map_set_block(tunneler_map *p, int x, int y, block b);
+
 #endif /* TUNNELER_MAP_H */
 

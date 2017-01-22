@@ -42,5 +42,17 @@ void tunneler_map_assign_base(tunneler_map *p, int base, int playerRID) {
 
     p_chunk = tunneler_map_get_chunk(p, p->bases[base].x, p->bases[base].y);
     tunneler_map_chunk_assing_player(p_chunk, playerRID);
+}
 
+block tunneler_map_get_block(tunneler_map *p, int x, int y){
+    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p, 
+            x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
+    return tunneler_map_chunk_get_block(p_chunk,
+            x % p->CHUNK_SIZE,  y % p->CHUNK_SIZE);
+}   
+void tunneler_map_set_block(tunneler_map *p, int x, int y, block b){
+    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p, 
+            x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
+    tunneler_map_chunk_set_block(p_chunk,
+            x % p->CHUNK_SIZE,  y % p->CHUNK_SIZE, b);
 }

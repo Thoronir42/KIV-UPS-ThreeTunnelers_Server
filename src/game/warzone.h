@@ -9,9 +9,20 @@
 #define WARZONE_PROJECTILES_PER_TANK 20
 #define WARZONE_MAX_PROJECTILES WARZONE_MAX_PLAYERS * WARZONE_PROJECTILES_PER_TANK
 
+struct map_change {
+    int x, y;
+    block new_block;
+};
+typedef struct warzone_rules {
+    int TANK_MAX_HP;
+    int TANK_MAX_EP;
+    int MAX_PROJECTILES_PER_TANK;
+    int TANK_CANNON_COOLDOWN;
+    int TANK_CANNON_COOLDOWN_RATE;
+} warzone_rules;
+
 typedef struct warzone {
-    const int TANK_MAX_HP,
-    TANK_MAX_EP;
+    const warzone_rules rules;
     tunneler_map map;
 
     tank tanks[WARZONE_MAX_PLAYERS];
