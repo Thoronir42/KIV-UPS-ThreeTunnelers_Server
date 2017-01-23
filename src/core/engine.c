@@ -20,29 +20,31 @@
 
 #define CLOCK CLOCK_MONOTONIC
 
-int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) {
-    memset(p_engine, 0, sizeof (engine));
+int engine_init(engine *p, settings *p_settings, resources *p_resources) {
+    memset(p, 0, sizeof (engine));
 
-    p_engine->settings = p_settings;
-    p_engine->resources = p_resources;
-    p_engine->keep_running = 1;
+    p->settings = p_settings;
+    p->resources = p_resources;
+    p->keep_running = 1;
 
-    statistics_init(&p_engine->stats);
-    cmd_queue_init(&p_engine->cmd_in_queue);
+    statistics_init(&p->stats);
+    cmd_queue_init(&p->cmd_in_queue);
 
     unsigned long milliseconds = 1000000000 / p_settings->MAX_TICKRATE;
 
-    p_engine->sleep.tv_sec = milliseconds / 1000000000;
-    p_engine->sleep.tv_nsec = (milliseconds % 1000000000);
+    p->sleep.tv_sec = milliseconds / 1000000000;
+    p->sleep.tv_nsec = (milliseconds % 1000000000);
 
-    glog(LOG_FINE, "Engine: Sleep = %d s + %lu ns", p_engine->sleep.tv_sec, p_engine->sleep.tv_nsec);
+    glog(LOG_FINE, "Engine: Sleep = %d s + %lu ns", p->sleep.tv_sec, p->sleep.tv_nsec);
 
-    _engine_init_solo_commands(p_engine->command_proccess_func);
-    _engine_init_gameroom_commands(p_engine->command_proccess_func);
-    _engine_init_game_play_commands(p_engine->command_proccess_func);
-
-    p_engine->p_netadapter = &p_engine->netadapter;
-    p_engine->p_cmd_out = &p_engine->_cmd_out;
+    _engine_init_solo_commands(p->command_proccess_func);
+    _engine_init_gameroom_commands(p->command_proccess_func);
+    _engine_init_game_play_commands(p->command_proccess_func);
+    
+    _engine_init_gameroom_updates(p);
+    
+    p->p_netadapter = &p->netadapter;
+    p->p_cmd_out = &p->_cmd_out;
 
     return 0;
 }

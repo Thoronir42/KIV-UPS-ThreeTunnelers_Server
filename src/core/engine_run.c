@@ -148,7 +148,7 @@ int _engine_authorize_connection(engine *p, network_command cmd) {
     return 0;
 }
 
-void _engine_process_queue(engine *p) {
+void _engine_process_command_queue(engine *p) {
     network_command cmd;
     net_client *p_cli;
     int ret_val;
@@ -232,7 +232,8 @@ void *engine_run(void *args) {
         clock_gettime(CLOCK_MONOTONIC, &tick_start);
         
         _engine_check_active_clients(p, current_second);
-        _engine_process_queue(p);
+        _engine_process_command_queue(p);
+        engine_update_gamerooms(p);
         
         clock_gettime(CLOCK_MONOTONIC, &tick_end);
         elapsed_nanos = tick_end.tv_nsec - tick_start.tv_nsec;

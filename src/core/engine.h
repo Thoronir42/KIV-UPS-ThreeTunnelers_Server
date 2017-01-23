@@ -46,17 +46,21 @@ typedef struct engine
     netadapter *p_netadapter;
     network_command *p_cmd_out;
 
-
+    void(* game_room_update_functions[GAME_ROOM_STATES_COUNT])(struct engine *, game_room *);
+    int game_room_update_tickskip[GAME_ROOM_STATES_COUNT];
 
 } engine;
 
 int engine_init(engine *p_engine, settings *p_settings, resources *p_resources);
+void _engine_init_gameroom_updates(engine *p);
 
 void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 void _engine_init_gameroom_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 void _engine_init_game_play_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 
 void engine_handle_command(void *handler, const network_command cmd);
+
+void engine_update_gamerooms(engine *p);
 
 void *engine_run(void *args);
 void *engine_cli_run(void *args);

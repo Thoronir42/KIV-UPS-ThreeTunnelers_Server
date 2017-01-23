@@ -12,6 +12,7 @@
 #include "../model/projectile.h"
 
 #define GAME_ROOM_MAX_PLAYERS WARZONE_MAX_PLAYERS
+#define GAME_ROOM_STATES_COUNT 6
 
 typedef enum game_room_state
 {
