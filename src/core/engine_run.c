@@ -230,9 +230,7 @@ void *engine_run(void *args) {
         _engine_process_queue(p);
 
 
-        p->total_ticks++;
-        if (p->total_ticks > p->settings->MAX_TICKRATE * 30) {
-
+        
         }
         nanosleep(&p->sleep, NULL);
     }
