@@ -17,6 +17,7 @@
 #include "model/direction.h"
 #include "tests/test.h"
 #include "localisation.h"
+#include "game/entity_shape.h"
 
 void print_help(const char *file, int err) {
     switch (err) {
@@ -61,12 +62,17 @@ int main(int argc, char* argv[]) {
 int main_startup(int argc, char *argv[], settings *p_settings, resources *p_resources) {
     int ret_val;
     time_t now;
+    printf("Main: Initialising enviroment\n");
+
+    init_locale();
+    directions_initialise();
+    shapes_initialise();
+    
     printf("Main: Processing arguments\n");
-    ////
     ret_val = settings_process_arguments(p_settings, argc, argv);
     switch (ret_val) {
         case 0:
-            now = time(NULL);
+//            now = time(NULL);
 //            logger_init(now);
             logger_init_file(stdout);
             break;
@@ -78,11 +84,6 @@ int main_startup(int argc, char *argv[], settings *p_settings, resources *p_reso
             print_help(argv[0], ret_val);
             return MAIN_ERR_BAD_ARGS;
     }
-    
-    glog(LOG_INFO, "Main: Initialising enviroment");
-
-    init_locale();
-    directions_initialise();
 
     glog(LOG_INFO, "Main: Allocating resources");
     ret_val = resources_allocate(p_resources, p_settings->MAX_ROOMS,

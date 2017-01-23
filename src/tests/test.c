@@ -10,6 +10,7 @@
 #include "../core/str_scanner.h"
 #include "../map/tunneler_map.h"
 #include "../map_generator/map_generator.h"
+#include "../game/entity_shape.h"
 
 void test_strpos() {
     printf("Strpos test\n");
@@ -221,18 +222,18 @@ void test_str_scanner() {
 
 }
 
-void _test_dump_map(tunneler_map *map){
+void _test_dump_map(tunneler_map *map) {
     int cx, cy, bx, by;
     tunneler_map_chunk *p_chunk;
     printf("Printing chunks\n");
-    for(cy = 0; cy < map->chunk_dimensions.height; cy++){
-        for(cx = 0; cx < map->chunk_dimensions.width; cx++){
+    for (cy = 0; cy < map->chunk_dimensions.height; cy++) {
+        for (cx = 0; cx < map->chunk_dimensions.width; cx++) {
             p_chunk = tunneler_map_get_chunk(map, cx, cy);
             printf("Chunk y=%d.x=%d, size = %d (%s)\n", cy, cx, p_chunk->size,
                     p_chunk->type == TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE ? "base" : "regular");
-            for(by = 0; by < p_chunk->size; by++){
+            for (by = 0; by < p_chunk->size; by++) {
                 printf("%d: ", by);
-                for(bx = 0; bx < p_chunk->size; bx++){
+                for (bx = 0; bx < p_chunk->size; bx++) {
                     printf("%3d", tunneler_map_chunk_get_block(p_chunk, bx, by));
                 }
                 printf("\n");
@@ -245,31 +246,58 @@ void _test_dump_map(tunneler_map *map){
 void test_map_generation() {
     int width = 4, height = 5, chunkSize = 10, playerCount = 2;
     tunneler_map map;
-    
+
     printf("Initializing map to be %d chunks wide and %d chunks high\n", width, height);
     tunneler_map_init(&map, width, height, chunkSize);
     printf("Generating map content for %d players\n", playerCount);
     map_generator_generate(&map, playerCount);
-    
+
     _test_dump_map(&map);
-    
-    
-    
-    
+
+
+
+
+}
+
+void _shape_print(shape s, char *label) {
+    int x, y;
+    printf("Shape size = %d*%d '%s'\n", s.size.width, s.size.height, label);
+    for (y = 0; y < s.size.height; y++) {
+        for (x = 0; x < s.size.width; x++) {
+            printf("%c", shape_is_solid(s, x, y) ? '#' : ' ');
+        }
+        printf("\n");
+    }
+
+}
+
+void test_print_shapes() {
+    _shape_print(shape_get(DIRECTION_N, SHAPE_TANK_BODY), "Body upward");
+    _shape_print(shape_get(DIRECTION_NE, SHAPE_TANK_BODY), "Body diagonal");
+    _shape_print(shape_get(DIRECTION_N, SHAPE_TANK_BELT), "Belt north");
+    _shape_print(shape_get(DIRECTION_NE, SHAPE_TANK_BELT), "Belt north east");
+    _shape_print(shape_get(DIRECTION_E, SHAPE_TANK_BELT), "Belt east");
+    _shape_print(shape_get(DIRECTION_SE, SHAPE_TANK_BELT), "Belt south east");
+    _shape_print(shape_get(DIRECTION_N, SHAPE_PROJECTILE), "Projectile north");
+    _shape_print(shape_get(DIRECTION_NE, SHAPE_PROJECTILE), "Projectile north east");
+    _shape_print(shape_get(DIRECTION_E, SHAPE_PROJECTILE), "Projectile east");
+    _shape_print(shape_get(DIRECTION_SE, SHAPE_PROJECTILE), "Projectile south east");
 }
 
 void run_tests() {
     printf("Three Tunnelers Server - auto-testing\n");
-//    test_hex_formatting();
-//    test_command_parsing();
+    //    test_hex_formatting();
+    //    test_command_parsing();
 
-//    test_strpos();
-//    test_strshift();
-//    test_logger_formatting();
+    //    test_strpos();
+    //    test_strshift();
+    //    test_logger_formatting();
 
-//    test_command_appending();
-//    test_str_scanner();
-//    test_network_client_idle();
+    //    test_command_appending();
+    //    test_str_scanner();
+    //    test_network_client_idle();
+
+    //    test_map_generation();
     
-//    test_map_generation();
+    test_print_shapes();
 }
