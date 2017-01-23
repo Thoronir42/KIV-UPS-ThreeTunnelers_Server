@@ -1,4 +1,5 @@
 #include <string.h>
+#include <time.h>
 
 #include "engine.h"
 
@@ -220,21 +221,31 @@ void _engine_check_active_clients(engine *p, time_t now) {
 void *engine_run(void *args) {
     engine *p = (engine *) args;
     time_t current_second;
+    struct timespec tick_start, tick_end, remaining_sleep;
+    long elapsed_nanos;
+    
     p->stats.run_start = clock();
     glog(LOG_INFO, "Engine: Starting");
     while (p->keep_running) {
         p->current_tick++;
         current_second = time(NULL);
+        clock_gettime(CLOCK_MONOTONIC, &tick_start);
         
         _engine_check_active_clients(p, current_second);
         _engine_process_queue(p);
-
-
         
+        clock_gettime(CLOCK_MONOTONIC, &tick_end);
+        elapsed_nanos = tick_end.tv_nsec - tick_start.tv_nsec;
+        if(elapsed_nanos > 1000){
+            
         }
-        nanosleep(&p->sleep, NULL);
+        
+        remaining_sleep = p->sleep;
+        remaining_sleep.tv_nsec -= elapsed_nanos;
+        
+        nanosleep(&remaining_sleep, NULL);
     }
-
+    
     p->stats.run_end = clock();
     glog(LOG_INFO, "Engine: Finished");
     netadapter_shutdown(&p->netadapter);
