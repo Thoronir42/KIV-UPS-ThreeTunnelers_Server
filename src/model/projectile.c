@@ -3,7 +3,7 @@
 
 #include "projectile.h"
 
-void projectile_init(projectile *p, int x, int y, int direction, int player_rid) {
+void projectile_init(projectile *p, int x, int y, enum direction direction, int player_rid) {
     p->location.x = x;
     p->location.y = y;
     p->direction = direction;

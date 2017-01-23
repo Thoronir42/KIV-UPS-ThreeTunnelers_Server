@@ -3,17 +3,20 @@
 
 #include "intpoint.h"
 
-#define DIRECTION_0 0
-#define DIRECTION_N 1
-#define DIRECTION_NE 2
-#define DIRECTION_E 3
-#define DIRECTION_SE 4
-#define DIRECTION_S 5
-#define DIRECTION_SW 6
-#define DIRECTION_W 7
-#define DIRECTION_NW 8
+intpoint G_DIRECTIONS[9];
 
-intpoint DIRECTIONS[9];
+enum direction
+{
+    DIRECTION_0 = 0,
+    DIRECTION_N = 1,
+    DIRECTION_NE = 2,
+    DIRECTION_E = 3,
+    DIRECTION_SE = 4,
+    DIRECTION_S = 5,
+    DIRECTION_SW = 6,
+    DIRECTION_W = 7,
+    DIRECTION_NW = 8,
+};
 
 void directions_initialise();
 
