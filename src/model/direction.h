@@ -20,5 +20,7 @@ enum direction
 
 void directions_initialise();
 
+enum direction direction_get_by_d(int dx, int dy);
+
 #endif /* INPUT_H */
 

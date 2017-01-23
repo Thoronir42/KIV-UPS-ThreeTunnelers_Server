@@ -284,6 +284,17 @@ void test_print_shapes() {
     _shape_print(shape_get(DIRECTION_SE, SHAPE_PROJECTILE), "Projectile south east");
 }
 
+void test_direction_getting() {
+    int x, y;
+    enum direction d;
+    for (y = -1; y <= 1; y++) {
+        for (x = -1; x <= 1; x++) {
+            d = direction_get_by_d(x, y);
+            printf("Direction by x=%d, y=%d is %d\n", x, y, d);
+        }
+    }
+}
+
 void run_tests() {
     printf("Three Tunnelers Server - auto-testing\n");
     //    test_hex_formatting();
@@ -298,6 +309,7 @@ void run_tests() {
     //    test_network_client_idle();
 
     //    test_map_generation();
-    
-    test_print_shapes();
+
+//    test_print_shapes();
+    test_direction_getting();
 }
