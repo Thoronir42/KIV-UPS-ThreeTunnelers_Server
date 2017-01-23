@@ -51,7 +51,7 @@ int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
 }
 
 int _exe_gpl_tank_info ENGINE_HANDLE_FUNC_HEADER{
-    int playerRID;
+    int player_rid;
     tank *p_tank;
     if (sc->length < 2) {
         return ENGINE_CMDEXE_DATA_TOO_SHORT;
@@ -59,18 +59,16 @@ int _exe_gpl_tank_info ENGINE_HANDLE_FUNC_HEADER{
     if (p_cgr == NULL || p_cgr->state == GAME_ROOM_STATE_BATTLE) {
         return ENGINE_CMDEXE_WRONG_CONTEXT;
     }
-    playerRID = strsc_byte(sc);
+    player_rid = strsc_byte(sc);
 
 
-    if (game_room_get_player(p_cgr, playerRID) == NULL) {
+    if (game_room_get_player(p_cgr, player_rid) == NULL) {
         return ENGINE_CMDEXE_ILLEGAL_OP;
     }
-    p_tank = warzone_get_tank(&p_cgr->zone, playerRID);
+    p_tank = warzone_get_tank(&p_cgr->zone, player_rid);
 
-
-    network_command_prepare(p->p_cmd_out, NCT_GAME_TANK_INFO);
-
-
+    engine_pack_game_tank(p->p_cmd_out, p_tank, player_rid);
+    engine_send_command(p, p_cli, p->p_cmd_out);
 
 
 }

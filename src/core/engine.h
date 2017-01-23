@@ -93,4 +93,6 @@ void engine_pack_map_specification(network_command *p_dst, tunneler_map *p_map);
 void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);
 void engine_pack_map_chunk(network_command *p_dst, int x, int y, tunneler_map_chunk *p_chunk);
 
+void engine_pack_game_tank(network_command *p_dst, tank *p_tank, int player_rid);
+
 #endif

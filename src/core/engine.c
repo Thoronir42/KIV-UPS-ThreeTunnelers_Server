@@ -225,5 +225,14 @@ void engine_pack_map_chunk(network_command *p_dst, int x, int y, tunneler_map_ch
     }
 
     write_hex_byte(p_dst->data + 4, check_sum);
+}
 
+void engine_pack_game_tank(network_command *p_dst, tank *p_tank, int player_rid){
+    network_command_prepare(p_dst, NCT_GAME_TANK_INFO);
+    network_command_append_byte(p_dst, player_rid);
+    network_command_append_short(p_dst, p_tank->location.x);
+    network_command_append_short(p_dst, p_tank->location.y);
+    network_command_append_byte(p_dst, p_tank->direction);
+    network_command_append_byte(p_dst, p_tank->hitpoints);
+    network_command_append_byte(p_dst, p_tank->energy);
 }
