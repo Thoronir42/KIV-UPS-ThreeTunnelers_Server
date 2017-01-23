@@ -86,6 +86,11 @@ void engine_game_room_dump_to_client(engine *p, net_client *p_cli, game_room *p_
 int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli);
 void engine_game_room_remove_player(engine *p, game_room *p_gr, int player_rid);
 
+// network command related stuff
+void engine_gameroom_process_map_changes(engine *p, game_room *p_gr);
+void engine_gameroom_sync_tanks(engine *p, game_room *p_gr);
+
+
 void engine_pack_room_client(network_command *p_dst, game_room *p_gr, int client_rid);
 void engine_pack_room_player(network_command *p_dst, game_room *p_gr, int player_rid);
 

@@ -35,6 +35,7 @@ typedef struct game_room
     player players[GAME_ROOM_MAX_PLAYERS];
 
     warzone zone;
+    int current_tick;
 
 
 } game_room;
