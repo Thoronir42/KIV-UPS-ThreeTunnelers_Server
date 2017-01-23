@@ -78,11 +78,13 @@ int _engine_authorize_reconnect(engine *p, net_client *p_cli) {
     }
 }
 
-int _engine_authorize_connection(engine *p, int socket, network_command cmd) {
+int _engine_authorize_connection(engine *p, network_command cmd) {
     net_client* p_cli;
     network_command cmd_out;
     my_byte reintroduce;
-
+    int socket = cmd.origin_socket;
+    
+    
     if (cmd.type != NCT_LEAD_INTRODUCE) {
         glog(LOG_FINE, "Authorization of connection %02d failed because command"
                 "type was not correct. Expected %d, got %d", socket, NCT_LEAD_INTRODUCE, cmd.type);
@@ -155,7 +157,7 @@ void _engine_process_queue(engine *p) {
         cmd = cmd_queue_get(&p->cmd_in_queue);
         p_cli = engine_client_by_socket(p, cmd.origin_socket);
         if (p_cli == NULL) {
-            ret_val = _engine_authorize_connection(p, cmd.origin_socket, cmd);
+            ret_val = _engine_authorize_connection(p, cmd);
             if (ret_val) {
                 p->p_netadapter->stats->commands_received_invalid++;
                 netadapter_close_connection_by_socket(p->p_netadapter, cmd.origin_socket);
@@ -217,10 +219,6 @@ void _engine_check_active_clients(engine *p) {
 
 void *engine_run(void *args) {
     engine *p = (engine *) args;
-
-    p->netadapter.command_handler = p;
-    p->netadapter.command_handle_func = &_engine_handle_command;
-
     p->stats.run_start = clock();
     glog(LOG_INFO, "Engine: Starting");
     while (p->keep_running) {

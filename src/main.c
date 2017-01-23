@@ -128,6 +128,10 @@ int main_run(settings *p_settings, resources *p_resources) {
     ret_val = netadapter_init(&p_engine->netadapter, p_settings->port, &p_engine->stats,
             p_resources->clients, p_resources->clients_length,
             p_resources->connections, p_resources->con_to_cli, p_resources->connections_length);
+    
+    p_engine->netadapter.command_handler = p_engine;
+    p_engine->netadapter.command_handle_func = &engine_handle_command;
+    
     if (ret_val) {
         glog(LOG_WARNING, "Network interface couldn't be created, exitting.");
         ret_val = MAIN_ERR_NETWORK_FAILED;
