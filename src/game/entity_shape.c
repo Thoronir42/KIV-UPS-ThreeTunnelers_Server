@@ -181,3 +181,7 @@ int shape_is_solid(shape p, int x, int y) {
     int offset = y * p.size.width + x;
     return (int) p.pixels[offset];
 }
+
+int shape_is_solid_o(shape p, int sx, int sy){
+    return shape_is_solid(p, sx - p.min.x, sy - p.min.y);
+}

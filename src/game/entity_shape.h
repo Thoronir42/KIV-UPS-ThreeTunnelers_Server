@@ -24,5 +24,6 @@ shape shape_get(enum direction direction, enum shape_type);
 
 int shape_is_solid(shape p, int x, int y);
 
+int shape_is_solid_o(shape p, int sx, int sy);
 #endif /* ENTITY_SHAPE_H */
 
