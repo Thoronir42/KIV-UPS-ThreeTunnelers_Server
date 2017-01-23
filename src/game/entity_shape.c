@@ -152,14 +152,29 @@ shape _shape_get_projectile(enum direction direction) {
 }
 
 shape shape_get(enum direction direction, enum shape_type type) {
+    shape tmp;
     switch (type) {
         case SHAPE_TANK_BODY:
-            return _shape_get_body(direction);
+            tmp = _shape_get_body(direction);
+            break;
         case SHAPE_TANK_BELT:
-            return _shape_get_belt(direction);
+            tmp = _shape_get_belt(direction);
+            break;
         case SHAPE_PROJECTILE:
-            return _shape_get_projectile(direction);
+            tmp = _shape_get_projectile(direction);
+            break;
+        default:
+            tmp.size.width = tmp.size.height = 0;
+            break;
     }
+    
+    tmp.max.x = tmp.size.width / 2;
+    tmp.max.y = tmp.size.height / 2;
+    tmp.min.x = - tmp.max.x;
+    tmp.min.y = - tmp.max.y;
+
+    return tmp;
+
 }
 
 int shape_is_solid(shape p, int x, int y) {

@@ -15,6 +15,7 @@ typedef struct shape
 {
     intdimension size;
     bool pixels[49]; // 7 * 7 is largest piece,  I AM SORRY #2
+    intpoint min, max;
 } shape;
 
 void shapes_initialise();
