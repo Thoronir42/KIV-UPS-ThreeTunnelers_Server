@@ -24,6 +24,7 @@ void engine_game_room_cleanup(engine *p, game_room *p_gr) {
 
 void engine_game_room_remove_client(engine *p, game_room *p_gr, net_client *p_cli) {
     int i, clientRID = game_room_find_client(p_gr, p_cli);
+
     if (clientRID == ITEM_EMPTY) {
         return;
     }
@@ -139,6 +140,7 @@ void engine_game_room_remove_player(engine *p, game_room *p_gr, int playerRID) {
 
 tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
     int i, base_index;
+    intpoint base_center;
     tunneler_map *p_map = &p_gr->zone.map;
     tunneler_map_init(p_map, 8, 6, 21);
 
@@ -149,7 +151,8 @@ tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
         if (p_gr->players[i].client_rid == ITEM_EMPTY) {
             continue;
         }
-        tunneler_map_assign_base(p_map, base_index++, i);
+        base_center = tunneler_map_assign_base(p_map, base_index++, i);
+        warzone_init_tank(&p_gr->zone, i, base_center);
     }
 
     return p_map;

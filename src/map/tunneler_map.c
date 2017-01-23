@@ -37,22 +37,31 @@ tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y) {
     return map->chunks + (y * map->chunk_dimensions.width + x);
 }
 
-void tunneler_map_assign_base(tunneler_map *p, int base, int playerRID) {
+intpoint tunneler_map_assign_base(tunneler_map *p, int n, int playerRID) {
     tunneler_map_chunk *p_chunk;
+    intpoint base, center;
 
-    p_chunk = tunneler_map_get_chunk(p, p->bases[base].x, p->bases[base].y);
+    base = p->bases[n];
+
+    p_chunk = tunneler_map_get_chunk(p, base.x, base.y);
     tunneler_map_chunk_assing_player(p_chunk, playerRID);
+
+    center.x = base.x * p->CHUNK_SIZE + p->CHUNK_SIZE / 2;
+    center.y = base.y * p->CHUNK_SIZE + p->CHUNK_SIZE / 2;
+    
+    return center;
 }
 
-block tunneler_map_get_block(tunneler_map *p, int x, int y){
-    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p, 
+block tunneler_map_get_block(tunneler_map *p, int x, int y) {
+    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p,
             x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
     return tunneler_map_chunk_get_block(p_chunk,
-            x % p->CHUNK_SIZE,  y % p->CHUNK_SIZE);
-}   
-void tunneler_map_set_block(tunneler_map *p, int x, int y, block b){
-    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p, 
+            x % p->CHUNK_SIZE, y % p->CHUNK_SIZE);
+}
+
+void tunneler_map_set_block(tunneler_map *p, int x, int y, block b) {
+    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p,
             x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
     tunneler_map_chunk_set_block(p_chunk,
-            x % p->CHUNK_SIZE,  y % p->CHUNK_SIZE, b);
+            x % p->CHUNK_SIZE, y % p->CHUNK_SIZE, b);
 }
