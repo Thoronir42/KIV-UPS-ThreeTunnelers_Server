@@ -34,7 +34,7 @@ typedef struct engine
     statistics stats;
 
     struct timespec sleep;
-    unsigned long total_ticks;
+    unsigned long current_tick;
 
     int keep_running;
 
@@ -56,10 +56,9 @@ void _engine_init_solo_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HE
 void _engine_init_gameroom_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 void _engine_init_game_play_commands(int (**command_handle_func)ENGINE_HANDLE_FUNC_HEADER);
 
-void _engine_handle_command(void *handler, const network_command cmd);
+void engine_handle_command(void *handler, const network_command cmd);
 
 void *engine_run(void *args);
-
 void *engine_cli_run(void *args);
 
 void engine_client_disconnected(engine *p, net_client *p_cli, char *reason);

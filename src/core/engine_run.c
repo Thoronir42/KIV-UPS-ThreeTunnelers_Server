@@ -196,10 +196,10 @@ void _engine_check_client_for_idling(engine *p, net_client *p_client, time_t now
     }
 }
 
-void _engine_check_active_clients(engine *p) {
+void _engine_check_active_clients(engine *p, time_t now) {
     int i;
     net_client *p_cli;
-    time_t now = time(NULL);
+    
     
     for (i = 0; i < p->resources->clients_length; i++) {
         p_cli = p->resources->clients + i;
@@ -219,10 +219,14 @@ void _engine_check_active_clients(engine *p) {
 
 void *engine_run(void *args) {
     engine *p = (engine *) args;
+    time_t current_second;
     p->stats.run_start = clock();
     glog(LOG_INFO, "Engine: Starting");
     while (p->keep_running) {
-        _engine_check_active_clients(p);
+        p->current_tick++;
+        current_second = time(NULL);
+        
+        _engine_check_active_clients(p, current_second);
         _engine_process_queue(p);
 
 

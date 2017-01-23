@@ -47,7 +47,7 @@ int engine_init(engine *p_engine, settings *p_settings, resources *p_resources) 
     return 0;
 }
 
-void _engine_handle_command(void *handler, const network_command cmd) {
+void engine_handle_command(void *handler, const network_command cmd) {
     engine *p_engine = (engine *) handler;
 
     if (cmd_queue_is_full(&p_engine->cmd_in_queue)) {
