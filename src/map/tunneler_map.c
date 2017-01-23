@@ -48,7 +48,7 @@ intpoint tunneler_map_assign_base(tunneler_map *p, int n, int playerRID) {
 
     center.x = base.x * p->CHUNK_SIZE + p->CHUNK_SIZE / 2;
     center.y = base.y * p->CHUNK_SIZE + p->CHUNK_SIZE / 2;
-    
+
     return center;
 }
 
@@ -59,9 +59,15 @@ block tunneler_map_get_block(tunneler_map *p, int x, int y) {
             x % p->CHUNK_SIZE, y % p->CHUNK_SIZE);
 }
 
-void tunneler_map_set_block(tunneler_map *p, int x, int y, block b) {
+int tunneler_map_set_block(tunneler_map *p, int x, int y, block b) {
+    block current = tunneler_map_get_block(p, x, y);
+    if (current == b) {
+        return 0;
+    }
     tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p,
             x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
     tunneler_map_chunk_set_block(p_chunk,
             x % p->CHUNK_SIZE, y % p->CHUNK_SIZE, b);
+    
+    return 1;
 }
