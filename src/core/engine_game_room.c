@@ -17,6 +17,7 @@ void engine_game_room_cleanup(engine *p, game_room *p_gr) {
         if (p_gr->clients[i] == NULL) {
             continue;
         }
+        net_client_wipe(p_gr->clients[i]);
     }
 
     glog(LOG_INFO, "Room %d has bean cleaned up", p_gr - p->resources->game_rooms);
