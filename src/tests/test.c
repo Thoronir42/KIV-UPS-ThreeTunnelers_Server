@@ -272,16 +272,21 @@ void _shape_print(shape s, char *label) {
 }
 
 void test_print_shapes() {
-    _shape_print(shape_get(DIRECTION_N, SHAPE_TANK_BODY), "Body upward");
-    _shape_print(shape_get(DIRECTION_NE, SHAPE_TANK_BODY), "Body diagonal");
-    _shape_print(shape_get(DIRECTION_N, SHAPE_TANK_BELT), "Belt north");
-    _shape_print(shape_get(DIRECTION_NE, SHAPE_TANK_BELT), "Belt north east");
-    _shape_print(shape_get(DIRECTION_E, SHAPE_TANK_BELT), "Belt east");
-    _shape_print(shape_get(DIRECTION_SE, SHAPE_TANK_BELT), "Belt south east");
-    _shape_print(shape_get(DIRECTION_N, SHAPE_PROJECTILE), "Projectile north");
-    _shape_print(shape_get(DIRECTION_NE, SHAPE_PROJECTILE), "Projectile north east");
-    _shape_print(shape_get(DIRECTION_E, SHAPE_PROJECTILE), "Projectile east");
-    _shape_print(shape_get(DIRECTION_SE, SHAPE_PROJECTILE), "Projectile south east");
+    int type, direction;
+    char label[20];
+    char *type_lbl[3] = {"body", "belt", "proj"};
+    
+    for(type = 0; type <=2; type++){
+        for(direction = 1; direction <= 8; direction++){
+            sprintf(label, "%5s %d", type_lbl[type], direction);
+            _shape_print(shape_get(direction, type), label);
+            
+            if(direction >= 2 && type == 0){
+                break;
+            }
+        }
+    }
+    
 }
 
 void test_direction_getting() {
@@ -310,6 +315,6 @@ void run_tests() {
 
     //    test_map_generation();
 
-//    test_print_shapes();
-    test_direction_getting();
+    test_print_shapes();
+//    test_direction_getting();
 }

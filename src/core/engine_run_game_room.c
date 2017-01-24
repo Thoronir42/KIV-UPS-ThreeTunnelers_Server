@@ -44,21 +44,21 @@ int _warzone_can_tank_move_to(warzone *p_wz, int new_x, int new_y,
 
 void _warzone_break_blocks_around(warzone *p_wz, int new_x, int new_y,
         shape shape_belt, shape shape_body) {
-    int sx, sy;
+    int sx, sy, belt_pixel, body_pixel;
     block b;
     for (sy = shape_belt.min.y; sy <= shape_belt.max.y; sy++) {
         for (sx = shape_belt.min.x; sx <= shape_belt.max.x; sx++) {
-            if (!shape_is_solid_o(shape_body, sx, sy) && // tank body destroys all blocks
-                    (!shape_is_solid_o(shape_belt, sx, sy) // tank belts destroy
-                    || (new_x + sx + new_y + sy) & 2 == 1) // every other block
-                    ) {
-                continue;
+            body_pixel = shape_is_solid_o(shape_body, sx, sy);
+//            belt_pixel = shape_is_solid_o(shape_belt, sx, sy);
+
+            if (body_pixel) {
+                b = tunneler_map_get_block(&p_wz->map, new_x + sx, new_y + sy);
+                if (block_is_breakable(b)) {
+                    int bfr = warzone_set_block(p_wz, new_x + sx, new_y + sy, BLOCK_EMPTY);
+                }
             }
 
-            b = tunneler_map_get_block(&p_wz->map, new_x + sx, new_y + sy);
-            if (block_is_breakable(b)) {
-                warzone_set_block(p_wz, new_x + sx, new_y + sy, BLOCK_EMPTY);
-            }
+
         }
     }
 }

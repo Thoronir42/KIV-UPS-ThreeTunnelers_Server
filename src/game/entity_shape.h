@@ -8,7 +8,7 @@
 
 enum shape_type
 {
-    SHAPE_TANK_BODY, SHAPE_TANK_BELT, SHAPE_PROJECTILE
+    SHAPE_TANK_BODY = 0, SHAPE_TANK_BELT = 1, SHAPE_PROJECTILE = 2
 };
 
 typedef struct shape
