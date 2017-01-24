@@ -12,4 +12,5 @@ void tank_init(tank *p, int x, int y, enum direction direction, int hitpoints, i
     p->direction = direction;
     p->energy = energy;
     p->hitpoints = hitpoints;
+    p->cooldown = 0;
 }

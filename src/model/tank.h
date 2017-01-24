@@ -19,6 +19,8 @@ typedef struct tank
     enum direction direction;
     int hitpoints;
     int energy;
+    
+    int cooldown;
 } tank;
 
 void tank_init(tank *p, int x, int y, enum direction direction, int hitpoints, int energy);

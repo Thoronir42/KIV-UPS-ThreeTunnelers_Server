@@ -49,7 +49,7 @@ void _warzone_break_blocks_around(warzone *p_wz, int new_x, int new_y,
     for (sy = shape_belt.min.y; sy <= shape_belt.max.y; sy++) {
         for (sx = shape_belt.min.x; sx <= shape_belt.max.x; sx++) {
             body_pixel = shape_is_solid_o(shape_body, sx, sy);
-//            belt_pixel = shape_is_solid_o(shape_belt, sx, sy);
+            //            belt_pixel = shape_is_solid_o(shape_belt, sx, sy);
 
             if (body_pixel) {
                 b = tunneler_map_get_block(&p_wz->map, new_x + sx, new_y + sy);
@@ -96,6 +96,88 @@ void _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     _warzone_break_blocks_around(p_wz, new_x, new_y, shape_belt, shape_body);
 }
 
+projectile* _engine_uwz_shoot_add_projectile(engine *p, warzone *p_wz,
+        int player_rid, intpoint location, enum direction direction) {
+    int i, projectiles_per_tank = p_wz->rules.MAX_PROJECTILES_PER_TANK;
+
+    projectile *p_proj;
+    for (i = 0; i < projectiles_per_tank; i++) {
+        p_proj = p_wz->projectiles + player_rid * projectiles_per_tank + i;
+        if (p_proj->direction != DIRECTION_0) {
+            continue;
+        }
+        projectile_init(p_proj, location.x, location.y, direction, player_rid);
+        return p_proj;
+    }
+
+    return NULL;
+}
+
+void _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
+    projectile *p_proj;
+    player *p_player = p_gr->players + i;
+    tank *p_tank = p_wz->tanks + i;
+    p_tank->cooldown -= p_wz->rules.TANK_CANNON_COOLDOWN_RATE;
+    if (p_tank->cooldown < 0) {
+        p_tank->cooldown = 0;
+    }
+    if (!controls_is_input_held(&p_player->input, INPUT_SHOOT)) {
+        return;
+    }
+    if (p_tank->cooldown > 0) {
+        return;
+    }
+    p_proj = _engine_uwz_shoot_add_projectile(p, p_wz, i, p_tank->location, p_tank->direction);
+
+    if (p_proj == NULL) {
+        glog(LOG_INFO, "Player %d failed at created a shot", i);
+        return;
+    }
+    glog(LOG_INFO, "Player %d created shot %d", i, p_proj - p_wz->projectiles);
+
+    p_tank->cooldown = p_wz->rules.TANK_CANNON_COOLDOWN;
+
+    network_command_prepare(p->p_cmd_out, NCT_GAME_PROJ_ADD);
+    network_command_append_byte(p->p_cmd_out, p_proj - p_wz->projectiles);
+    network_command_append_byte(p->p_cmd_out, p_proj->player_rid);
+    network_command_append_short(p->p_cmd_out, p_proj->location.x);
+    network_command_append_short(p->p_cmd_out, p_proj->location.y);
+    network_command_append_byte(p->p_cmd_out, p_proj->direction);
+    engine_bc_command(p, p_gr, p->p_cmd_out);
+}
+
+void _engine_uwz_update_projectiles(engine *p, game_room *p_gr, warzone *p_wz) {
+    int i, new_x, new_y, clear = 0;
+    block b;
+    projectile *p_proj;
+    for (i = 0; i < p_wz->projectiles_size; i++) {
+        p_proj = p_wz->projectiles + i;
+        if(p_proj->direction == DIRECTION_0){
+            continue;
+        }
+        new_x = p_proj->location.x += G_DIRECTIONS[p_proj->direction].x;
+        new_y = p_proj->location.y += G_DIRECTIONS[p_proj->direction].y;
+        
+        b = tunneler_map_get_block(&p_wz->map, new_x, new_y);
+        if(block_is_obstacle(b)){
+            clear = 1;
+            glog(LOG_INFO, "Projectile %d crashed into obstacle %d at %d-%d", i, b, new_x, new_y);
+        } else if(block_is_breakable(b)){
+            clear = 1;
+            warzone_set_block(p_wz, new_x, new_y, BLOCK_EMPTY);
+            glog(LOG_INFO, "Projectile %d broke block %d into emptiness at %d-%d", i, b, new_x, new_y);
+        }
+        
+        if(clear){
+            projectile_clear(p_proj);
+            network_command_prepare(p->p_cmd_out, NCT_GAME_PROJ_REM);
+            network_command_append_byte(p->p_cmd_out, i);
+            engine_bc_command(p, p_gr, p->p_cmd_out);
+        }
+        
+    }
+}
+
 void _engine_update_gameroom_battle(engine *p, game_room *p_gr) {
     int i;
     warzone *p_wz = &p_gr->zone;
@@ -106,6 +188,8 @@ void _engine_update_gameroom_battle(engine *p, game_room *p_gr) {
                 continue;
             }
             _engine_uwz_move_tank(p, p_gr, p_wz, i);
+            _engine_uwz_shoot(p, p_gr, p_wz, i);
+            _engine_uwz_update_projectiles(p, p_gr, p_wz);
             engine_gameroom_process_map_changes(p, p_gr);
         }
     }
@@ -185,7 +269,7 @@ void engine_gameroom_sync_tanks(engine *p, game_room *p_gr) {
     tank *p_tank;
     for (i = 0; i < p_gr->size; i++) {
         p_tank = p_gr->zone.tanks + i;
-        if (p_tank->status == TANK_STATUS_EMPTY) {
+        if (p_tank->status != TANK_STATUS_OPERATIVE) {
             continue;
         }
         engine_pack_game_tank(p->p_cmd_out, p_tank, i);
