@@ -7,7 +7,7 @@ typedef enum control_input
     INPUT_DOWN = 0x02,
     INPUT_LEFT = 0x04,
     INPUT_RIGHT = 0x08,
-    INPUT_SHOOT = 0x16,
+    INPUT_SHOOT = 0x10,
 } control_input;
 
 typedef struct controls

@@ -4,6 +4,7 @@ int block_is_obstacle(block b) {
     switch (b) {
         case BLOCK_ROCK:
         case BLOCK_BASE_WALL:
+        case BLOCK_UNDEFINED:
             return 1;
         default:
             return 0;

@@ -53,6 +53,10 @@ intpoint tunneler_map_assign_base(tunneler_map *p, int n, int playerRID) {
 }
 
 block tunneler_map_get_block(tunneler_map *p, int x, int y) {
+    if(x < 0 || x > p->block_dimensions.width ||
+            y < 0 || y > p->block_dimensions.height){
+        return BLOCK_UNDEFINED;
+    }
     tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p,
             x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
     return tunneler_map_chunk_get_block(p_chunk,

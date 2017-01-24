@@ -10,12 +10,12 @@
 #define NETCMD_TYPE_UNKNOWN 1
 #define NETCMD_DATA_TOO_LONG 2
 
-void network_command_prepare(network_command *p, short type) {
+void network_command_prepare(network_command *p, network_command_type type) {
     memset(p, 0, sizeof (network_command));
     p->type = type;
 }
 
-void network_command_strprep(network_command *p, short type, char* message) {
+void network_command_strprep(network_command *p, network_command_type type, char* message) {
     network_command_prepare(p, type);
     network_command_set_data(p, message, strlen(message));
 }

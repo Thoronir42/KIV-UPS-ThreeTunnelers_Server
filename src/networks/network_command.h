@@ -63,9 +63,9 @@ typedef struct network_command
 
 } network_command;
 
-void network_command_prepare(network_command *p, short type);
+void network_command_prepare(network_command *p, network_command_type type);
 
-void network_command_strprep(network_command *p, short type, char* message);
+void network_command_strprep(network_command *p, network_command_type type, char* message);
 
 int network_command_set_data(network_command *p, const char *str, int length);
 
