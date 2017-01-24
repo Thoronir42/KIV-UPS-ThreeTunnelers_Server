@@ -64,7 +64,7 @@ void _warzone_break_blocks_around(warzone *p_wz, int new_x, int new_y,
     }
 }
 
-void _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
+int _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     int dx, dy, sx, sy, new_x, new_y;
     enum direction new_direction;
     shape shape_belt, shape_body;
@@ -95,6 +95,8 @@ void _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     p_tank->location.y = new_y;
 
     _warzone_break_blocks_around(p_wz, new_x, new_y, shape_belt, shape_body);
+
+    return dx * dx + dy * dy;
 }
 
 projectile* _engine_uwz_shoot_add_projectile(engine *p, warzone *p_wz,
@@ -114,7 +116,7 @@ projectile* _engine_uwz_shoot_add_projectile(engine *p, warzone *p_wz,
     return NULL;
 }
 
-void _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
+int _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     projectile *p_proj;
     player *p_player = p_gr->players + i;
     tank *p_tank = p_wz->tanks + i;
@@ -123,18 +125,16 @@ void _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
         p_tank->cooldown = 0;
     }
     if (!controls_is_input_held(&p_player->input, INPUT_SHOOT)) {
-        return;
+        return 0;
     }
     if (p_tank->cooldown > 0) {
-        return;
+        return 0;
     }
     p_proj = _engine_uwz_shoot_add_projectile(p, p_wz, i, p_tank->location, p_tank->direction);
 
     if (p_proj == NULL) {
-        glog(LOG_INFO, "Player %d failed at created a shot", i);
-        return;
+        return 0;
     }
-    glog(LOG_INFO, "Player %d created shot %d", i, p_proj - p_wz->projectiles);
 
     p_tank->cooldown = p_wz->rules.TANK_CANNON_COOLDOWN;
 
@@ -145,6 +145,8 @@ void _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     network_command_append_short(p->p_cmd_out, p_proj->location.y);
     network_command_append_byte(p->p_cmd_out, p_proj->direction);
     engine_bc_command(p, p_gr, p->p_cmd_out);
+
+    return 1;
 }
 
 tank *_engine_uwz_find_tank_hit(warzone *p_wz, projectile *p_proj) {
@@ -197,7 +199,10 @@ void _engine_uwz_update_projectiles(engine *p, game_room *p_gr, warzone *p_wz) {
             p_target = _engine_uwz_find_tank_hit(p_wz, p_proj);
             glog(LOG_INFO, "Projectile %d hit tank %d", i, p_target - p_wz->tanks);
             if (p_target != NULL) {
-                p_target->hitpoints -= 1;
+                if (tank_reduce_hitpoints(p_target) == 0) {
+                    engine_gameroom_tank_destroyed(p, p_gr, p_target);
+                }
+
                 clear = 1;
             }
         }
@@ -212,22 +217,44 @@ void _engine_uwz_update_projectiles(engine *p, game_room *p_gr, warzone *p_wz) {
     }
 }
 
-void _engine_update_gameroom_battle(engine *p, game_room *p_gr) {
-    int i;
-    warzone *p_wz = &p_gr->zone;
-    p_gr->current_tick++;
-    if (p_gr->current_tick % 3 == 0) {
-        for (i = 0; i < p_wz->tanks_size; i++) {
-            if (p_wz->tanks[i].status != TANK_STATUS_OPERATIVE) {
-                continue;
-            }
-            _engine_uwz_move_tank(p, p_gr, p_wz, i);
-            _engine_uwz_shoot(p, p_gr, p_wz, i);
-            _engine_uwz_update_projectiles(p, p_gr, p_wz);
-            engine_gameroom_process_map_changes(p, p_gr);
+void _engine_uwz_update_tank_energy(engine *p, warzone *p_wz, int player_rid, int current_cost) {
+    tank *p_tank = p_wz->tanks + player_rid;
+    tunneler_map_chunk *p_chunk = tunneler_map_is_in_base(&p_wz->map, p_tank->location.x, p_tank->location.y);
+
+    int rnd;
+    if (p_chunk != NULL) {
+        p_tank->energy += p_chunk->assigned_player_rid == player_rid ? 7 : 4;
+        if (p_tank->energy > p_wz->rules.TANK_MAX_EP) {
+            p_tank->energy = p_wz->rules.TANK_MAX_EP;
+        }
+    } else {
+        rnd = rand() % 10;
+        if (rnd <= current_cost) {
+            tank_reduce_energy(p_tank);
         }
     }
 
+
+}
+
+void _engine_update_gameroom_battle(engine *p, game_room *p_gr) {
+    int i, moved, shot;
+    warzone *p_wz = &p_gr->zone;
+    tank *p_tank;
+    p_gr->current_tick++;
+    if (p_gr->current_tick % 3 == 0) {
+        for (i = 0; i < p_wz->tanks_size; i++) {
+            p_tank = p_wz->tanks + i;
+            if (p_tank->status != TANK_STATUS_OPERATIVE) {
+                continue;
+            }
+            moved = _engine_uwz_move_tank(p, p_gr, p_wz, i);
+            shot = _engine_uwz_shoot(p, p_gr, p_wz, i);
+            engine_gameroom_process_map_changes(p, p_gr);
+            _engine_uwz_update_tank_energy(p, p_wz, i, moved + shot * 2);
+        }
+    }
+    _engine_uwz_update_projectiles(p, p_gr, p_wz);
     if ((p_gr->current_tick % 9) == 0) {
         engine_gameroom_sync_tanks(p, p_gr);
     }
@@ -270,6 +297,10 @@ void _engine_init_gameroom_updates(engine *p) {
     p->game_room_update_tickskip[GAME_ROOM_STATE_BATTLE] = 1;
     p->game_room_update_functions[GAME_ROOM_STATE_SUMMARIZATION] = &_engine_update_gameroom_battle;
     p->game_room_update_tickskip[GAME_ROOM_STATE_SUMMARIZATION] = 1;
+}
+
+void engine_gameroom_tank_destroyed(engine *p, game_room *p_gr, tank *p_tank) {
+    p_tank->status = TANK_STATUS_DESTROYED;
 }
 
 void engine_gameroom_process_map_changes(engine *p, game_room *p_gr) {

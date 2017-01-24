@@ -33,6 +33,7 @@ typedef struct tunneler_map
 void tunneler_map_init(tunneler_map *map, int width, int height, int chunk_size);
 
 tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y);
+tunneler_map_chunk *tunneler_map_is_in_base(tunneler_map *map, int block_x, int block_y);
 
 intpoint tunneler_map_assign_base(tunneler_map *map, int base, int playerRID);
 

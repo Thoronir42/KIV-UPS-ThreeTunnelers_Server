@@ -37,6 +37,15 @@ tunneler_map_chunk *tunneler_map_get_chunk(tunneler_map *map, int x, int y) {
     return map->chunks + (y * map->chunk_dimensions.width + x);
 }
 
+tunneler_map_chunk *tunneler_map_is_in_base(tunneler_map *p, int block_x, int block_y) {
+    tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p, block_x / p->CHUNK_SIZE, block_y / p->CHUNK_SIZE);
+    if (p_chunk == NULL || p_chunk->type != TUNNELER_MAP_CHUNK_TYPE_PLAYER_BASE) {
+        return NULL;
+    }
+    
+    return p_chunk;
+}
+
 intpoint tunneler_map_assign_base(tunneler_map *p, int n, int playerRID) {
     tunneler_map_chunk *p_chunk;
     intpoint base, center;
@@ -53,8 +62,8 @@ intpoint tunneler_map_assign_base(tunneler_map *p, int n, int playerRID) {
 }
 
 block tunneler_map_get_block(tunneler_map *p, int x, int y) {
-    if(x < 0 || x > p->block_dimensions.width ||
-            y < 0 || y > p->block_dimensions.height){
+    if (x < 0 || x > p->block_dimensions.width ||
+            y < 0 || y > p->block_dimensions.height) {
         return BLOCK_UNDEFINED;
     }
     tunneler_map_chunk *p_chunk = tunneler_map_get_chunk(p,
@@ -72,6 +81,6 @@ int tunneler_map_set_block(tunneler_map *p, int x, int y, block b) {
             x / p->CHUNK_SIZE, y / p->CHUNK_SIZE);
     tunneler_map_chunk_set_block(p_chunk,
             x % p->CHUNK_SIZE, y % p->CHUNK_SIZE, b);
-    
+
     return 1;
 }

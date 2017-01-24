@@ -25,5 +25,7 @@ typedef struct tank
 
 void tank_init(tank *p, int x, int y, enum direction direction, int hitpoints, int energy);
 
+int tank_reduce_hitpoints(tank *p);
+int tank_reduce_energy(tank *p);
 
 #endif /* TANK_H */
