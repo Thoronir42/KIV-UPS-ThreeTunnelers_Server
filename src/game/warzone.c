@@ -10,7 +10,7 @@ warzone_rules _warzone_rules(){
     rules.TANK_MAX_EP = 250;
     rules.TANK_MAX_HP = 20;
     rules.MAX_PROJECTILES_PER_TANK = WARZONE_PROJECTILES_PER_TANK;
-    rules.TANK_CANNON_COOLDOWN = 5;
+    rules.TANK_CANNON_COOLDOWN = 2;
     rules.TANK_CANNON_COOLDOWN_RATE = 1;
     
     return rules;

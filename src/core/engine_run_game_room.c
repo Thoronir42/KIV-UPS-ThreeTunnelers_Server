@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 
 #include "engine.h"
 
@@ -146,35 +147,68 @@ void _engine_uwz_shoot(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
+tank *_engine_uwz_find_tank_hit(warzone *p_wz, projectile *p_proj) {
+    shape tank_body;
+    tank *p_tank;
+    int i, dx, dy;
+    for (i = 0; i < p_wz->tanks_size; i++) {
+        p_tank = p_wz->tanks + i;
+        if (p_tank->status == TANK_STATUS_EMPTY || i == p_proj->player_rid) {
+            continue;
+        }
+        tank_body = shape_get(p_tank->direction, SHAPE_TANK_BODY);
+        if (p_proj->location.x < p_tank->location.x + tank_body.min.x ||
+                p_proj->location.x > p_tank->location.x + tank_body.max.x ||
+                p_proj->location.y < p_tank->location.y + tank_body.min.y ||
+                p_proj->location.y > p_tank->location.y + tank_body.max.y) {
+            continue;
+        }
+        dx = p_proj->location.x - p_tank->location.x;
+        dy = p_proj->location.x - p_tank->location.x;
+        if (shape_is_solid_o(tank_body, dx, dy)) {
+            return p_tank;
+        }
+    }
+    return NULL;
+}
+
 void _engine_uwz_update_projectiles(engine *p, game_room *p_gr, warzone *p_wz) {
     int i, new_x, new_y, clear = 0;
     block b;
     projectile *p_proj;
+    tank *p_target;
     for (i = 0; i < p_wz->projectiles_size; i++) {
         p_proj = p_wz->projectiles + i;
-        if(p_proj->direction == DIRECTION_0){
+        if (p_proj->direction == DIRECTION_0) {
             continue;
         }
         new_x = p_proj->location.x += G_DIRECTIONS[p_proj->direction].x;
         new_y = p_proj->location.y += G_DIRECTIONS[p_proj->direction].y;
-        
+
         b = tunneler_map_get_block(&p_wz->map, new_x, new_y);
-        if(block_is_obstacle(b)){
+        if (block_is_obstacle(b)) {
             clear = 1;
             glog(LOG_INFO, "Projectile %d crashed into obstacle %d at %d-%d", i, b, new_x, new_y);
-        } else if(block_is_breakable(b)){
+        } else if (block_is_breakable(b)) {
             clear = 1;
             warzone_set_block(p_wz, new_x, new_y, BLOCK_EMPTY);
             glog(LOG_INFO, "Projectile %d broke block %d into emptiness at %d-%d", i, b, new_x, new_y);
+        } else {
+            p_target = _engine_uwz_find_tank_hit(p_wz, p_proj);
+            glog(LOG_INFO, "Projectile %d hit tank %d", i, p_target - p_wz->tanks);
+            if (p_target != NULL) {
+                p_target->hitpoints -= 1;
+                clear = 1;
+            }
         }
-        
-        if(clear){
+
+        if (clear) {
             projectile_clear(p_proj);
             network_command_prepare(p->p_cmd_out, NCT_GAME_PROJ_REM);
             network_command_append_byte(p->p_cmd_out, i);
             engine_bc_command(p, p_gr, p->p_cmd_out);
         }
-        
+
     }
 }
 
