@@ -121,7 +121,8 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
 
     p_gr = engine_find_empty_game_room(p);
     if (p_gr != NULL) {
-        clientRID = game_room_init(p_gr, GAME_ROOM_MAX_PLAYERS, p_cli);
+        // fixme: constant game room size
+        clientRID = game_room_init(p_gr, 2, p_cli);
         engine_game_room_put_client(p, p_gr, p_cli);
 
         glog(LOG_FINE, "Client %d created room %d",

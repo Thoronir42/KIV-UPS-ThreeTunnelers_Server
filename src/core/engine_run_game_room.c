@@ -190,14 +190,11 @@ void _engine_uwz_update_projectiles(engine *p, game_room *p_gr, warzone *p_wz) {
         b = tunneler_map_get_block(&p_wz->map, new_x, new_y);
         if (block_is_obstacle(b)) {
             clear = 1;
-            glog(LOG_INFO, "Projectile %d crashed into obstacle %d at %d-%d", i, b, new_x, new_y);
         } else if (block_is_breakable(b)) {
             clear = 1;
             warzone_set_block(p_wz, new_x, new_y, BLOCK_EMPTY);
-            glog(LOG_INFO, "Projectile %d broke block %d into emptiness at %d-%d", i, b, new_x, new_y);
         } else {
             p_target = _engine_uwz_find_tank_hit(p_wz, p_proj);
-            glog(LOG_INFO, "Projectile %d hit tank %d", i, p_target - p_wz->tanks);
             if (p_target != NULL) {
                 if (tank_reduce_hitpoints(p_target) == 0) {
                     engine_gameroom_tank_destroyed(p, p_gr, p_target);
@@ -300,7 +297,12 @@ void _engine_init_gameroom_updates(engine *p) {
 }
 
 void engine_gameroom_tank_destroyed(engine *p, game_room *p_gr, tank *p_tank) {
-    p_tank->status = TANK_STATUS_DESTROYED;
+    // todo: implement 
+    engine_game_room_set_state(p, p_gr, GAME_ROOM_STATE_LOBBY);
+    
+    network_command_prepare(p->p_cmd_out, NCT_MSG_SYSTEM);
+    network_command_append_str(p->p_cmd_out, "End of Three Tunnelers demonstration.");
+    engine_bc_command(p, p_gr, p->p_cmd_out);
 }
 
 void engine_gameroom_process_map_changes(engine *p, game_room *p_gr) {
