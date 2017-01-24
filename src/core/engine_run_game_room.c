@@ -84,7 +84,7 @@ void _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     shape_body = shape_get(p_tank->direction, SHAPE_TANK_BODY);
     new_x = p_tank->location.x + dx;
     new_y = p_tank->location.y + dy;
-    
+
     if (!_warzone_can_tank_move_to(p_wz, new_x, new_y, shape_belt, shape_body)) {
         return;
     }
@@ -157,7 +157,6 @@ void _engine_init_gameroom_updates(engine *p) {
 void engine_gameroom_process_map_changes(engine *p, game_room *p_gr) {
     int i, n = 0;
     warzone *p_wz = &p_gr->zone;
-
     network_command_prepare(p->p_cmd_out, NCT_MAP_BLOCK_CHANGES);
     network_command_append_byte(p->p_cmd_out, 0);
     for (i = 0; i < p_wz->map_change_count; i++) {
@@ -169,7 +168,8 @@ void engine_gameroom_process_map_changes(engine *p, game_room *p_gr) {
         }
         network_command_append_short(p->p_cmd_out, p_wz->map_change_buffer[i].x);
         network_command_append_short(p->p_cmd_out, p_wz->map_change_buffer[i].y);
-        network_command_append_byte(p->p_cmd_out, p_wz->map_change_buffer[i].b);
+        network_command_append_char(p->p_cmd_out, char_from_num(p_wz->map_change_buffer[i].b));
+        n++;
     }
 
     if (n > 0) {
