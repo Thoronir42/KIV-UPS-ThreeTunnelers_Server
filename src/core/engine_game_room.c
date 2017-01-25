@@ -41,29 +41,33 @@ void engine_game_room_remove_client(engine *p, game_room *p_gr, net_client *p_cl
 }
 
 void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli) {
-    int clientRID, playerRID;
+    int client_rid, playerRID;
     int room_id;
 
     room_id = p_gr - p->resources->game_rooms;
 
-    if (!game_room_is_joinable(p_gr)) {
+    if (game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
+
+    }
+
+    if (!game_room_has_open_slots(p_gr)) {
         network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
         network_command_append_str(p->p_cmd_out, "Game room is full");
         engine_send_command(p, p_cli, p->p_cmd_out);
         return;
     }
-    clientRID = game_room_put_client(p_gr, p_cli);
+    client_rid = game_room_put_client(p_gr, p_cli);
 
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_JOIN);
     network_command_append_byte(p->p_cmd_out, room_id);
-    network_command_append_byte(p->p_cmd_out, clientRID);
+    network_command_append_byte(p->p_cmd_out, client_rid);
     network_command_append_byte(p->p_cmd_out, p_gr->leaderClientRID);
     engine_send_command(p, p_cli, p->p_cmd_out);
     p_cli->room_id = room_id;
 
     engine_game_room_dump_to_client(p, p_cli, p_gr);
 
-    engine_pack_room_client(p->p_cmd_out, p_gr, clientRID);
+    engine_pack_room_client(p->p_cmd_out, p_gr, client_rid);
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
     engine_game_room_put_player(p, p_gr, p_cli);
@@ -111,20 +115,24 @@ void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client
 }
 
 int engine_game_room_put_player(engine *p, game_room *p_gr, net_client *p_cli) {
-    int playerRID, clientRID, playerCID;
-    clientRID = game_room_find_client(p_gr, p_cli);
-    playerRID = game_room_attach_player(p_gr, clientRID);
-    if (playerRID == ITEM_EMPTY) {
+    int player_rid, client_rid, player_cid;
+    client_rid = game_room_find_client(p_gr, p_cli);
+
+    player_rid = game_room_attach_player(p_gr, client_rid);
+    if (player_rid == ITEM_EMPTY) {
+        glog(LOG_WARNING, "No empty spot to put player of client %d", client_rid);
         return 1;
     }
-    playerCID = net_client_put_player(p_cli, playerRID);
-    if (playerCID == ITEM_EMPTY) {
-        game_room_detach_player(p_gr, playerRID);
+    player_cid = net_client_put_player(p_cli, player_rid);
+    if (player_cid == ITEM_EMPTY) {
+        game_room_detach_player(p_gr, player_rid);
         glog(LOG_WARNING, "Failed to put player to client");
         return 1;
     }
 
-    engine_pack_room_player(p->p_cmd_out, p_gr, playerRID);
+    glog(LOG_INFO, "Room %d: Client %d added player %d as their player %d",
+            p_gr - p->resources->game_rooms, client_rid, player_rid, player_cid);
+    engine_pack_room_player(p->p_cmd_out, p_gr, player_rid);
     engine_bc_command(p, p_gr, p->p_cmd_out);
 
 
@@ -160,11 +168,42 @@ tunneler_map *_game_room_init_map(game_room *p_gr, int player_count) {
 
 }
 
+void _engine_game_room_set_clients_status(game_room *p_gr, net_client_status status) {
+    int i;
+    for (i = 0; i < p_gr->size; i++) {
+        if (p_gr->clients[i] == NULL) {
+            continue;
+        }
+        switch (p_gr->clients[i]->status) {
+            case NET_CLIENT_STATUS_DISCONNECTED:
+            case NET_CLIENT_STATUS_EMPTY:
+                continue;
+        }
+
+        p_gr->clients[i]->status = status;
+    }
+}
+
+void _engine_game_room_clear_controls(game_room *p_gr){
+    int i;
+    for(i = 0; i <p_gr->size; i++){
+        controls_set_state(&p_gr->players[i].input, 0);
+    }
+}
+
+
 void engine_game_room_set_state(engine *p, game_room *p_gr, game_room_state game_state) {
     int i;
     p_gr->state = game_state;
-    if (game_state == GAME_ROOM_STATE_BATTLE) {
-        p_gr->current_tick = 0;
+    switch (p_gr->state = game_state) {
+        case GAME_ROOM_STATE_BATTLE:
+            _engine_game_room_set_clients_status(p_gr, NET_CLIENT_STATUS_PLAYING);
+            _engine_game_room_clear_controls(p_gr);
+            p_gr->current_tick = 0;
+            break;
+        case GAME_ROOM_STATE_LOBBY:
+            _engine_game_room_set_clients_status(p_gr, NET_CLIENT_STATUS_CONNECTED);
+            break;
     }
 
     network_command_prepare(p->p_cmd_out, NCT_ROOM_SYNC_STATE);
