@@ -53,7 +53,7 @@ int net_client_set_name(net_client *p, const char *name, int length) {
 int net_client_put_player(net_client *p, int player_rid){
     int current_cid, empty_cid;
     current_cid = net_client_player_cid_by_rid(p, player_rid);
-    if(current_cid){
+    if(current_cid != ITEM_EMPTY){
         return current_cid;
     }
     empty_cid = net_client_player_cid_by_rid(p, ITEM_EMPTY);
