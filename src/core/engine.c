@@ -163,7 +163,7 @@ void engine_client_disconnected(engine *p, net_client *p_cli, char *reason) {
 
 void engine_pack_room_client(network_command *p_dst, game_room *p_gr, int client_rid) {
     net_client *p_cli = p_gr->clients[client_rid];
-    
+
     network_command_prepare(p_dst, NCT_ROOM_CLIENT_INFO);
     network_command_append_byte(p_dst, client_rid);
     network_command_append_str(p_dst, p_cli->name);
@@ -172,7 +172,7 @@ void engine_pack_room_client(network_command *p_dst, game_room *p_gr, int client
 void engine_pack_room_player(network_command *p_dst, game_room *p_gr, int player_rid) {
     player *p_plr = p_gr->players + player_rid;
     net_client *p_cli = p_gr->clients[p_plr->client_rid];
-    int player_cid = net_client_player_cid(p_cli, player_rid);
+    int player_cid = net_client_player_cid_by_rid(p_cli, player_rid);
 
     network_command_prepare(p_dst, NCT_ROOM_PLAYER_ATTACH);
     network_command_append_byte(p_dst, player_rid);
@@ -227,7 +227,7 @@ void engine_pack_map_chunk(network_command *p_dst, int x, int y, tunneler_map_ch
     write_hex_byte(p_dst->data + 4, check_sum);
 }
 
-void engine_pack_game_tank(network_command *p_dst, tank *p_tank, int player_rid){
+void engine_pack_game_tank(network_command *p_dst, tank *p_tank, int player_rid) {
     network_command_prepare(p_dst, NCT_GAME_TANK_INFO);
     network_command_append_byte(p_dst, player_rid);
     network_command_append_byte(p_dst, p_tank->status);

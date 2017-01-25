@@ -10,6 +10,8 @@ char net_client_status_letter(net_client_status status) {
             return '?';
         case NET_CLIENT_STATUS_CONNECTED:
             return 'C';
+        case NET_CLIENT_STATUS_PLAYING:
+            return 'P';
         case NET_CLIENT_STATUS_UNRESPONSIVE:
             return 'U';
         case NET_CLIENT_STATUS_DISCONNECTED:
@@ -49,7 +51,12 @@ int net_client_set_name(net_client *p, const char *name, int length) {
 }
 
 int net_client_put_player(net_client *p, int player_rid){
-    int empty_cid = net_client_player_cid(p, ITEM_EMPTY);
+    int current_cid, empty_cid;
+    current_cid = net_client_player_cid_by_rid(p, player_rid);
+    if(current_cid){
+        return current_cid;
+    }
+    empty_cid = net_client_player_cid_by_rid(p, ITEM_EMPTY);
     if(empty_cid != ITEM_EMPTY){
         p->player_rids[empty_cid] = player_rid;
         return empty_cid;
@@ -57,7 +64,7 @@ int net_client_put_player(net_client *p, int player_rid){
     
     return ITEM_EMPTY;
 }
-int net_client_player_cid(net_client *p, int player_rid){
+int net_client_player_cid_by_rid(net_client *p, int player_rid){
     int i;
     for(i = 0; i < NET_CLIENT_MAX_PLAYERS; i++){
         if(p->player_rids[i] == player_rid){

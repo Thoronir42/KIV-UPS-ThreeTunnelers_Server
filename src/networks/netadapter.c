@@ -27,8 +27,8 @@ int _netadapter_init_socket(netadapter *p) {
     p->addr.sin_port = htons(p->port);
     p->addr.sin_addr.s_addr = INADDR_ANY;
 
-    setsockopt(p->socket,SOL_SOCKET,SO_REUSEADDR, &p->socket_reuse, sizeof p->socket_reuse);
-    
+    setsockopt(p->socket, SOL_SOCKET, SO_REUSEADDR, &p->socket_reuse, sizeof p->socket_reuse);
+
     if (bind(p->socket, (struct sockaddr *) &p->addr, \
 		sizeof (struct sockaddr_in))) {
         return NETADAPTER_STATUS_BIND_ERROR;
@@ -90,40 +90,40 @@ int netadapter_init(netadapter *p, int port, statistics *stats,
     *(short *) &p->ALLOWED_IDLE_TIME = _NETADAPTER_MAX_IDLE_TIME;
     *(short *) &p->ALLOWED_UNRESPONSIVE_TIME = _NETADAPTER_MAX_IDLE_TIME + 4;
     *(short *) &p->ALLOWED_INVALLID_MSG_COUNT = _NETADAPTER_MAX_WRONG_MSGS;
-    
-    for(i = 0; i < connections_length; i++){
+
+    for (i = 0; i < connections_length; i++) {
         p->connection_to_client[i] = (p->connections + i)->socket = NETADAPTER_SOCKET_EMPTY;
     }
 
     return _netadapter_bind_and_listen(p);
 }
 
-void _netadapter_shutdown_connections(netadapter *p){
+void _netadapter_shutdown_connections(netadapter *p) {
     network_command cmd;
     int i, n = 0;
-    
+
     glog(LOG_INFO, "Netadapter: shutting down all remaining connections");
-    
+
     network_command_prepare(&cmd, NCT_LEAD_DISCONNECT);
     network_command_set_data(&cmd, g_loc.server_shutting_down, strlen(g_loc.server_shutting_down));
-    
-    for(i = 0; i < p->connections_length; i++){
-        if((p->connections + i)->socket != NETADAPTER_SOCKET_EMPTY){
+
+    for (i = 0; i < p->connections_length; i++) {
+        if ((p->connections + i)->socket != NETADAPTER_SOCKET_EMPTY) {
             netadapter_send_command(p, p->connections + i, &cmd);
             netadapter_close_connection(p, p->connections + i);
             n++;
         }
     }
-    
+
     glog(LOG_INFO, "Netadapter: %d connections terminated", n);
-    
+
 }
 
 void netadapter_shutdown(netadapter *p) {
     int ret_val;
 
     _netadapter_shutdown_connections(p);
-    
+
     FD_CLR(p->socket, &p->client_socks);
     p->status = NETADAPTER_STATUS_SHUTTING_DOWN;
 
@@ -180,7 +180,7 @@ void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
     net_client *p_cli;
     close(p_con->socket);
     FD_CLR(p_con->socket, &p->client_socks);
-    if(p->connection_to_client[p_con->socket] != NETADAPTER_SOCKET_EMPTY){
+    if (p->connection_to_client[p_con->socket] != NETADAPTER_SOCKET_EMPTY) {
         p_cli = (p->clients + p->connection_to_client[p_con->socket]);
         p_cli->connection = NULL;
         p->connection_to_client[p_con->socket] = NETADAPTER_SOCKET_EMPTY;
@@ -191,7 +191,7 @@ void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
 
 void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli) {
     netadapter_close_connection(p, p_cli->connection);
-    
+
 }
 
 void netadapter_close_connection_by_socket(netadapter *p, int socket) {

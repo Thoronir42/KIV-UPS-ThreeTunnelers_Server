@@ -37,7 +37,7 @@ int game_room_init(game_room *p, int size, net_client *p_cli) {
     return clientRID;
 }
 
-int game_room_is_joinable(game_room *p) {
+int game_room_has_open_slots(game_room *p) {
     return (game_room_get_open_client_slots(p) > 0) &&
             (game_room_get_open_player_slots(p) > 0);
 }
@@ -164,22 +164,21 @@ player *game_room_get_player(game_room *p, int playerRID) {
     return p->players + playerRID;
 }
 
-int game_room_attach_player(game_room* p, int clientRID) {
+int game_room_attach_player(game_room* p, int client_rid) {
     int i, color;
     for (i = 0; i < p->size; i++) {
         if (p->players[i].client_rid == ITEM_EMPTY) {
             color = colors_use_random(&p->player_colors);
-            player_init(p->players + i, clientRID, color);
+            player_init(p->players + i, client_rid, color);
 
             return i;
         }
     }
 
     return ITEM_EMPTY;
-
 }
 
-void game_room_detach_player(game_room *p, int playerRID) {
-    colors_set_in_use(&p->player_colors, p->players[playerRID].color, 0);
-    player_cleanup(p->players + playerRID);
+void game_room_detach_player(game_room *p, int player_rid) {
+    colors_set_in_use(&p->player_colors, p->players[player_rid].color, 0);
+    player_cleanup(p->players + player_rid);
 }

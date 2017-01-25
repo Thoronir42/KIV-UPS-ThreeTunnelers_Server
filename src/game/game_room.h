@@ -53,7 +53,7 @@ int game_room_init(game_room *p, int size, net_client *p_cli);
 
 void game_room_clean_up(game_room *p);
 
-int game_room_is_joinable(game_room *p);
+int game_room_has_open_slots(game_room *p);
 
 int game_room_get_open_player_slots(game_room *p_game_room);
 int game_room_get_open_client_slots(game_room *p_game_room);

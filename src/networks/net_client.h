@@ -14,7 +14,8 @@
 #define NET_CLIENT_MAX_PLAYERS 2
 #define NET_CLIENT_SECRET_LENGTH 6
 
-typedef struct tcp_connection {
+typedef struct tcp_connection
+{
     int socket, a2read;
 
     struct sockaddr_in addr;
@@ -22,26 +23,29 @@ typedef struct tcp_connection {
 
     time_t last_active;
     int invalid_counter;
-    
+
     int client_aid;
-    
+
     char _in_buffer[TCP_CONNECTION_BUFFER_SIZE];
     int _in_buffer_ptr;
     network_command _out_buffer;
-    
+
 } tcp_connection;
 
-typedef enum net_client_status {
-    NET_CLIENT_STATUS_ANY = -1, 
+typedef enum net_client_status
+{
+    NET_CLIENT_STATUS_ANY = -1,
     NET_CLIENT_STATUS_EMPTY = 0, NET_CLIENT_STATUS_CONNECTED = 1,
-    NET_CLIENT_STATUS_UNRESPONSIVE = 2, NET_CLIENT_STATUS_DISCONNECTED = 3
+    NET_CLIENT_STATUS_PLAYING, NET_CLIENT_STATUS_UNRESPONSIVE = 2,
+    NET_CLIENT_STATUS_DISCONNECTED = 3
 } net_client_status;
 
-typedef struct net_client {
+typedef struct net_client
+{
     tcp_connection *connection;
     net_client_status status;
     int latency;
-    
+
     char connection_secret[NET_CLIENT_SECRET_LENGTH + 1];
 
     char name[NET_CLIENT_NAME_MAX_LENGTH + 1];
@@ -52,15 +56,15 @@ typedef struct net_client {
 } net_client;
 
 char net_client_status_letter(net_client_status status);
-int  tcp_connection_process(tcp_connection *p, int a2read);
+int tcp_connection_process(tcp_connection *p, int a2read);
 
-int  net_client_init(net_client *p, tcp_connection *connection);
+int net_client_init(net_client *p, tcp_connection *connection);
 void net_client_wipe(net_client *p);
 
-int  net_client_set_name(net_client *p, const char *name, int length);
+int net_client_set_name(net_client *p, const char *name, int length);
 
 int net_client_put_player(net_client *p, int player_rid);
-int net_client_player_cid(net_client *p, int player_rid);
+int net_client_player_cid_by_rid(net_client *p, int player_rid);
 
 #endif /* NET_CLIENT_H */
 
