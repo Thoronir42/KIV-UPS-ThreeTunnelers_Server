@@ -78,6 +78,7 @@ game_room *engine_find_empty_game_room(engine *p);
 
 void engine_send_command(engine *p, net_client *p_cli, network_command *cmd);
 void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd);
+void engine_bc_command_status_filter(engine *p, game_room *p_gr, network_command *cmd, net_client_status status);
 
 void engine_game_room_put_client(engine *p, game_room *p_gr, net_client *p_cli);
 void engine_game_room_client_disconnected(engine *p, game_room *p_gr, net_client *p_cli, char *reason);

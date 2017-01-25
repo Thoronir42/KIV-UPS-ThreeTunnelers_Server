@@ -40,9 +40,9 @@ int engine_init(engine *p, settings *p_settings, resources *p_resources) {
     _engine_init_solo_commands(p->command_proccess_func);
     _engine_init_gameroom_commands(p->command_proccess_func);
     _engine_init_game_play_commands(p->command_proccess_func);
-    
+
     _engine_init_gameroom_updates(p);
-    
+
     p->p_netadapter = &p->netadapter;
     p->p_cmd_out = &p->_cmd_out;
 
@@ -120,6 +120,11 @@ void engine_send_command(engine *p, net_client *p_cli, network_command *cmd) {
 
 void engine_bc_command(engine *p, game_room *p_gr, network_command *cmd) {
     netadapter_broadcast_command_p(&p->netadapter, p_gr->clients, p_gr->size, cmd);
+}
+
+void engine_bc_command_status_filter(engine *p, game_room *p_gr,
+        network_command *cmd, net_client_status status) {
+    netadapter_broadcast_command_pf(&p->netadapter, p_gr->clients, p_gr->size, cmd, status);
 }
 
 game_room *engine_game_room_by_id(engine *p, int room_id) {

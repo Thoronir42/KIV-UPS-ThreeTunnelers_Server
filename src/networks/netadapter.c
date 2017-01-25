@@ -150,30 +150,42 @@ int netadapter_send_command(netadapter *p, tcp_connection *p_con, network_comman
     p->stats->commands_sent++;
     p->stats->bytes_sent += a2write;
     //    network_command_print("Sent", cmd);
-    
+
     return 0;
 }
 
-int _netadapter_broadcast_command(netadapter *p, net_client **clients, int clients_size, network_command *cmd, int ref_pointer) {
+int _netadapter_broadcast_command(netadapter *p, net_client **clients, int clients_size,
+        network_command *cmd, int ref_pointer, net_client_status status) {
     int i, counter = 0;
     net_client *p_cli;
     for (i = 0; i < clients_size; i++) {
         p_cli = ref_pointer ? *(clients + i) : (net_client *) (clients + i);
-        if (p_cli != NULL && p_cli->connection != NULL) {
-            netadapter_send_command(p, p_cli->connection, cmd);
-            counter++;
+        if (p_cli == NULL || p_cli->connection == NULL) {
+            continue;
         }
+        if (status != NET_CLIENT_STATUS_ANY && p_cli->status != status) {
+            continue;
+        }
+        netadapter_send_command(p, p_cli->connection, cmd);
+        counter++;
     }
 
     return counter;
 }
 
 int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd) {
-    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size, cmd, 0);
+    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size,
+            cmd, 0, NET_CLIENT_STATUS_ANY);
 }
 
 int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd) {
-    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size, cmd, 1);
+    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size,
+            cmd, 1, NET_CLIENT_STATUS_ANY);
+}
+
+int netadapter_broadcast_command_pf(netadapter *p, net_client **clients, int clients_size,
+        network_command *cmd, net_client_status status) {
+    return _netadapter_broadcast_command(p, (net_client **) clients, clients_size, cmd, 1, status);
 }
 
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
