@@ -339,7 +339,7 @@ void engine_gameroom_sync_tanks(engine *p, game_room *p_gr) {
         if (p_tank->status != TANK_STATUS_OPERATIVE) {
             continue;
         }
-        engine_pack_game_tank(p->p_cmd_out, p_tank, i);
+        nc_create_game_tank(p->p_cmd_out, p_tank, i);
         engine_bc_command_status_filter(p, p_gr, p->p_cmd_out, NET_CLIENT_STATUS_PLAYING);
     }
 }

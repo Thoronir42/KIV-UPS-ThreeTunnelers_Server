@@ -92,14 +92,4 @@ void engine_gameroom_process_map_changes(engine *p, game_room *p_gr);
 void engine_gameroom_sync_tanks(engine *p, game_room *p_gr);
 void engine_gameroom_tank_destroyed(engine *p, game_room *p_gr, tank *p_tank);
 
-
-void engine_pack_room_client(network_command *p_dst, game_room *p_gr, int client_rid);
-void engine_pack_room_player(network_command *p_dst, game_room *p_gr, int player_rid);
-
-void engine_pack_map_specification(network_command *p_dst, tunneler_map *p_map);
-void engine_pack_map_bases(network_command *p_dst, tunneler_map *p_map);
-void engine_pack_map_chunk(network_command *p_dst, int x, int y, tunneler_map_chunk *p_chunk);
-
-void engine_pack_game_tank(network_command *p_dst, tank *p_tank, int player_rid);
-
 #endif

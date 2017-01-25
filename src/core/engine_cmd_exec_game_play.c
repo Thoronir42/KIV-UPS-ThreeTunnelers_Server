@@ -67,7 +67,7 @@ int _exe_gpl_tank_info ENGINE_HANDLE_FUNC_HEADER{
     }
     p_tank = warzone_get_tank(&p_cgr->zone, player_rid);
 
-    engine_pack_game_tank(p->p_cmd_out, p_tank, player_rid);
+    nc_create_game_tank(p->p_cmd_out, p_tank, player_rid);
     engine_send_command(p, p_cli, p->p_cmd_out);
 
 
