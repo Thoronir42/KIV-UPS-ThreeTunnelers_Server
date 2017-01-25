@@ -49,12 +49,12 @@ int _exe_solo_lead_polo ENGINE_HANDLE_FUNC_HEADER{
 
     glog(LOG_FINE, "Latency with client %s is %d", p_cli->name, p_cli->latency);
 
-//    if (p_cgr != NULL) {
-//        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_STATUS);
-//        network_command_append_short(p->p_cmd_out, p_cli->latency);
-//
-//        netadapter_broadcast_command_p(p->p_netadapter, p_cgr->clients, p_cgr->size, p->p_cmd_out);
-//    }
+    //    if (p_cgr != NULL) {
+    //        network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_STATUS);
+    //        network_command_append_short(p->p_cmd_out, p_cli->latency);
+    //
+    //        netadapter_broadcast_command_p(p->p_netadapter, p_cgr->clients, p_cgr->size, p->p_cmd_out);
+    //    }
 
     return 0;
 }
@@ -106,7 +106,7 @@ int _exe_solo_rooms_list ENGINE_HANDLE_FUNC_HEADER{
 }
 
 int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
-    int clientRID, i;
+    int client_rid, room_id;
     game_room *p_gr;
 
 
@@ -120,23 +120,27 @@ int _exe_solo_rooms_create ENGINE_HANDLE_FUNC_HEADER{
     }
 
     p_gr = engine_find_empty_game_room(p);
-    if (p_gr != NULL) {
-        // fixme: constant game room size
-        clientRID = game_room_init(p_gr, 2, p_cli);
-        engine_game_room_put_client(p, p_gr, p_cli);
-
-        glog(LOG_FINE, "Client %d created room %d",
-                p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
+    if (p_gr == NULL) {
+        network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
+        network_command_append_str(p->p_cmd_out, "No game rooms available");
+        engine_send_command(p, p_cli, p->p_cmd_out);
 
         return 0;
     }
+    room_id = p_gr - p->resources->game_rooms;
 
-    network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);
-    network_command_append_str(p->p_cmd_out, "No game rooms available");
+    // fixme: constant game room size
+    client_rid = game_room_init(p_gr, 2, p_cli);
+    nc_create_rooms_join(p->p_cmd_out, room_id, client_rid, p_gr->leaderClientRID);
     engine_send_command(p, p_cli, p->p_cmd_out);
+    
+    p_cli->room_id = room_id;
 
+    engine_game_room_put_player(p, p_gr, p_cli);
+    
+    glog(LOG_FINE, "Client %d created room %d",
+    p_cli - p->resources->clients, p_gr - p->resources->game_rooms);
     return 0;
-
 }
 
 int _exe_solo_rooms_join ENGINE_HANDLE_FUNC_HEADER{

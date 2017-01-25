@@ -107,7 +107,7 @@ int _exe_gr_client_info ENGINE_HANDLE_FUNC_HEADER{
         return ENGINE_CMDEXE_ILLEGAL_OP;
     }
     
-    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INFO);
+    network_command_prepare(p->p_cmd_out, NCT_ROOM_CLIENT_INTRODUCE);
     network_command_append_byte(p->p_cmd_out, clientRID);
     network_command_append_str(p->p_cmd_out, p_o_cli->name);
     engine_send_command(p, p_cli, p->p_cmd_out);
@@ -120,7 +120,7 @@ void _engine_init_gameroom_commands(int (**actions)ENGINE_HANDLE_FUNC_HEADER) {
     //    actions[NCT_MSG_RCON] = &_exe_gr_msg_rcon;
     actions[NCT_ROOM_SYNC_STATE] = &_exe_gr_sync_phase;
     actions[NCT_ROOM_READY_STATE] = &_exe_gr_ready_state;
-    actions[NCT_ROOM_CLIENT_INFO] = &_exe_gr_client_info;
+    actions[NCT_ROOM_CLIENT_INTRODUCE] = &_exe_gr_client_info;
     actions[NCT_ROOM_CLIENT_STATUS] = NULL; // do not implement
     actions[NCT_ROOM_CLIENT_REMOVE] = NULL; // todo: implement
     actions[NCT_ROOM_SET_LEADER] = NULL; // todo: implement

@@ -29,11 +29,8 @@ int net_client_init(net_client *p, tcp_connection *connection) {
 }
 
 void net_client_wipe(net_client *p) {
-    int i;
     memset(p, 0, sizeof(net_client));
-    for(i = 0; i < NET_CLIENT_MAX_PLAYERS; i++){
-        p->player_rids[i] = ITEM_EMPTY;
-    }
+    memset(p->player_rids, ITEM_EMPTY, sizeof(int) * NET_CLIENT_MAX_PLAYERS);
     p->room_id = ITEM_EMPTY;
 }
 

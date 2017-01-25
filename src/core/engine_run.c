@@ -57,7 +57,7 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
 
     ret_val = handle_action(p, p_cli, &scanner, p_gr);
     if (ret_val) {
-        glog(LOG_FINE, "Processed command of type %d from client %d which "
+        glog(LOG_FINE, "Processed command of type 0x%2X from client %d which "
                 "resulted in %s", cmd.type, p_cli - p->resources->clients , _engine_cmd_exe_retval_label(ret_val));
 
         netadapter_handle_invallid_command(p->p_netadapter, p_cli, cmd);
@@ -72,10 +72,14 @@ int _engine_process_command(engine *p, net_client *p_cli, network_command cmd) {
 
 int _engine_authorize_reconnect(engine *p, net_client *p_cli) {
     game_room *p_gr;
+    
+    network_command_prepare(p->p_cmd_out, NCT_CLIENT_SET_NAME);
+    network_command_append_str(p->p_cmd_out, p_cli->name);
+    engine_send_command(p, p_cli, p->p_cmd_out);
 
     p_gr = engine_game_room_by_id(p, p_cli->room_id);
     if (p_gr != NULL && game_room_find_client(p_gr, p_cli) != ITEM_EMPTY) {
-        engine_game_room_put_client(p, p_gr, p_cli);
+        engine_game_room_put_client_again(p, p_gr, p_cli);
     }
 }
 
