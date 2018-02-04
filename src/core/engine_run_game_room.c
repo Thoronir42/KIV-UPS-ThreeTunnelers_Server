@@ -6,6 +6,7 @@
 #include "../logger.h"
 #include "../game/warzone.h"
 #include "../game/entity_shape.h"
+#include "../networks/netadapter.h"
 
 void _engine_update_gameroom_starting(engine *p, game_room *p_gr) {
     int i;
@@ -70,14 +71,14 @@ int _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     shape shape_belt, shape_body;
     block b;
 
-
+    
     player *p_player = p_gr->players + i;
     tank *p_tank = p_wz->tanks + i;
 
     dx = controls_direction_x(&p_player->input);
     dy = controls_direction_y(&p_player->input);
     if (dx == 0 && dy == 0) {
-        return;
+        return 0;
     }
 
     new_direction = direction_get_by_d(dx, dy);
@@ -87,7 +88,7 @@ int _engine_uwz_move_tank(engine *p, game_room *p_gr, warzone *p_wz, int i) {
     new_y = p_tank->location.y + dy;
 
     if (!_warzone_can_tank_move_to(p_wz, new_x, new_y, shape_belt, shape_body)) {
-        return;
+        return 0;
     }
 
     p_tank->direction = new_direction;

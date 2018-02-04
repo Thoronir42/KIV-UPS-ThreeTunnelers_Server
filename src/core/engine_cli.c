@@ -6,7 +6,7 @@
 
 #define STATUS_VALUE_SIZE 24
 
-_list_page_count(int items, int ipp) {
+int _list_page_count(int items, int ipp) {
     return items / ipp + (items % ipp > 0 ? 1 : 0);
 }
 

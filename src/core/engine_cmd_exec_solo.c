@@ -7,6 +7,8 @@
 #include "../logger.h"
 #include "../localisation.h"
 
+#include "../networks/network_command_factory.h"
+
 int _exe_solo_undefined ENGINE_HANDLE_FUNC_HEADER
 {
     return 1;
@@ -193,7 +195,7 @@ int _exe_solo_rooms_leave ENGINE_HANDLE_FUNC_HEADER{
         network_command_append_str(p->p_cmd_out, "Not in room");
         engine_send_command(p, p_cli, p->p_cmd_out);
 
-        return;
+        return 0;
     }
 
     network_command_prepare(p->p_cmd_out, NCT_ROOMS_LEAVE);

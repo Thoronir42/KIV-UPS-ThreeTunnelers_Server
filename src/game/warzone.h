@@ -43,6 +43,8 @@ typedef struct warzone {
 
 void warzone_init(warzone *p, int tanks_size);
 
+void warzone_init_tank(warzone *p, int player_rid, intpoint location);
+
 tank *warzone_get_tank(warzone *p, int playerRID);
 
 int warzone_set_block(warzone *p, int x, int y, block b);

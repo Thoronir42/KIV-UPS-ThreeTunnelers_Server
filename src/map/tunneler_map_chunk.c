@@ -21,7 +21,7 @@ int tunnel_map_chunk_init(tunneler_map_chunk *p, int chunk_size) {
     return 0;
 }
 
-void tunneler_map_chunk_set_type(tunneler_map_chunk *p, enum tunneler_map_chunk_type type){
+void tunneler_map_chunk_set_type(tunneler_map_chunk *p, enum tunneler_map_chunk_type type) {
     p->type = type;
 }
 

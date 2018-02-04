@@ -25,6 +25,10 @@ typedef struct tunneler_map_chunk
 
 int tunnel_map_chunk_init(tunneler_map_chunk *p, int size);
 
+void tunneler_map_chunk_set_type(tunneler_map_chunk *p, enum tunneler_map_chunk_type type);
+void tunneler_map_chunk_assing_player(tunneler_map_chunk *p, int playerRID);
+int tunneler_map_chunk_is_base(tunneler_map_chunk *p);
+
 void tunneler_map_chunk_set_block(tunneler_map_chunk *p, int x, int y, block b);
 block tunneler_map_chunk_get_block(tunneler_map_chunk *p, int x, int y);
 

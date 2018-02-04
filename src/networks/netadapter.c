@@ -200,6 +200,13 @@ void netadapter_close_connection(netadapter *p, tcp_connection *p_con) {
     glog(LOG_INFO, "Connection on socket %d has been terminated", p_con->socket);
     p_con->socket = NETADAPTER_SOCKET_EMPTY;
 }
+void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
+    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DISCONNECT);
+    network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
+
+    netadapter_send_command(p, p_con, &p_con->_out_buffer);
+    netadapter_close_connection(p, p_con);
+}
 
 void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli) {
     netadapter_close_connection(p, p_cli->connection);
@@ -208,12 +215,4 @@ void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli) {
 
 void netadapter_close_connection_by_socket(netadapter *p, int socket) {
     netadapter_close_connection(p, p->connections + socket);
-}
-
-void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg) {
-    network_command_prepare(&p_con->_out_buffer, NCT_LEAD_DISCONNECT);
-    network_command_set_data(&p_con->_out_buffer, msg, strlen(msg));
-
-    netadapter_send_command(p, p_con, &p_con->_out_buffer);
-    netadapter_close_connection(p, p_con);
 }

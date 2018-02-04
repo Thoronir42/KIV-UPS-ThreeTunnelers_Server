@@ -79,8 +79,11 @@ void netadapter_handle_invallid_command(netadapter *p, net_client *p_cli, networ
 int netadapter_send_command(netadapter *p, tcp_connection *connection, network_command *cmd);
 int netadapter_broadcast_command(netadapter *p, net_client *clients, int clients_size, network_command *cmd);
 int netadapter_broadcast_command_p(netadapter *p, net_client **clients, int clients_size, network_command *cmd);
+int netadapter_broadcast_command_pf(netadapter *p, net_client **clients, int clients_size, network_command *cmd, net_client_status status);
 
 void netadapter_close_connection(netadapter *p, tcp_connection *p_con);
+void netadapter_close_connection_msg(netadapter *p, tcp_connection *p_con, const char *msg);
+
 void netadapter_close_connection_by_client(netadapter *p, net_client *p_cli);
 void netadapter_close_connection_by_socket(netadapter *p, int socket);
 

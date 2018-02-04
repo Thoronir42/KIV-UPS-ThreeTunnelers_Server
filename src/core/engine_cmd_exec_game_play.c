@@ -5,6 +5,7 @@
 
 #include "../logger.h"
 
+#include "../networks/network_command_factory.h"
 
 int _exe_gpl_controls_set ENGINE_HANDLE_FUNC_HEADER
 {

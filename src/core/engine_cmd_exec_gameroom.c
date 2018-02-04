@@ -5,6 +5,8 @@
 
 #include "../logger.h"
 
+#include "../networks/network_command_factory.h"
+
 int _exe_gr_msg_plain ENGINE_HANDLE_FUNC_HEADER
 {
     int clientRID;
